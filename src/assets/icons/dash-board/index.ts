@@ -1,0 +1,11 @@
+export { default as badIcon } from './bad.svg';
+export { default as completedIcon } from './completed.svg';
+export { default as docsIcon } from './Docs.svg';
+export { default as failIcon } from './fail.svg';
+export { default as faqIcon } from './faq.svg';
+export { default as fileTextIcon } from './file-text.svg';
+export { default as filterIcon } from './filter.svg';
+export { default as goodIcon } from './good.svg';
+export { default as processingIcon } from './processing.svg';
+export { default as smallTalkIcon } from './smallTalk.svg';
+export { default as termsIcon } from './terms.svg';
