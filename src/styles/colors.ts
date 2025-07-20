@@ -1,7 +1,7 @@
 const colors = {
-  background: '#FFFFFF', // 흰색
+  background: '#FFFFFF',
   text: {
-    primary: '#000000', // 검정
+    primary: '#000000',
   },
 
   Black: '#000000',
