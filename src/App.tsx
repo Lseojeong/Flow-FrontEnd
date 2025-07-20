@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import React from 'react';
+import { useRoutes } from 'react-router-dom';
+import routes from '@/routes/router';
+import GlobalStyle from '@/styles/globalStyle';
 
-function App() {
-  const [count, setCount] = useState<number>(0);
+const App: React.FC = () => {
+  const element = useRoutes(routes);
 
   return (
-    <div>
-      <h1>Hello Vite + React + TypeScript</h1>
-      <button onClick={() => setCount(count + 1)}>Count: {count}</button>
-    </div>
+    <>
+      <GlobalStyle />
+      {element}
+    </>
   );
-}
+};
 
 export default App;
