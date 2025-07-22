@@ -1,3 +1,5 @@
-export { default as copyIcon } from './copy.svg';
-export { default as informationIcon } from './information.svg';
-export { default as xmarkIcon } from './xmark.svg';
+import copyIcon from './copy.svg?react';
+import informationIcon from './information.svg?react';
+import xmarkIcon from './xmark.svg?react';
+
+export { copyIcon, informationIcon, xmarkIcon };
