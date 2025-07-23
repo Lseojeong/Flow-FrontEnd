@@ -1,5 +1,7 @@
-export { default as dashBoardIcon } from './dashBoard.svg';
-export { default as docsIcon } from './docs.svg';
-export { default as faqIcon } from './faq.svg';
-export { default as settingsIcon } from './settings.svg';
-export { default as wordIcon } from './word.svg';
+import dashBoardIcon from './dashBoard.svg?react';
+import docsIcon from './docs.svg?react';
+import faqIcon from './faq.svg?react';
+import settingsIcon from './settings.svg?react';
+import wordIcon from './word.svg?react';
+
+export { dashBoardIcon, docsIcon, faqIcon, settingsIcon, wordIcon };

@@ -39,6 +39,7 @@ export default defineConfig({
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
+    'react/prop-types': 'off',
   },
   settings: {
     react: { version: 'detect' },
