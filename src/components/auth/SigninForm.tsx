@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo/index';
-import { RippleButton } from '@/components/common/button/RippleButton';
+import { AuthButton } from '@/components/common/button/AuthButton';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
@@ -11,7 +11,7 @@ export function SigninForm() {
       { validate: (v) => v.trim() !== '', message: '* 닉네임을 입력해주세요.' },
       {
         validate: (v) => /^[가-힣]{1,4}$/.test(v),
-        message: '* 한글만 입력 가능하며 최대 4자까지 가능합니다.',
+        message: '* 올바른 한글 닉네임을 입력해주세요.(최대 4글자)',
       },
     ],
   });
@@ -38,15 +38,38 @@ export function SigninForm() {
   });
 
   const pwCheckField = useFormField({
-    validations: [
-      { validate: (v) => v.trim() !== '', message: '* 비밀번호 확인을 입력해주세요.' },
-      { validate: (v) => v === pwField.value, message: '* 비밀번호가 일치하지 않습니다.' },
-    ],
+    validations: [{ validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' }],
   });
 
-  const isDisabled = [nicknameField, idField, pwField, pwCheckField].some(
-    (f) => f.errorMessage !== ''
-  );
+  const handlePwCheckBlur = () => {
+    pwCheckField.onBlur();
+  };
+
+  const getPwCheckErrorMessage = () => {
+    if (pwCheckField.value.trim() === '') {
+      return pwCheckField.errorMessage;
+    }
+    if (pwCheckField.isBlurred && pwCheckField.value !== pwField.value) {
+      return '* 비밀번호가 일치하지 않습니다.';
+    }
+    return '';
+  };
+
+  const isDisabled =
+    nicknameField.value.trim() === '' ||
+    idField.value.trim() === '' ||
+    pwField.value.trim() === '' ||
+    pwCheckField.value.trim() === '' ||
+    nicknameField.errorMessage !== '' ||
+    idField.errorMessage !== '' ||
+    pwField.errorMessage !== '' ||
+    (pwCheckField.isBlurred &&
+      pwCheckField.value.trim() !== '' &&
+      pwCheckField.value !== pwField.value) ||
+    !nicknameField.isBlurred ||
+    !idField.isBlurred ||
+    !pwField.isBlurred ||
+    !pwCheckField.isBlurred;
 
   return (
     <Card>
@@ -98,10 +121,10 @@ export function SigninForm() {
           placeholder="비밀번호를 다시 한 번 입력해주세요."
           value={pwCheckField.value}
           onChange={pwCheckField.onChange}
-          onBlur={pwCheckField.onBlur}
-          error={pwCheckField.errorMessage}
+          onBlur={handlePwCheckBlur}
+          error={getPwCheckErrorMessage()}
         />
-        <RippleButton disabled={isDisabled}>완료</RippleButton>
+        <AuthButton disabled={isDisabled}>완료</AuthButton>
       </Form>
     </Card>
   );
