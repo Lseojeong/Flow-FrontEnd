@@ -5,49 +5,20 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { colors, fontWeight } from '@/styles/index';
 import { calenderIcon as CalenderIcon, arrowIcon as ArrowIcon } from '@/assets/icons/common';
 import { ko } from 'date-fns/locale';
+import { DateFilterProps, CustomNavigationProps, CustomInputProps } from './date-filter.types';
+import {
+  DATE_FORMAT,
+  DATE_FORMAT_CALENDAR,
+  DEFAULT_PLACEHOLDER,
+  INPUT_WIDTH,
+  INPUT_HEIGHT,
+  CALENDAR_ICON_SIZE,
+  ARROW_ICON_SIZE,
+  NAVIGATION_BUTTON_SIZE,
+} from './date-filter.constants';
 
 registerLocale('ko', ko);
 
-// 상수 정의
-const DATE_FORMAT = 'yyyy/MM/dd';
-const DATE_FORMAT_CALENDAR = 'yyyy년 MM월';
-const DEFAULT_PLACEHOLDER = '날짜를 선택하세요';
-const INPUT_WIDTH = '204px';
-const INPUT_HEIGHT = '32px';
-const CALENDAR_ICON_SIZE = '36px';
-const ARROW_ICON_SIZE = '16px';
-const NAVIGATION_BUTTON_SIZE = '24px';
-
-// 타입 정의
-export interface DateFilterProps {
-  startDate: Date | null;
-  endDate: Date | null;
-  onDateChange: (_startDate: Date | null, _endDate: Date | null) => void;
-  placeholder?: string;
-  className?: string;
-  disabled?: boolean;
-  error?: boolean;
-}
-
-interface CustomNavigationProps {
-  className?: string;
-  onClick: () => void;
-  type: 'previous' | 'next';
-  disabled?: boolean;
-}
-
-interface CustomInputProps {
-  value?: string;
-  onClick?: () => void;
-  onChange?: (_e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  error?: boolean;
-  focused?: boolean;
-  hasValue?: boolean;
-}
-
-// 유틸리티 함수
 const getBorderColor = (error: boolean, focused: boolean, disabled: boolean): string => {
   if (error) return '#ff4757';
   if (focused) return colors.Normal;
@@ -63,7 +34,6 @@ const getCalendarIconColor = (disabled: boolean): string => {
   return disabled ? '#9ca3af' : colors.Normal;
 };
 
-// 커스텀 네비게이션 컴포넌트
 const CustomNavigation: React.FC<CustomNavigationProps> = ({
   className,
   onClick,
@@ -139,7 +109,6 @@ const CustomNavigation: React.FC<CustomNavigationProps> = ({
   );
 };
 
-// 커스텀 헤더 컴포넌트
 const CustomHeader = ({
   date,
   decreaseMonth,
@@ -170,7 +139,6 @@ const CustomHeader = ({
   </div>
 );
 
-// 메인 DateFilter 컴포넌트
 export const DateFilter: React.FC<DateFilterProps> = ({
   startDate,
   endDate,
@@ -238,7 +206,6 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   );
 };
 
-// 커스텀 입력 컴포넌트
 const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(
   ({ value, onClick, onChange, placeholder, disabled, error, focused, hasValue }, ref) => {
     const handleClearClick = (e: React.MouseEvent) => {
@@ -273,7 +240,6 @@ const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(
 
 CustomInput.displayName = 'CustomInput';
 
-// 스타일 컴포넌트
 const DateFilterContainer = styled.div`
   position: relative;
   width: fit-content;
