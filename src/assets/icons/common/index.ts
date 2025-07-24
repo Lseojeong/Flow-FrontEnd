@@ -1,19 +1,19 @@
-import arrowIcon from './arrow.svg?react';
-import calenderIcon from './calender.svg?react';
-import deleteIcon from './delete.svg?react';
-import downloadIcon from './download.svg?react';
-import editIcon from './edit.svg?react';
-import resetIcon from './reset.svg?react';
-import searchIcon from './search.svg?react';
-import uploadIcon from './upload.svg?react';
+import ArrowIcon from './arrow.svg?react';
+import CalenderIcon from './calender.svg?react';
+import DeleteIcon from './delete.svg?react';
+import DownloadIcon from './download.svg?react';
+import EditIcon from './edit.svg?react';
+import ResetIcon from './reset.svg?react';
+import SearchIcon from './search.svg?react';
+import UploadIcon from './upload.svg?react';
 
 export {
-  arrowIcon,
-  calenderIcon,
-  deleteIcon,
-  downloadIcon,
-  editIcon,
-  resetIcon,
-  searchIcon,
-  uploadIcon,
+  ArrowIcon,
+  CalenderIcon,
+  DeleteIcon,
+  DownloadIcon,
+  EditIcon,
+  ResetIcon,
+  SearchIcon,
+  UploadIcon,
 };

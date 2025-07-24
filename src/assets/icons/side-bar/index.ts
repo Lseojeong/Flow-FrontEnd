@@ -1,7 +1,7 @@
-import dashBoardIcon from './dashBoard.svg?react';
-import docsIcon from './docs.svg?react';
-import faqIcon from './faq.svg?react';
-import settingsIcon from './settings.svg?react';
-import wordIcon from './word.svg?react';
+import DashBoardIcon from './dashBoard.svg?react';
+import DocsIcon from './docs.svg?react';
+import FaqIcon from './faq.svg?react';
+import SettingsIcon from './settings.svg?react';
+import WordIcon from './word.svg?react';
 
-export { dashBoardIcon, docsIcon, faqIcon, settingsIcon, wordIcon };
+export { DashBoardIcon, DocsIcon, FaqIcon, SettingsIcon, WordIcon };

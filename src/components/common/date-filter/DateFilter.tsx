@@ -3,7 +3,7 @@ import styled, { createGlobalStyle } from 'styled-components';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { colors, fontWeight } from '@/styles/index';
-import { calenderIcon as CalenderIcon, arrowIcon as ArrowIcon } from '@/assets/icons/common';
+import { CalenderIcon, ArrowIcon } from '@/assets/icons/common/index';
 import { ko } from 'date-fns/locale';
 import { DateFilterProps, CustomNavigationProps, CustomInputProps } from './date-filter.types';
 import {
