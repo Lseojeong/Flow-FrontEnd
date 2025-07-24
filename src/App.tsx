@@ -3,6 +3,7 @@ import { useRoutes, Routes, Route } from 'react-router-dom';
 import routes from '@/routes/router';
 import GlobalStyle from '@/styles/globalStyle';
 import { SideBarPlayground } from '@/playground/SideBarPlayground';
+import { DateFilterPlayground } from '@/playground/DateFilterPlayground';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
@@ -16,6 +17,7 @@ const App: React.FC = () => {
       {import.meta.env.DEV && (
         <Routes>
           <Route path="/playground/sidebar" element={<SideBarPlayground />} />
+          <Route path="/playground/date-filter" element={<DateFilterPlayground />} />
         </Routes>
       )}
     </>
