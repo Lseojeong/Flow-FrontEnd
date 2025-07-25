@@ -23,7 +23,7 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
   NAVIGATION_BUTTON_SIZE,
-} from '../input/input.constants';
+} from '@/components/common/input/input.constants';
 
 registerLocale('ko', ko);
 
