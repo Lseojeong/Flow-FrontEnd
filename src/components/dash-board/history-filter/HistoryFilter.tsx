@@ -4,53 +4,14 @@ import { colors, fontWeight } from '@/styles/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-
-// ===== 더미 데이터 =====
-const MENU_LIST = [
-  { id: 'dictionary', label: '용어사전' },
-  { id: 'docs', label: '사내문서' },
-  { id: 'faq', label: 'FAQ' },
-];
-
-const CATEGORY_MAP: Record<string, { id: string; label: string }[]> = {
-  dictionary: [
-    { id: 'dict-cat-1', label: 'IT용어' },
-    { id: 'dict-cat-2', label: '경영용어' },
-  ],
-  docs: [
-    { id: 'docs-cat-1', label: '인사문서' },
-    { id: 'docs-cat-2', label: '재무문서' },
-  ],
-  faq: [],
-};
-
-const FILE_MAP: Record<string, { id: string; label: string }[]> = {
-  'dict-cat-1': [
-    { id: 'file-1', label: 'IT용어집.pdf' },
-    { id: 'file-2', label: 'IT트렌드.docx' },
-  ],
-  'dict-cat-2': [{ id: 'file-3', label: '경영용어집.pdf' }],
-  'docs-cat-1': [{ id: 'file-4', label: '인사규정.docx' }],
-  'docs-cat-2': [{ id: 'file-5', label: '재무보고서.pdf' }],
-};
-
-const MSG = {
-  selectMenu: '메뉴를 먼저 선택하세요',
-  noCategory: '카테고리 없음',
-  selectCategory: '카테고리를 먼저 선택하세요',
-  noFile: '파일 없음',
-};
-
-// 파일 이름 길이 제한
-const truncateFileName = (fileName: string, maxLength: number = 10) => {
-  if (fileName.length <= maxLength) return fileName;
-  return fileName.substring(0, maxLength) + '...';
-};
-
-interface HistoryFilterProps {
-  onCancel?: () => void;
-  onConfirm?: (_selectedItems: { menu: string[]; category: string[]; file: string[] }) => void;
-}
+import { HistoryFilterProps } from './history-filter.types';
+import {
+  MENU_LIST,
+  CATEGORY_MAP,
+  FILE_MAP,
+  MSG,
+  truncateFileName,
+} from './history-filter.constants';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -181,6 +142,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
   );
 };
 
+// ===== 스타일 컴포넌트 =====
 const FilterWrapper = styled.div`
   position: relative;
   display: inline-block;
@@ -222,7 +184,8 @@ const DropdownContainer = styled.div`
 `;
 
 const FilterContainer = styled.div`
-  width: 550px;
+  width: 600px;
+  height: 268px;
   background: ${colors.White};
   border: 1px solid ${colors.BoxStroke};
   border-radius: 8px;
@@ -296,7 +259,8 @@ const FilterFooter = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
   border-top: 1px solid ${colors.BoxStroke};
 `;
 
