@@ -1,8 +1,8 @@
 import React from 'react';
-import { useRoutes, Routes, Route } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import routes from '@/routes/router';
 import GlobalStyle from '@/styles/globalStyle';
-import { SideBarPlayground } from '@/playground/SideBarPlayground';
+import PlaygroundRoutes from '@/routes/playgroundRoutes';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
@@ -11,13 +11,8 @@ const App: React.FC = () => {
     <>
       <GlobalStyle />
       {element}
-
       {/* 개발 환경에서만 플레이그라운드 라우트 추가 */}
-      {import.meta.env.DEV && (
-        <Routes>
-          <Route path="/playground/sidebar" element={<SideBarPlayground />} />
-        </Routes>
-      )}
+      {import.meta.env.DEV && <PlaygroundRoutes />}
     </>
   );
 };

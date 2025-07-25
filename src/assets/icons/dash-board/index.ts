@@ -1,25 +1,23 @@
-import badIcon from './bad.svg?react';
-import completedIcon from './completed.svg?react';
-import docsIcon from './Docs.svg?react';
-import failIcon from './fail.svg?react';
-import faqIcon from './faq.svg?react';
-import fileTextIcon from './file-text.svg?react';
-import filterIcon from './filter.svg?react';
-import goodIcon from './good.svg?react';
-import processingIcon from './processing.svg?react';
-import smallTalkIcon from './smallTalk.svg?react';
-import termsIcon from './terms.svg?react';
+import BadIcon from './bad.svg?react';
+import CompletedIcon from './completed.svg?react';
+import DocsIcon from './Docs.svg?react';
+import FailIcon from './fail.svg?react';
+import FaqIcon from './faq.svg?react';
+import FilterIcon from './filter.svg?react';
+import GoodIcon from './good.svg?react';
+import ProcessingIcon from './processing.svg?react';
+import SmallTalkIcon from './smallTalk.svg?react';
+import TermsIcon from './terms.svg?react';
 
 export {
-  badIcon,
-  completedIcon,
-  docsIcon,
-  failIcon,
-  faqIcon,
-  fileTextIcon,
-  filterIcon,
-  goodIcon,
-  processingIcon,
-  smallTalkIcon,
-  termsIcon,
+  BadIcon,
+  CompletedIcon,
+  DocsIcon,
+  FailIcon,
+  FaqIcon,
+  FilterIcon,
+  GoodIcon,
+  ProcessingIcon,
+  SmallTalkIcon,
+  TermsIcon,
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, SideBarProps } from './side-bar.types';
-import { arrowIcon } from '@/assets/icons/common';
+import { ArrowIcon } from '@/assets/icons/common/index';
 
 /**
  * @example
@@ -52,7 +52,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: SideBarPr
                         transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       }}
                     >
-                      {React.createElement(arrowIcon, { width: 20, height: 20 })}
+                      {React.createElement(ArrowIcon, { width: 20, height: 20 })}
                     </span>
                   )}
                 </MenuItem>
