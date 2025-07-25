@@ -41,6 +41,12 @@ const MSG = {
   noFile: '파일 없음',
 };
 
+// 파일 이름 길이 제한
+const truncateFileName = (fileName: string, maxLength: number = 10) => {
+  if (fileName.length <= maxLength) return fileName;
+  return fileName.substring(0, maxLength) + '...';
+};
+
 interface HistoryFilterProps {
   onCancel?: () => void;
   onConfirm?: (_selectedItems: { menu: string[]; category: string[]; file: string[] }) => void;
@@ -113,7 +119,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
       <FilterItemWrapper key={item.id}>
         <CheckBox
           id={`file-${item.id}`}
-          label={item.label}
+          label={truncateFileName(item.label)}
           checked={selectedFileId === item.id}
           onChange={() => handleFileSelect(item.id)}
         />
