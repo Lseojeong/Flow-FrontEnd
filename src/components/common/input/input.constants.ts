@@ -1,0 +1,20 @@
+import { colors, fontWeight } from '@/styles/index';
+
+export const DATE_FORMAT = 'yyyy/MM/dd';
+export const DATE_FORMAT_CALENDAR = 'yyyy년 MM월';
+export const DEFAULT_PLACEHOLDER = '날짜를 선택하세요';
+export const INPUT_WIDTH = '204px';
+export const INPUT_HEIGHT = '32px';
+export const INPUT_ICON_SIZE = '12px';
+export const INPUT_FONT_SIZE = '12px';
+export const INPUT_FONT_WEIGHT = fontWeight.Medium;
+export const INPUT_TEXT_COLOR = colors.BoxText;
+export const INPUT_PLACEHOLDER_COLOR = colors.BoxText;
+export const INPUT_BORDER_COLOR = colors.BoxStroke;
+export const INPUT_FOCUS_COLOR = colors.Normal;
+export const INPUT_BG_COLOR = colors.White;
+export const INPUT_RADIUS = '4px';
+export const INPUT_PADDING = '0 12px';
+export const CALENDAR_ICON_SIZE = INPUT_ICON_SIZE;
+export const ARROW_ICON_SIZE = INPUT_ICON_SIZE;
+export const NAVIGATION_BUTTON_SIZE = '24px';

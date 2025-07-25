@@ -12,27 +12,20 @@ import {
   DEFAULT_PLACEHOLDER,
   INPUT_WIDTH,
   INPUT_HEIGHT,
-  CALENDAR_ICON_SIZE,
-  ARROW_ICON_SIZE,
+  INPUT_ICON_SIZE,
+  INPUT_FONT_SIZE,
+  INPUT_FONT_WEIGHT,
+  INPUT_TEXT_COLOR,
+  INPUT_PLACEHOLDER_COLOR,
+  INPUT_BORDER_COLOR,
+  INPUT_FOCUS_COLOR,
+  INPUT_BG_COLOR,
+  INPUT_RADIUS,
+  INPUT_PADDING,
   NAVIGATION_BUTTON_SIZE,
-} from './date-filter.constants';
+} from '../input/input.constants';
 
 registerLocale('ko', ko);
-
-const getBorderColor = (error: boolean, focused: boolean, disabled: boolean): string => {
-  if (error) return '#ff4757';
-  if (focused) return colors.Normal;
-  if (disabled) return '#e1e5e9';
-  return colors.BoxStroke;
-};
-
-const getBackgroundColor = (disabled: boolean): string => {
-  return disabled ? '#f8f9fa' : 'white';
-};
-
-const getCalendarIconColor = (disabled: boolean): string => {
-  return disabled ? '#9ca3af' : colors.Normal;
-};
 
 const CustomNavigation: React.FC<CustomNavigationProps> = ({
   className,
@@ -99,8 +92,8 @@ const CustomNavigation: React.FC<CustomNavigationProps> = ({
     >
       <ArrowIcon
         style={{
-          width: ARROW_ICON_SIZE,
-          height: ARROW_ICON_SIZE,
+          width: INPUT_ICON_SIZE,
+          height: INPUT_ICON_SIZE,
           color: colors.BoxText,
           transform: getArrowRotation(),
         }}
@@ -139,6 +132,15 @@ const CustomHeader = ({
   </div>
 );
 
+function isSameDay(a: Date | null, b: Date | null) {
+  if (!a || !b) return false;
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
 export const DateFilter: React.FC<DateFilterProps> = ({
   startDate,
   endDate,
@@ -174,12 +176,17 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
   const hasValue = !!(startDate || endDate);
 
+  const filterDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return date <= today;
+  };
+
   return (
     <DateFilterContainer className={className}>
       <DatePicker
-        maxDate={new Date()}
+        filterDate={filterDate}
         showPopperArrow={false}
-        fixedHeight
         selected={startDate}
         onChange={handleDateChange}
         startDate={startDate}
@@ -194,12 +201,28 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         dateFormat={DATE_FORMAT}
         dateFormatCalendar={DATE_FORMAT_CALENDAR}
         locale="ko"
+        selectsStart={!endDate}
+        selectsEnd={!!startDate && !endDate}
         customInput={
           <CustomInput disabled={disabled} error={error} focused={isFocused} hasValue={hasValue} />
         }
         popperClassName="date-picker-popper"
         popperPlacement="bottom-start"
         renderCustomHeader={CustomHeader}
+        dayClassName={(date) => {
+          const isSunday = date.getDay() === 0;
+          const isRangeStart = startDate && isSameDay(date, startDate);
+          const isRangeEnd = endDate && isSameDay(date, endDate);
+          const isToday = isSameDay(date, new Date());
+
+          let className = '';
+          if (isSunday) className += ' react-datepicker__day--sun';
+          if (isRangeStart) className += ' react-datepicker__day--range-start';
+          if (isRangeEnd) className += ' react-datepicker__day--range-end';
+          if (isToday) className += ' react-datepicker__day--today';
+
+          return className.trim();
+        }}
       />
       <DatePickerStyles />
     </DateFilterContainer>
@@ -258,71 +281,49 @@ const DateInputContainer = styled.div<{
   height: ${INPUT_HEIGHT};
   border: 1px solid
     ${({ error, focused, disabled }) =>
-      getBorderColor(error || false, focused || false, disabled || false)};
-  border-radius: 4px;
-  background-color: ${({ disabled }) => getBackgroundColor(disabled || false)};
+      error ? '#ff4757' : focused ? INPUT_FOCUS_COLOR : disabled ? '#e1e5e9' : INPUT_BORDER_COLOR};
+  border-radius: ${INPUT_RADIUS};
+  background: ${INPUT_BG_COLOR};
+  padding: ${INPUT_PADDING};
   cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+  transition: border-color 0.2s;
 
-  &:hover {
-    ${({ disabled, error }) =>
-      !disabled &&
-      `
-      border-color: ${error ? '#ff3742' : colors.Normal};
-      transform: translateY(-1px);
-    `}
+  &:hover,
+  &:focus-within {
+    border-color: ${INPUT_FOCUS_COLOR};
   }
-
-  ${({ hasValue }) =>
-    hasValue &&
-    `
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-  `}
 `;
 
 const CalendarIcon = styled.div<{ disabled?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: ${CALENDAR_ICON_SIZE};
-  height: ${CALENDAR_ICON_SIZE};
-  color: ${({ disabled }) => getCalendarIconColor(disabled || false)};
+  width: ${INPUT_ICON_SIZE};
+  height: ${INPUT_ICON_SIZE};
+  color: ${({ disabled }) => (disabled ? '#9ca3af' : INPUT_BORDER_COLOR)};
   flex-shrink: 0;
+  margin-right: 8px;
   transition: color 0.2s ease;
 
   svg {
-    width: ${ARROW_ICON_SIZE};
-    height: ${ARROW_ICON_SIZE};
+    width: ${INPUT_ICON_SIZE};
+    height: ${INPUT_ICON_SIZE};
   }
 `;
 
 const DateInput = styled.input`
   flex: 1;
-  padding: 0 12px 0 0;
   border: none;
+  outline: none;
   background: transparent;
-  font-size: 12px;
-  font-weight: ${fontWeight.Medium};
-  color: ${colors.BoxText};
-  cursor: pointer;
-  transition: color 0.2s ease;
-
-  &:focus {
-    outline: none;
-    color: #1f2937;
-  }
-
-  &:disabled {
-    color: #9ca3af;
-    cursor: not-allowed;
-  }
+  font-size: ${INPUT_FONT_SIZE};
+  font-weight: ${INPUT_FONT_WEIGHT};
+  color: ${INPUT_TEXT_COLOR};
+  padding: 0;
 
   &::placeholder {
-    color: #9ca3af;
-    font-weight: ${fontWeight.Regular};
-  }
-
-  &::selection {
-    background-color: rgba(59, 130, 246, 0.2);
+    color: ${INPUT_PLACEHOLDER_COLOR};
+    opacity: 0.7;
   }
 `;
 
@@ -414,7 +415,7 @@ const DatePickerStyles = createGlobalStyle`
 
   .react-datepicker__day:hover {
     background: linear-gradient(135deg, #3b82f6 0%, #4338ca 100%);
-    color: ${colors.White};
+    color: rgb(255, 195, 84);
     transform: scale(1.05);
   }
 
@@ -436,21 +437,21 @@ const DatePickerStyles = createGlobalStyle`
   }
 
   .react-datepicker__day--in-selecting-range {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
     color: ${colors.Normal};
   }
 
   .react-datepicker__day--in-range {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    color: ${colors.Normal};
-    border-radius: 0;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    color: ${colors.Normal} !important;
+    border-radius: 0 !important;
   }
 
   .react-datepicker__day--range-start,
   .react-datepicker__day--range-end {
-    background: linear-gradient(135deg, ${colors.Normal} 0%, #4f46e5 100%);
-    color: ${colors.White};
-    border-radius: 8px;
+    background: linear-gradient(135deg, ${colors.Normal} 0%, #4f46e5 100%) !important;
+    color: ${colors.White} !important;
+    border-radius: 8px !important;
     font-weight: ${fontWeight.SemiBold};
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
   }
@@ -467,7 +468,7 @@ const DatePickerStyles = createGlobalStyle`
     transform: translateX(-50%);
     width: 4px;
     height: 4px;
-    background: rgb(245, 210, 11);
+    background: rgb(28, 219, 79);
     border-radius: 50%;
     margin-bottom: 0px;
   }
@@ -484,6 +485,22 @@ const DatePickerStyles = createGlobalStyle`
   .react-datepicker__day--disabled:hover {
     background: transparent;
     transform: none;
+  }
+
+  .react-datepicker__day-name:first-child {
+    color: ${colors.MainRed} !important;
+  }
+
+  .react-datepicker__day-name:last-child {
+    color: ${colors.Normal} !important;
+  }
+
+  .react-datepicker__day-name:nth-child(2),
+  .react-datepicker__day-name:nth-child(3),
+  .react-datepicker__day-name:nth-child(4),
+  .react-datepicker__day-name:nth-child(5),
+  .react-datepicker__day-name:nth-child(6) {
+    color: ${colors.Black} !important;
   }
 `;
 
