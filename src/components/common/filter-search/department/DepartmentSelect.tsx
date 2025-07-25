@@ -5,7 +5,7 @@ import {
   INPUT_HEIGHT,
   INPUT_FONT_SIZE,
   INPUT_FONT_WEIGHT,
-} from '@/components/common/input/input.constants';
+} from '@/components/common/filter-search/common/filterSearch.constants';
 import DepartmentSelectItem from './DepartmentSelectItem';
 import { ArrowIcon } from '@/assets/icons/common/index';
 
