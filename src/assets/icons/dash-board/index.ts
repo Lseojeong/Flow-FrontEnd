@@ -3,7 +3,6 @@ import CompletedIcon from './completed.svg?react';
 import DocsIcon from './Docs.svg?react';
 import FailIcon from './fail.svg?react';
 import FaqIcon from './faq.svg?react';
-import FileTextIcon from './file-text.svg?react';
 import FilterIcon from './filter.svg?react';
 import GoodIcon from './good.svg?react';
 import ProcessingIcon from './processing.svg?react';
@@ -16,7 +15,6 @@ export {
   DocsIcon,
   FailIcon,
   FaqIcon,
-  FileTextIcon,
   FilterIcon,
   GoodIcon,
   ProcessingIcon,
