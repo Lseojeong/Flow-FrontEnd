@@ -14,7 +14,7 @@ import {
   INPUT_BG_COLOR,
   INPUT_RADIUS,
   INPUT_PADDING,
-} from '@/components/common/filter-search/common/filterSearch.constants';
+} from '@/components/common/filter-search/common/FilterSearch.constants';
 
 interface CategorySearchProps {
   value: string;
