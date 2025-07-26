@@ -1,4 +1,8 @@
-import { MenuItem, CategoryItem, FileItem } from './HistoryFilter.types';
+import {
+  MenuItem,
+  CategoryItem,
+  FileItem,
+} from '@/components/dash-board/history-filter/HistoryFilter.types';
 
 // ===== 더미 데이터 =====
 export const MENU_LIST: MenuItem[] = [

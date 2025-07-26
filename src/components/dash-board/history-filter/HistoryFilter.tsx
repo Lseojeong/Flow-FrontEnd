@@ -11,7 +11,7 @@ import {
   FILE_MAP,
   MSG,
   truncateFileName,
-} from './HistoryFilter.constants';
+} from '@/constants/HistoryFilter.constants';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
