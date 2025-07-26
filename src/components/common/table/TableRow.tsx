@@ -30,10 +30,6 @@ const StyledTableRow = styled.tr`
     border-bottom: 1px solid #f2f2f2;
     overflow: hidden;
   }
-
-  &:last-child td {
-    border-bottom: none;
-  }
 `;
 
 export const TableCell = styled.td<{ align?: 'left' | 'center' | 'right' }>`
