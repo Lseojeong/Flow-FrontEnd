@@ -15,12 +15,7 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
 } from '@/constants/FilterSearch.constants';
-
-interface CategorySearchProps {
-  value: string;
-  onChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-}
+import { CategorySearchProps } from './CategorySearch.types';
 
 export const CategorySearch: React.FC<CategorySearchProps> = ({
   value,
