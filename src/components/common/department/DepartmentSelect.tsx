@@ -8,13 +8,7 @@ import {
 } from '@/constants/FilterSearch.constants';
 import DepartmentSelectItem from './DepartmentSelectItem';
 import { ArrowIcon } from '@/assets/icons/common/index';
-
-interface DepartmentSelectProps {
-  options?: string[];
-  value?: string;
-  onChange: (_value: string) => void;
-  placeholder?: string;
-}
+import { DepartmentSelectProps, DropdownStateProps } from './DepartmentSelect.types';
 
 const Department_OPTIONS = ['전체', '기술 전략실', '재무실'];
 
@@ -69,7 +63,7 @@ const DropdownContainer = styled.div`
   width: 152px;
 `;
 
-const DropdownButton = styled.button<{ $open: boolean }>`
+const DropdownButton = styled.button<DropdownStateProps>`
   width: 152px;
   height: ${INPUT_HEIGHT};
   background: ${colors.White};
@@ -98,7 +92,7 @@ const DropdownButton = styled.button<{ $open: boolean }>`
   }
 `;
 
-const Arrow = styled.span<{ $open: boolean }>`
+const Arrow = styled.span<DropdownStateProps>`
   transform: ${({ $open }) => ($open ? 'rotate(180deg)' : 'none')};
   transition: transform 0.2s;
   display: flex;

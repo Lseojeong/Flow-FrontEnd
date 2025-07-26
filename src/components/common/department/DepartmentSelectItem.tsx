@@ -2,12 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { INPUT_FONT_SIZE } from '@/constants/FilterSearch.constants';
-
-interface DepartmentSelectItemProps {
-  option: string;
-  selected: boolean;
-  onClick: () => void;
-}
+import { DepartmentSelectItemProps, DropdownItemStateProps } from './DepartmentSelect.types';
 
 const DepartmentSelectItem: React.FC<DepartmentSelectItemProps> = ({
   option,
@@ -19,7 +14,7 @@ const DepartmentSelectItem: React.FC<DepartmentSelectItemProps> = ({
   </DropdownItem>
 );
 
-const DropdownItem = styled.li<{ $selected: boolean }>`
+const DropdownItem = styled.li<DropdownItemStateProps>`
   width: 100%;
   padding: 8px 12px;
   font-size: ${INPUT_FONT_SIZE};
