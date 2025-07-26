@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { SearchIcon } from '@/assets/icons/common';
+import { FileSearchProps } from './FileSearch.types';
 import {
   INPUT_HEIGHT,
   INPUT_ICON_SIZE,
@@ -14,12 +15,6 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
 } from '@/constants/FilterSearch.constants';
-
-interface FileSearchProps {
-  value: string;
-  onChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-}
 
 export const FileSearch: React.FC<FileSearchProps> = ({
   value,
