@@ -1,15 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors } from '@/styles/index';
+import { ScrollableCellProps } from './Table.types';
 
 /**
  * @description 스크롤 가능한 셀 컴포넌트(부서 목록 셀)
  */
-interface ScrollableCellProps {
-  children: React.ReactNode;
-  align?: 'left' | 'center' | 'right';
-  maxWidth?: string;
-}
 
 export const ScrollableCell: React.FC<ScrollableCellProps> = ({
   children,

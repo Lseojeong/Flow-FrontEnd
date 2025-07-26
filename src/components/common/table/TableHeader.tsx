@@ -1,16 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-
-interface Column {
-  label: string;
-  width?: string;
-  align?: 'left' | 'center' | 'right';
-}
-
-interface TableHeaderProps {
-  columns: Column[];
-}
+import { TableHeaderProps } from './Table.types';
 
 export const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
   return (

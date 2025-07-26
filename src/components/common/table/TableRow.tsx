@@ -1,12 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-
-interface TableRowProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  style?: React.CSSProperties;
-}
+import { TableRowProps, TableCellProps } from './Table.types';
 
 export const TableRow: React.FC<TableRowProps> = ({ children, onClick, style }) => {
   return (
@@ -32,7 +27,7 @@ const StyledTableRow = styled.tr`
   }
 `;
 
-export const TableCell = styled.td<{ align?: 'left' | 'center' | 'right' }>`
+export const TableCell = styled.td<TableCellProps>`
   white-space: nowrap;
   text-align: ${({ align }) => align || 'left'};
   overflow: hidden;
