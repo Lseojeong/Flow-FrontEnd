@@ -23,7 +23,7 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
   NAVIGATION_BUTTON_SIZE,
-} from '@/components/common/filter-search/common/FilterSearch.constants';
+} from '@/constants/FilterSearch.constants';
 
 registerLocale('ko', ko);
 

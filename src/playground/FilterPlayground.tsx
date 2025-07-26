@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import CategorySearch from '@/components/common/filter-search/category-search/CategorySearch';
-import { DateFilter } from '@/components/common/filter-search/date-filter/DateFilter';
-import DepartmentSelect from '@/components/common/filter-search/department/DepartmentSelect';
-import FileSearch from '@/components/common/filter-search/file-search/FileSearch';
+import CategorySearch from '@/components/common/category-search/CategorySearch';
+import { DateFilter } from '@/components/common/date-filter/DateFilter';
+import DepartmentSelect from '@/components/common/department/DepartmentSelect';
+import FileSearch from '@/components/common/file-search/FileSearch';
 import { HistoryFilter } from '@/components/dash-board/history-filter/HistoryFilter';
 import { colors, fontWeight } from '@/styles/index';
 

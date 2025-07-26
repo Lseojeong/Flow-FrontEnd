@@ -18,7 +18,7 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
 }) => {
   return (
     <CellContainer align={align} maxWidth={maxWidth}>
-      <ScrollableContent>{children}</ScrollableContent>
+      <ScrollableContent align={align}>{children}</ScrollableContent>
     </CellContainer>
   );
 };
@@ -35,10 +35,11 @@ const CellContainer = styled.td<{ align: string; maxWidth: string }>`
   border-bottom: 1px solid #f2f2f2;
 `;
 
-const ScrollableContent = styled.div`
+const ScrollableContent = styled.div<{ align: string }>`
   overflow-x: auto;
   white-space: nowrap;
   position: relative;
+  text-align: ${({ align }) => align};
 
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;

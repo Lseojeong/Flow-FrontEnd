@@ -32,7 +32,6 @@ const StyledThead = styled.thead`
 
   th {
     padding: 16px 24px;
-    text-align: left;
     font-size: 14px;
     font-weight: ${fontWeight.Medium};
     white-space: nowrap;
