@@ -4,14 +4,14 @@ import { colors, fontWeight } from '@/styles/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { HistoryFilterProps } from './history-filter.types';
+import { HistoryFilterProps } from './HistoryFilter.types';
 import {
   MENU_LIST,
   CATEGORY_MAP,
   FILE_MAP,
   MSG,
   truncateFileName,
-} from './history-filter.constants';
+} from './HistoryFilter.constants';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);

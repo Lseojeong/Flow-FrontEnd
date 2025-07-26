@@ -1,2 +1,2 @@
 export { DateFilter } from './DateFilter';
-export type { DateFilterProps } from './date-filter.types';
+export type { DateFilterProps } from './DateFilter.types';

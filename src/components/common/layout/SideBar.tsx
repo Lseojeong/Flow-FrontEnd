@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
-import { MenuItemType, SideBarProps } from './side-bar.types';
+import { MenuItemType, SideBarProps } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
 
 /**

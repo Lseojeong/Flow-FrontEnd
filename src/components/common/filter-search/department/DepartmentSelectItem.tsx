@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { INPUT_FONT_SIZE } from '@/components/common/filter-search/common/filterSearch.constants';
+import { INPUT_FONT_SIZE } from '@/components/common/filter-search/common/FilterSearch.constants';
 
 interface DepartmentSelectItemProps {
   option: string;

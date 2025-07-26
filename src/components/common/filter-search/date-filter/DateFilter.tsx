@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { colors, fontWeight } from '@/styles/index';
 import { CalenderIcon, ArrowIcon } from '@/assets/icons/common/index';
 import { ko } from 'date-fns/locale';
-import { DateFilterProps, CustomNavigationProps, CustomInputProps } from './date-filter.types';
+import { DateFilterProps, CustomNavigationProps, CustomInputProps } from './DateFilter.types';
 import {
   DATE_FORMAT,
   DATE_FORMAT_CALENDAR,
@@ -23,7 +23,7 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
   NAVIGATION_BUTTON_SIZE,
-} from '@/components/common/filter-search/common/filterSearch.constants';
+} from '@/components/common/filter-search/common/FilterSearch.constants';
 
 registerLocale('ko', ko);
 
