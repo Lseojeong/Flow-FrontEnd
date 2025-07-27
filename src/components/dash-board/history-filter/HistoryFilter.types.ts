@@ -3,17 +3,18 @@ export interface HistoryFilterProps {
   onConfirm?: (_selectedItems: { menu: string[]; category: string[]; file: string[] }) => void;
 }
 
-export interface MenuItem {
-  id: string;
-  label: string;
+export interface Category {
+  category: string;
+  fileList: string[];
 }
 
-export interface CategoryItem {
-  id: string;
-  label: string;
+export interface HistoryMenu {
+  menu: string;
+  categoryList: Category[];
 }
 
-export interface FileItem {
-  id: string;
-  label: string;
+export interface HistoryFilterApiResponse {
+  result: {
+    menuList: HistoryMenu[];
+  };
 }

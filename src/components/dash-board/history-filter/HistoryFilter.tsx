@@ -4,91 +4,88 @@ import { colors, fontWeight } from '@/styles/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { HistoryFilterProps } from './HistoryFilter.types';
-import {
-  MENU_LIST,
-  CATEGORY_MAP,
-  FILE_MAP,
-  MSG,
-  truncateFileName,
-} from '@/constants/HistoryFilter.constants';
+import { HistoryFilterProps, HistoryMenu, Category } from './HistoryFilter.types';
+import { MOCK_MENU_LIST, MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedMenuId, setSelectedMenuId] = useState<string | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
-  const handleMenuSelect = (id: string) => {
-    setSelectedMenuId(id);
-    setSelectedCategoryId(null);
-    setSelectedFileId(null);
+  const handleMenuSelect = (menu: string) => {
+    setSelectedMenu(menu);
+    setSelectedCategory(null);
+    setSelectedFile(null);
   };
-  const handleCategorySelect = (id: string) => {
-    setSelectedCategoryId(id);
-    setSelectedFileId(null);
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedFile(null);
   };
-  const handleFileSelect = (id: string) => {
-    setSelectedFileId(id);
+
+  const handleFileSelect = (file: string) => {
+    setSelectedFile(file);
   };
+
   const handleReset = () => {
-    setSelectedMenuId(null);
-    setSelectedCategoryId(null);
-    setSelectedFileId(null);
+    setSelectedMenu(null);
+    setSelectedCategory(null);
+    setSelectedFile(null);
   };
+
   const handleCancel = () => {
     onCancel?.();
     handleReset();
     setIsOpen(false);
   };
+
   const handleConfirm = () => {
-    if (!selectedMenuId || !selectedCategoryId || !selectedFileId) return;
+    if (!selectedMenu || !selectedCategory || !selectedFile) return;
     onConfirm?.({
-      menu: [MENU_LIST.find((m) => m.id === selectedMenuId)?.label ?? ''],
-      category: [
-        CATEGORY_MAP[selectedMenuId].find((c) => c.id === selectedCategoryId)?.label ?? '',
-      ],
-      file: [FILE_MAP[selectedCategoryId].find((f) => f.id === selectedFileId)?.label ?? ''],
+      menu: [selectedMenu],
+      category: [selectedCategory],
+      file: [selectedFile],
     });
     setIsOpen(false);
   };
 
+  const selectedMenuObj = MOCK_MENU_LIST.find((m) => m.menu === selectedMenu);
+  const selectedCategoryObj = selectedMenuObj?.categoryList.find(
+    (c: Category) => c.category === selectedCategory
+  );
+
   const renderCategoryList = () => {
-    if (!selectedMenuId) return <GuideText>{MSG.selectMenu}</GuideText>;
-    const categories = CATEGORY_MAP[selectedMenuId];
-    if (!categories || categories.length === 0) return <GuideText>{MSG.noCategory}</GuideText>;
-    return categories.map((item) => (
-      <FilterItemWrapper key={item.id}>
+    if (!selectedMenuObj) return <GuideText>{MSG.selectMenu}</GuideText>;
+    if (selectedMenuObj.categoryList.length === 0) return <GuideText>{MSG.noCategory}</GuideText>;
+    return selectedMenuObj.categoryList.map((item: Category) => (
+      <FilterItemWrapper key={item.category}>
         <CheckBox
-          id={`category-${item.id}`}
-          label={item.label}
-          checked={selectedCategoryId === item.id}
-          onChange={() => handleCategorySelect(item.id)}
+          id={`category-${item.category}`}
+          label={item.category}
+          checked={selectedCategory === item.category}
+          onChange={() => handleCategorySelect(item.category)}
         />
       </FilterItemWrapper>
     ));
   };
 
   const renderFileList = () => {
-    if (selectedMenuId && CATEGORY_MAP[selectedMenuId].length === 0) {
-      return <GuideText>{MSG.noFile}</GuideText>;
-    }
-    if (!selectedCategoryId) return <GuideText>{MSG.selectCategory}</GuideText>;
-    const files = FILE_MAP[selectedCategoryId];
-    if (!files || files.length === 0) return <GuideText>{MSG.noFile}</GuideText>;
-    return files.map((item) => (
-      <FilterItemWrapper key={item.id}>
+    if (!selectedCategoryObj) return <GuideText>{MSG.selectCategory}</GuideText>;
+    if (selectedCategoryObj.fileList.length === 0) return <GuideText>{MSG.noFile}</GuideText>;
+    return selectedCategoryObj.fileList.map((fileName: string) => (
+      <FilterItemWrapper key={fileName}>
         <CheckBox
-          id={`file-${item.id}`}
-          label={truncateFileName(item.label)}
-          checked={selectedFileId === item.id}
-          onChange={() => handleFileSelect(item.id)}
+          id={`file-${fileName}`}
+          label={truncateFileName(fileName)}
+          checked={selectedFile === fileName}
+          onChange={() => handleFileSelect(fileName)}
         />
       </FilterItemWrapper>
     ));
   };
 
-  const isConfirmDisabled = !selectedMenuId || !selectedCategoryId || !selectedFileId;
+  const isConfirmDisabled = !selectedMenu || !selectedCategory || !selectedFile;
 
   return (
     <FilterWrapper>
@@ -103,13 +100,13 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
               <MenuColumn>
                 <ColumnTitle>메뉴</ColumnTitle>
                 <ItemList>
-                  {MENU_LIST.map((item) => (
-                    <FilterItemWrapper key={item.id}>
+                  {MOCK_MENU_LIST.map((item: HistoryMenu) => (
+                    <FilterItemWrapper key={item.menu}>
                       <CheckBox
-                        id={`menu-${item.id}`}
-                        label={item.label}
-                        checked={selectedMenuId === item.id}
-                        onChange={() => handleMenuSelect(item.id)}
+                        id={`menu-${item.menu}`}
+                        label={item.menu}
+                        checked={selectedMenu === item.menu}
+                        onChange={() => handleMenuSelect(item.menu)}
                       />
                     </FilterItemWrapper>
                   ))}
