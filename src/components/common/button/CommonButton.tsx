@@ -8,7 +8,6 @@ interface CommonButtonProps {
   icon?: React.ReactNode;
   variant?: 'primary' | 'dark';
   size?: 'small' | 'medium';
-  fullWidth?: boolean;
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
 }
@@ -78,7 +77,6 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
   icon,
   variant = 'primary',
   size = 'medium',
-  fullWidth = false,
   disabled = false,
   type = 'button',
 }) => {
@@ -94,7 +92,6 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
       onClick={handleClick}
       $variant={variant}
       $size={size}
-      $fullWidth={fullWidth}
       disabled={disabled}
       type={type}
     >
@@ -107,7 +104,6 @@ export const CommonButton: React.FC<CommonButtonProps> = ({
 const StyledButton = styled.button<{
   $variant: ButtonVariant;
   $size: ButtonSize;
-  $fullWidth: boolean;
 }>`
   border: none;
   border-radius: 4px;
@@ -121,11 +117,6 @@ const StyledButton = styled.button<{
 
   ${({ $variant }) => getVariantStyles($variant)}
   ${({ $size }) => getSizeStyles($size)}
-  ${({ $fullWidth }) =>
-    $fullWidth &&
-    css`
-      width: 100%;
-    `}
 
   &:disabled {
     background-color: ${colors.Disabled};
