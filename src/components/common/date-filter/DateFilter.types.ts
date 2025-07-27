@@ -1,9 +1,9 @@
 import React from 'react';
 
 export interface DateFilterProps {
-  startDate: Date | null;
-  endDate: Date | null;
-  onDateChange: (_startDate: Date | null, _endDate: Date | null) => void;
+  startDate: string | null;
+  endDate: string | null;
+  onDateChange: (_startDate: string | null, _endDate: string | null) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
