@@ -13,8 +13,8 @@ export interface DepartmentApiResponse {
 
 export interface DepartmentSelectProps {
   options?: Department[];
-  value?: string;
-  onChange: (_departmentId: string) => void;
+  value?: string | null;
+  onChange: (_departmentId: string | null) => void;
   placeholder?: string;
 }
 

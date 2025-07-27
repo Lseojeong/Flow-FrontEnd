@@ -22,11 +22,16 @@ const MOCK_DEPARTMENTS: Department[] = [
   },
 ];
 
+// 프론트엔드에서만 "전체" 옵션 추가
+const ALL_OPTION: Department = {
+  departmentId: 'all',
+  departmentName: '전체',
+};
+
 const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   options = MOCK_DEPARTMENTS,
-  value,
+  value = null,
   onChange,
-  placeholder = '부서를 선택하세요',
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -41,25 +46,30 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const selectedDepartment = options.find((dept) => dept.departmentId === value);
+  const allOptions = [ALL_OPTION, ...options];
+  const selectedDepartment = allOptions.find((dept) => dept.departmentId === value);
 
   return (
     <DropdownContainer ref={ref}>
       <DropdownButton onClick={() => setOpen((prev) => !prev)} $open={open}>
-        {selectedDepartment?.departmentName || <span className="placeholder">{placeholder}</span>}
+        {value === null ? '전체' : selectedDepartment?.departmentName || '전체'}
         <Arrow $open={open}>
           <ArrowIcon />
         </Arrow>
       </DropdownButton>
       {open && (
         <DropdownList>
-          {options.map((option) => (
+          {allOptions.map((option) => (
             <DepartmentSelectItem
               key={option.departmentId}
               option={option}
-              selected={option.departmentId === value}
+              selected={
+                option.departmentId === 'all' ? value === null : option.departmentId === value
+              }
               onClick={() => {
-                onChange(option.departmentId);
+                // "전체" 선택 시 null, 그 외에는 departmentId 전달
+                const selectedValue = option.departmentId === 'all' ? null : option.departmentId;
+                onChange(selectedValue);
                 setOpen(false);
               }}
             />
