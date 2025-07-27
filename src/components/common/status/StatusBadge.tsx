@@ -1,13 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-
-interface StatusBadgeProps {
-  status: string;
-  children: React.ReactNode;
-}
-
-type StatusType = 'Completed' | 'Processing' | 'Fail';
+import { StatusBadgeProps, StatusType } from './Status.types';
 
 const STATUS_COLORS = {
   Completed: {
