@@ -1,9 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { TableLayout } from '@/components/common/table/TableLayout';
-import { TableHeader } from '@/components/common/table/TableHeader';
-import { TableRow } from '@/components/common/table/TableRow';
-import { ScrollableCell } from '@/components/common/table/ScrollableCell';
+import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import { StatusSummary } from '@/components/common/status/StatusSummary';
 import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
