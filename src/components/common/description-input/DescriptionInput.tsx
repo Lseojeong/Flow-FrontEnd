@@ -11,7 +11,7 @@ import { Props } from './DescriptionInput.types';
 const DEFAULT_CONFIG = {
   MAX_LENGTH: 50,
   PLACEHOLDER: '카테고리 설명을 작성해주세요.',
-  LABEL: '설명',
+  LABEL: '카테고리 설명',
   ERROR_MESSAGE: '카테고리 설명을 입력해주세요.',
 } as const;
 
