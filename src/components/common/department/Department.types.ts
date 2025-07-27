@@ -3,14 +3,6 @@ export interface Department {
   departmentName: string;
 }
 
-export interface DepartmentApiResponse {
-  code: string;
-  message: string;
-  result: {
-    departmentList: Department[];
-  };
-}
-
 export interface DepartmentSelectProps {
   options?: Department[];
   value?: string | null;
