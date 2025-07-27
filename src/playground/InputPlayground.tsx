@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
-import { CategoryDescription } from '@/components/common/category-description/CategoryDescription';
+import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
 import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import { colors, fontWeight } from '@/styles/index';
 
@@ -35,11 +35,11 @@ const InputPlayground: React.FC = () => {
       </Section>
 
       <Section>
-        <SectionTitle>📝 CategoryDescription 테스트</SectionTitle>
+        <SectionTitle>📝 DescriptionInput 테스트</SectionTitle>
         <TestCase>
-          <CategoryDescription />
+          <DescriptionInput />
           <Info>
-            • 50글자 제한 input 필드
+            • 기본: 50글자 제한, &quot;설명&quot; 라벨
             <br />
             • 우측에 실시간 글자수 카운터
             <br />
@@ -47,6 +47,26 @@ const InputPlayground: React.FC = () => {
             <br />
             • 빈 값일 때 에러 메시지 표시
             <br />• 텍스트 중앙 정렬
+          </Info>
+        </TestCase>
+      </Section>
+
+      <Section>
+        <SectionTitle>📋 히스토리 설명 테스트</SectionTitle>
+        <TestCase>
+          <DescriptionInput
+            label="히스토리 설명"
+            placeholder="히스토리 설명을 작성해주세요."
+            maxLength={30}
+            errorMessage="히스토리 설명을 입력해주세요."
+          />
+          <Info>
+            • 커스텀: 30글자 제한, &quot;히스토리 설명&quot; 라벨
+            <br />
+            • 24글자부터 주황색, 30글자 진한 주황색
+            <br />
+            • 전용 placeholder 및 에러 메시지
+            <br />• 같은 컴포넌트, 다른 설정으로 재사용
           </Info>
         </TestCase>
       </Section>
@@ -104,7 +124,7 @@ const InputPlayground: React.FC = () => {
         <TestCase>
           <FormWrapper>
             <CategoryInput value={inputValue} onChange={setInputValue} />
-            <CategoryDescription />
+            <DescriptionInput />
             <UploadInput fileType="csv" onFileSelect={handleCsvFileSelect} />
             <UploadInput fileType="pdf" onFileSelect={handlePdfFileSelect} />
           </FormWrapper>
