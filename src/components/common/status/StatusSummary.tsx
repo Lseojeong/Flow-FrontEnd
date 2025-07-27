@@ -2,9 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { CompletedIcon, FailIcon, ProcessingIcon } from '@/assets/icons/common/index';
-import { StatusItemData, StatusSummaryProps } from './Status.types';
+import { StatusItemData, Props } from './Status.types';
 
-export const StatusSummary: React.FC<StatusSummaryProps> = ({ items }) => {
+export const StatusSummary: React.FC<Props> = ({ items }) => {
   const getStatusIcon = (type: StatusItemData['type']) => {
     switch (type) {
       case 'Completed':
