@@ -1,7 +1,8 @@
 // src/playground/SideBarPlayground.tsx
 import { useState } from 'react';
 import { symbolTextLogo } from '@/assets/logo';
-import { SideBar, commonMenuItems, settingsMenuItems } from '@/components/common/layout/index';
+import SideBar from '@/components/common/layout/SideBar';
+import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 

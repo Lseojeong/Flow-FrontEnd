@@ -1,5 +1,6 @@
 import { RouteObject } from 'react-router-dom';
-import { LoginPage, SigninPage } from '@/pages/auth';
+import LoginPage from '@/pages/auth/LoginPage';
+import SigninPage from '@/pages/auth/SigninPage';
 
 const routes: RouteObject[] = [
   {
