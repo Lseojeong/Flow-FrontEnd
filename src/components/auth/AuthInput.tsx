@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
-import { Props } from './auth.types';
+import { Props } from './Auth.types';
 
 const DEFAULT_WIDTH = '368px';
 
