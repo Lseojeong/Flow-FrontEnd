@@ -14,7 +14,7 @@ const FilterPlayground: React.FC = () => {
   // CategorySearch 상태
   const [searchValue, setSearchValue] = useState('');
   // DepartmentSelect 상태
-  const [department, setDepartment] = useState('전체');
+  const [department, setDepartment] = useState<string | null>(null);
   // FileSearch 상태
   const [fileSearch, setFileSearch] = useState('');
   // HistoryFilter 상태
@@ -71,9 +71,9 @@ const FilterPlayground: React.FC = () => {
         <SectionTitle>DepartmentSelect</SectionTitle>
         <DepartmentSelect value={department} onChange={setDepartment} />
         <Info>
-          <span>선택된 부서: {department}</span>
+          <span>선택된 부서: {department || '전체'}</span>
         </Info>
-        <ResetButton onClick={() => setDepartment('전체')}>부서 초기화</ResetButton>
+        <ResetButton onClick={() => setDepartment(null)}>부서 초기화</ResetButton>
       </Section>
       <Section>
         <SectionTitle>FileSearch</SectionTitle>
