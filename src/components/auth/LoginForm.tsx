@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo';
-import { AuthButton } from '@/components/common/button/AuthButton';
+import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
@@ -47,7 +47,9 @@ export function LoginForm() {
         />
         <Spacer />
         <LoginErrorMessage />
-        <AuthButton disabled={isDisabled}>로그인</AuthButton>
+        <Button size="large" disabled={isDisabled}>
+          로그인
+        </Button>
       </Form>
     </Card>
   );
