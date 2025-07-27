@@ -4,6 +4,12 @@ import { colors, fontWeight } from '@/styles';
 import { Loading } from '@/components/common/loading/Loading';
 import { Props, ButtonVariant, ButtonSize } from './Button.types';
 
+/**
+ * Note:
+ * 확인, 취소는 medium
+ * auth 페이지는 large
+ * 나머지는 medium으로 통일
+ */
 const DOUBLE_CLICK_DELAY = 300;
 
 const BUTTON_VARIANTS = {
