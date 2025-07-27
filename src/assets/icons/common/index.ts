@@ -6,6 +6,9 @@ import EditIcon from './edit.svg?react';
 import ResetIcon from './reset.svg?react';
 import SearchIcon from './search.svg?react';
 import UploadIcon from './upload.svg?react';
+import CompletedIcon from './completed.svg?react';
+import ProcessingIcon from './processing.svg?react';
+import FailIcon from './fail.svg?react';
 
 export {
   ArrowIcon,
@@ -16,4 +19,7 @@ export {
   ResetIcon,
   SearchIcon,
   UploadIcon,
+  CompletedIcon,
+  ProcessingIcon,
+  FailIcon,
 };

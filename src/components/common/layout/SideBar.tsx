@@ -120,7 +120,7 @@ const MenuItem = styled.li<{ $active?: boolean }>`
   align-items: center;
   gap: 8px;
   padding: 12px 0 24px 32px;
-  color: ${({ $active }) => ($active ? colors.Normal : colors.Black)};
+  color: ${({ $active }) => ($active ? colors.Normal : colors.Dark_active)};
   font-size: 20px;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;

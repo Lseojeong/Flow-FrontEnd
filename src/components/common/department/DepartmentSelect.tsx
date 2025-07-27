@@ -5,24 +5,33 @@ import {
   INPUT_HEIGHT,
   INPUT_FONT_SIZE,
   INPUT_FONT_WEIGHT,
-} from '@/components/common/filter-search/common/FilterSearch.constants';
-import DepartmentSelectItem from './DepartmentSelectItem';
+} from '@/constants/FilterSearch.constants';
 import { ArrowIcon } from '@/assets/icons/common/index';
+import { DepartmentSelectProps, DropdownStateProps, Department } from './Department.types';
+import DepartmentSelectItem from './DepartmentSelectItem';
 
-interface DepartmentSelectProps {
-  options?: string[];
-  value?: string;
-  onChange: (_value: string) => void;
-  placeholder?: string;
-}
+//더미 데이터
+const MOCK_DEPARTMENTS: Department[] = [
+  {
+    departmentId: 'a1b2c3d4-e5f6-7890-abcd-1234567890ab',
+    departmentName: '고객지원팀',
+  },
+  {
+    departmentId: 'b2c3d4e5-f6a1-8901-bcda-2345678901bc',
+    departmentName: '기술지원팀',
+  },
+];
 
-const Department_OPTIONS = ['전체', '기술 전략실', '재무실'];
+// 프론트엔드에서만 "전체" 옵션 추가
+const ALL_OPTION: Department = {
+  departmentId: 'all',
+  departmentName: '전체',
+};
 
 const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
-  options = Department_OPTIONS,
-  value = '전체',
+  options = MOCK_DEPARTMENTS,
+  value = null,
   onChange,
-  placeholder = '부서를 선택하세요',
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -37,23 +46,30 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
+  const allOptions = [ALL_OPTION, ...options];
+  const selectedDepartment = allOptions.find((dept) => dept.departmentId === value);
+
   return (
     <DropdownContainer ref={ref}>
       <DropdownButton onClick={() => setOpen((prev) => !prev)} $open={open}>
-        {value || <span className="placeholder">{placeholder}</span>}
+        {value === null ? '전체' : selectedDepartment?.departmentName || '전체'}
         <Arrow $open={open}>
           <ArrowIcon />
         </Arrow>
       </DropdownButton>
       {open && (
         <DropdownList>
-          {options.map((option) => (
+          {allOptions.map((option) => (
             <DepartmentSelectItem
-              key={option}
+              key={option.departmentId}
               option={option}
-              selected={option === value}
+              selected={
+                option.departmentId === 'all' ? value === null : option.departmentId === value
+              }
               onClick={() => {
-                onChange(option);
+                // "전체" 선택 시 null, 그 외에는 departmentId 전달
+                const selectedValue = option.departmentId === 'all' ? null : option.departmentId;
+                onChange(selectedValue);
                 setOpen(false);
               }}
             />
@@ -69,7 +85,7 @@ const DropdownContainer = styled.div`
   width: 152px;
 `;
 
-const DropdownButton = styled.button<{ $open: boolean }>`
+const DropdownButton = styled.button<DropdownStateProps>`
   width: 152px;
   height: ${INPUT_HEIGHT};
   background: ${colors.White};
@@ -98,7 +114,7 @@ const DropdownButton = styled.button<{ $open: boolean }>`
   }
 `;
 
-const Arrow = styled.span<{ $open: boolean }>`
+const Arrow = styled.span<DropdownStateProps>`
   transform: ${({ $open }) => ($open ? 'rotate(180deg)' : 'none')};
   transition: transform 0.2s;
   display: flex;

@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { SearchIcon } from '@/assets/icons/common';
+import { FileSearchProps } from './FileSearch.types';
 import {
-  INPUT_WIDTH,
   INPUT_HEIGHT,
   INPUT_ICON_SIZE,
   INPUT_FONT_SIZE,
@@ -14,18 +14,12 @@ import {
   INPUT_BG_COLOR,
   INPUT_RADIUS,
   INPUT_PADDING,
-} from '@/components/common/filter-search/common/FilterSearch.constants';
+} from '@/constants/FilterSearch.constants';
 
-interface CategorySearchProps {
-  value: string;
-  onChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-}
-
-export const CategorySearch: React.FC<CategorySearchProps> = ({
+export const FileSearch: React.FC<FileSearchProps> = ({
   value,
   onChange,
-  placeholder = '카테고리 검색',
+  placeholder = '파일 검색',
 }) => (
   <SearchBox>
     <SearchIconWrapper>
@@ -38,7 +32,7 @@ export const CategorySearch: React.FC<CategorySearchProps> = ({
 const SearchBox = styled.div`
   display: flex;
   align-items: center;
-  width: ${INPUT_WIDTH};
+  width: 356px;
   height: ${INPUT_HEIGHT};
   border: 1px solid ${INPUT_BORDER_COLOR};
   border-radius: ${INPUT_RADIUS};
@@ -80,4 +74,4 @@ const StyledInput = styled.input`
   }
 `;
 
-export default CategorySearch;
+export default FileSearch;

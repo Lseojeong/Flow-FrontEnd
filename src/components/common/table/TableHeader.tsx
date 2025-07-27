@@ -1,16 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-
-interface Column {
-  label: string;
-  width?: string;
-  align?: 'left' | 'center' | 'right';
-}
-
-interface TableHeaderProps {
-  columns: Column[];
-}
+import { TableHeaderProps } from './Table.types';
 
 export const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
   return (
@@ -32,7 +23,6 @@ const StyledThead = styled.thead`
 
   th {
     padding: 16px 24px;
-    text-align: left;
     font-size: 14px;
     font-weight: ${fontWeight.Medium};
     white-space: nowrap;

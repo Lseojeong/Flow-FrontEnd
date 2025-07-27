@@ -1,9 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-
-interface TableLayoutProps {
-  children: React.ReactNode;
-}
+import { TableLayoutProps } from './Table.types';
 
 export const TableLayout: React.FC<TableLayoutProps> = ({ children }) => {
   return (
