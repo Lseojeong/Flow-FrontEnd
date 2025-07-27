@@ -6,7 +6,7 @@ import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
 export function SigninForm() {
-  const nicknameField = useFormField({
+  const nameField = useFormField({
     validations: [
       { validate: (v) => v.trim() !== '', message: '* 닉네임을 입력해주세요.' },
       {
@@ -16,7 +16,7 @@ export function SigninForm() {
     ],
   });
 
-  const idField = useFormField({
+  const adminIdField = useFormField({
     validations: [
       { validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' },
       {
@@ -26,7 +26,7 @@ export function SigninForm() {
     ],
   });
 
-  const pwField = useFormField({
+  const passwordField = useFormField({
     validations: [
       { validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' },
       { validate: (v) => v.length >= 8, message: '* 최소 8자 이상이어야 합니다.' },
@@ -37,39 +37,39 @@ export function SigninForm() {
     ],
   });
 
-  const pwCheckField = useFormField({
+  const passwordCheckField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' }],
   });
 
-  const handlePwCheckBlur = () => {
-    pwCheckField.onBlur();
+  const handlePasswordCheckBlur = () => {
+    passwordCheckField.onBlur();
   };
 
-  const getPwCheckErrorMessage = () => {
-    if (pwCheckField.value.trim() === '') {
-      return pwCheckField.errorMessage;
+  const getPasswordCheckErrorMessage = () => {
+    if (passwordCheckField.value.trim() === '') {
+      return passwordCheckField.errorMessage;
     }
-    if (pwCheckField.isBlurred && pwCheckField.value !== pwField.value) {
+    if (passwordCheckField.isBlurred && passwordCheckField.value !== passwordField.value) {
       return '* 비밀번호가 일치하지 않습니다.';
     }
     return '';
   };
 
   const isDisabled =
-    nicknameField.value.trim() === '' ||
-    idField.value.trim() === '' ||
-    pwField.value.trim() === '' ||
-    pwCheckField.value.trim() === '' ||
-    nicknameField.errorMessage !== '' ||
-    idField.errorMessage !== '' ||
-    pwField.errorMessage !== '' ||
-    (pwCheckField.isBlurred &&
-      pwCheckField.value.trim() !== '' &&
-      pwCheckField.value !== pwField.value) ||
-    !nicknameField.isBlurred ||
-    !idField.isBlurred ||
-    !pwField.isBlurred ||
-    !pwCheckField.isBlurred;
+    nameField.value.trim() === '' ||
+    adminIdField.value.trim() === '' ||
+    passwordField.value.trim() === '' ||
+    passwordCheckField.value.trim() === '' ||
+    nameField.errorMessage !== '' ||
+    adminIdField.errorMessage !== '' ||
+    passwordField.errorMessage !== '' ||
+    (passwordCheckField.isBlurred &&
+      passwordCheckField.value.trim() !== '' &&
+      passwordCheckField.value !== passwordField.value) ||
+    !nameField.isBlurred ||
+    !adminIdField.isBlurred ||
+    !passwordField.isBlurred ||
+    !passwordCheckField.isBlurred;
 
   return (
     <Card>
@@ -80,10 +80,10 @@ export function SigninForm() {
           id="login-nickname"
           label="닉네임"
           placeholder="닉네임을 입력해주세요.(최대 4글자/한글만 가능)"
-          value={nicknameField.value}
-          onChange={nicknameField.onChange}
-          onBlur={nicknameField.onBlur}
-          error={nicknameField.errorMessage}
+          value={nameField.value}
+          onChange={nameField.onChange}
+          onBlur={nameField.onBlur}
+          error={nameField.errorMessage}
         />
         <IdContainer>
           <IdInputWrapper>
@@ -92,15 +92,17 @@ export function SigninForm() {
               id="login-id"
               type="text"
               placeholder="아이디를 입력하세요.(영어&숫자만 가능/최대 12자)"
-              value={idField.value}
-              onChange={idField.onChange}
-              onBlur={idField.onBlur}
+              value={adminIdField.value}
+              onChange={adminIdField.onChange}
+              onBlur={adminIdField.onBlur}
               maxLength={12}
-              $isError={!!idField.errorMessage}
+              $isError={!!adminIdField.errorMessage}
             />
-            {!!idField.errorMessage && <IdErrorText>{idField.errorMessage}</IdErrorText>}
+            {!!adminIdField.errorMessage && <IdErrorText>{adminIdField.errorMessage}</IdErrorText>}
           </IdInputWrapper>
-          <DuplicateCheckButton disabled={!idField.isValid || idField.value.trim() === ''}>
+          <DuplicateCheckButton
+            disabled={!adminIdField.isValid || adminIdField.value.trim() === ''}
+          >
             중복 확인
           </DuplicateCheckButton>
         </IdContainer>
@@ -109,20 +111,20 @@ export function SigninForm() {
           type="password"
           label="비밀번호"
           placeholder="비밀번호를 입력하세요.(영어&숫자 포함 8자 이상/ 최대 32자)"
-          value={pwField.value}
-          onChange={pwField.onChange}
-          onBlur={pwField.onBlur}
-          error={pwField.errorMessage}
+          value={passwordField.value}
+          onChange={passwordField.onChange}
+          onBlur={passwordField.onBlur}
+          error={passwordField.errorMessage}
         />
         <FormInput
           id="login-pwcheck"
           type="password"
           label="비밀번호 확인"
           placeholder="비밀번호를 다시 한 번 입력해주세요."
-          value={pwCheckField.value}
-          onChange={pwCheckField.onChange}
-          onBlur={handlePwCheckBlur}
-          error={getPwCheckErrorMessage()}
+          value={passwordCheckField.value}
+          onChange={passwordCheckField.onChange}
+          onBlur={handlePasswordCheckBlur}
+          error={getPasswordCheckErrorMessage()}
         />
         <Button size="large" disabled={isDisabled}>
           완료
