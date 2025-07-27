@@ -7,11 +7,17 @@ import { colors, fontWeight } from '@/styles/index';
 
 const InputPlayground: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCsvFile, setSelectedCsvFile] = useState<File | null>(null);
+  const [selectedPdfFile, setSelectedPdfFile] = useState<File | null>(null);
 
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
-    console.log('선택된 파일:', file);
+  const handleCsvFileSelect = (file: File) => {
+    setSelectedCsvFile(file);
+    console.log('선택된 CSV 파일:', file);
+  };
+
+  const handlePdfFileSelect = (file: File) => {
+    setSelectedPdfFile(file);
+    console.log('선택된 PDF 파일:', file);
   };
 
   return (
@@ -46,23 +52,48 @@ const InputPlayground: React.FC = () => {
       </Section>
 
       <Section>
-        <SectionTitle>📁 FileUpload 테스트</SectionTitle>
+        <SectionTitle>📊 CSV FileUpload 테스트</SectionTitle>
         <TestCase>
-          <UploadInput onFileSelect={handleFileSelect} />
-          {selectedFile && (
+          <UploadInput fileType="csv" onFileSelect={handleCsvFileSelect} />
+          {selectedCsvFile && (
             <Info>
-              선택된 파일: {`"${selectedFile.name}"`} | 크기:{' '}
-              {(selectedFile.size / 1024).toFixed(2)}KB | 타입: {selectedFile.type || 'text/csv'}
+              선택된 CSV 파일: {`"${selectedCsvFile.name}"`} | 크기:{' '}
+              {(selectedCsvFile.size / 1024).toFixed(2)}KB | 타입:{' '}
+              {selectedCsvFile.type || 'text/csv'}
             </Info>
           )}
-          {!selectedFile && (
+          {!selectedCsvFile && (
             <Info>
               • CSV 파일만 업로드 가능
               <br />
               • 최대 20MB 제한
               <br />
-              • 에러 발생 시 우측 상단에 메시지 표시
-              <br />• 정상 파일 선택 시 파일명 표시
+              • 에러 발생 시 상단에 메시지 표시
+              <br />• 정상 파일 선택 시 파일명 표시 및 파란색 외곽선
+            </Info>
+          )}
+        </TestCase>
+      </Section>
+
+      <Section>
+        <SectionTitle>📄 PDF FileUpload 테스트</SectionTitle>
+        <TestCase>
+          <UploadInput fileType="pdf" onFileSelect={handlePdfFileSelect} />
+          {selectedPdfFile && (
+            <Info>
+              선택된 PDF 파일: {`"${selectedPdfFile.name}"`} | 크기:{' '}
+              {(selectedPdfFile.size / 1024).toFixed(2)}KB | 타입:{' '}
+              {selectedPdfFile.type || 'application/pdf'}
+            </Info>
+          )}
+          {!selectedPdfFile && (
+            <Info>
+              • PDF 파일만 업로드 가능
+              <br />
+              • 최대 20MB 제한
+              <br />
+              • 에러 발생 시 상단에 메시지 표시
+              <br />• 정상 파일 선택 시 파일명 표시 및 파란색 외곽선
             </Info>
           )}
         </TestCase>
@@ -74,9 +105,12 @@ const InputPlayground: React.FC = () => {
           <FormWrapper>
             <CategoryInput value={inputValue} onChange={setInputValue} />
             <CategoryDescription />
-            <UploadInput onFileSelect={handleFileSelect} />
+            <UploadInput fileType="csv" onFileSelect={handleCsvFileSelect} />
+            <UploadInput fileType="pdf" onFileSelect={handlePdfFileSelect} />
           </FormWrapper>
-          <Info>실제 폼에서 사용하는 예시: 카테고리명, 설명, 파일 업로드를 함께 입력</Info>
+          <Info>
+            실제 폼에서 사용하는 예시: 카테고리명, 설명, CSV 파일, PDF 파일 업로드를 함께 입력
+          </Info>
         </TestCase>
       </Section>
     </Container>

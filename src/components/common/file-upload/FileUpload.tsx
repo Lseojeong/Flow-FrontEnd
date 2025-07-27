@@ -2,52 +2,108 @@ import React, { useState, ChangeEvent } from 'react';
 import styled from 'styled-components';
 import { ErrorIcon } from '@/assets/icons/common/index';
 import { colors, fontWeight } from '@/styles/index';
-import { Props } from './FileUpload.types';
+import { UploadInputProps } from './FileUpload.types';
 
-export const UploadInput: React.FC<Props> = ({ onFileSelect }) => {
-  const [error, setError] = useState('');
-  const [selectedFileName, setSelectedFileName] = useState('');
+const FILE_SIZE_LIMIT = 20 * 1024 * 1024;
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+type FileType = 'csv' | 'pdf';
 
-    const isCSV = file.name.endsWith('.csv');
-    const isUnder20MB = file.size <= 20 * 1024 * 1024;
+const FILE_TYPE_CONFIG = {
+  csv: {
+    extension: '.csv',
+    accept: '.csv',
+    placeholder: '파일을 업로드(.csv 파일 / 최대 20MB)',
+    label: 'CSV',
+  },
+  pdf: {
+    extension: '.pdf',
+    accept: '.pdf',
+    placeholder: '파일을 업로드(.pdf 파일 / 최대 20MB)',
+    label: 'PDF',
+  },
+} as const;
 
-    if (!isCSV) {
-      setError('지원하지 않는 확장자입니다.');
-      setSelectedFileName('');
-      return;
-    }
-    if (!isUnder20MB) {
-      setError('20MB가 넘는 파일입니다.');
-      setSelectedFileName('');
-      return;
-    }
+const ERROR_MESSAGES = {
+  INVALID_EXTENSION: '지원하지 않는 확장자입니다.',
+  FILE_TOO_LARGE: '20MB가 넘는 파일입니다.',
+} as const;
 
-    setError('');
+const isValidFileExtension = (fileName: string, fileType: FileType): boolean => {
+  const config = FILE_TYPE_CONFIG[fileType];
+  return fileName.toLowerCase().endsWith(config.extension);
+};
+
+const isValidFileSize = (fileSize: number): boolean => {
+  return fileSize <= FILE_SIZE_LIMIT;
+};
+
+const validateFile = (file: File, fileType: FileType): string | null => {
+  if (!isValidFileExtension(file.name, fileType)) {
+    return ERROR_MESSAGES.INVALID_EXTENSION;
+  }
+
+  if (!isValidFileSize(file.size)) {
+    return ERROR_MESSAGES.FILE_TOO_LARGE;
+  }
+
+  return null;
+};
+
+export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType = 'csv' }) => {
+  const [error, setError] = useState<string>('');
+  const [selectedFileName, setSelectedFileName] = useState<string>('');
+
+  const resetFileSelection = (): void => {
+    setSelectedFileName('');
+  };
+
+  const handleFileSelection = (file: File): void => {
     setSelectedFileName(file.name);
     onFileSelect(file);
   };
 
+  const handleValidationError = (errorMessage: string): void => {
+    setError(errorMessage);
+    resetFileSelection();
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const validationError = validateFile(file, fileType);
+
+    if (validationError) {
+      handleValidationError(validationError);
+      return;
+    }
+
+    setError('');
+    handleFileSelection(file);
+  };
+
+  const currentConfig = FILE_TYPE_CONFIG[fileType];
+  const hasError = !!error;
+  const hasFile = !!selectedFileName;
+  const displayText = selectedFileName || currentConfig.placeholder;
+
   return (
     <Wrapper>
-      {error && (
+      {hasError && (
         <ErrorMessages>
-          {error.includes('확장자') && <div>지원하지 않는 확장자입니다.</div>}
-          {error.includes('20MB') && <div>20MB가 넘는 파일입니다.</div>}
+          {error.includes('확장자') && <div>{ERROR_MESSAGES.INVALID_EXTENSION}</div>}
+          {error.includes('20MB') && <div>{ERROR_MESSAGES.FILE_TOO_LARGE}</div>}
         </ErrorMessages>
       )}
-      <Label $hasError={!!error} $hasFile={!!selectedFileName}>
-        <HiddenInput type="file" accept=".csv" onChange={handleFileChange} />
-        <Text $hasFile={!!selectedFileName}>
-          {selectedFileName || '파일을 업로드(파일은 .csv만 가능 / 최대 20MB)'}
-        </Text>
-        {error && (
-          <ErrorIconWrapper>
+      <Label $hasError={hasError} $hasFile={hasFile}>
+        <HiddenInput type="file" accept={currentConfig.accept} onChange={handleFileChange} />
+        <Text $hasFile={hasFile}>{displayText}</Text>
+        {hasError && (
+          <ErrorWrapper>
+            <ErrorMessage>{error}</ErrorMessage>
             <ErrorIcon />
-          </ErrorIconWrapper>
+          </ErrorWrapper>
         )}
       </Label>
     </Wrapper>
@@ -82,6 +138,7 @@ const Label = styled.label<{ $hasError: boolean; $hasFile: boolean }>`
   padding: 0 12px;
   box-sizing: border-box;
   position: relative;
+
   &:hover {
     border-color: ${({ $hasError }) => ($hasError ? colors.MainRed : colors.Normal)};
     background-color: ${({ $hasError }) => ($hasError ? colors.GridLine : colors.Light)};
@@ -96,13 +153,24 @@ const Text = styled.span<{ $hasFile: boolean }>`
   font-size: 12px;
   font-weight: ${fontWeight.Regular};
   color: ${({ $hasFile }) => ($hasFile ? colors.Black : colors.BoxText)};
+  flex: 1;
+  text-align: center;
 `;
 
-const ErrorIconWrapper = styled.div`
-  position: absolute;
-  right: 12px;
+const ErrorWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
   svg {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
+    fill: ${colors.MainRed};
   }
+`;
+
+const ErrorMessage = styled.span`
+  font-size: 12px;
+  color: ${colors.MainRed};
+  white-space: nowrap;
 `;
