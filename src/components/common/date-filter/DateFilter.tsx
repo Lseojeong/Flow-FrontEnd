@@ -153,9 +153,16 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
+  // string을 Date 객체로 변환
+  const startDateObj = startDate ? new Date(startDate) : null;
+  const endDateObj = endDate ? new Date(endDate) : null;
+
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
-    onDateChange(start, end);
+    // Date 객체를 ISO string으로 변환하여 전달
+    const startString = start ? start.toISOString() : null;
+    const endString = end ? end.toISOString() : null;
+    onDateChange(startString, endString);
   };
 
   const handleInputClick = () => {
@@ -187,10 +194,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
       <DatePicker
         filterDate={filterDate}
         showPopperArrow={false}
-        selected={startDate}
+        selected={startDateObj}
         onChange={handleDateChange}
-        startDate={startDate}
-        endDate={endDate}
+        startDate={startDateObj}
+        endDate={endDateObj}
         selectsRange
         open={isOpen}
         disabled={disabled}
@@ -201,8 +208,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         dateFormat={DATE_FORMAT}
         dateFormatCalendar={DATE_FORMAT_CALENDAR}
         locale="ko"
-        selectsStart={!endDate}
-        selectsEnd={!!startDate && !endDate}
+        selectsStart={!endDateObj}
+        selectsEnd={!!startDateObj && !endDateObj}
         customInput={
           <CustomInput disabled={disabled} error={error} focused={isFocused} hasValue={hasValue} />
         }
@@ -211,8 +218,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         renderCustomHeader={CustomHeader}
         dayClassName={(date) => {
           const isSunday = date.getDay() === 0;
-          const isRangeStart = startDate && isSameDay(date, startDate);
-          const isRangeEnd = endDate && isSameDay(date, endDate);
+          const isRangeStart = startDateObj && isSameDay(date, startDateObj);
+          const isRangeEnd = endDateObj && isSameDay(date, endDateObj);
           const isToday = isSameDay(date, new Date());
 
           let className = '';

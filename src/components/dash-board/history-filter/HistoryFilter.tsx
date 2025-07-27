@@ -142,7 +142,6 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
   );
 };
 
-// ===== 스타일 컴포넌트 =====
 const FilterWrapper = styled.div`
   position: relative;
   display: inline-block;

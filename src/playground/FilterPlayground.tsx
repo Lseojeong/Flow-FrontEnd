@@ -9,12 +9,12 @@ import { colors, fontWeight } from '@/styles/index';
 
 const FilterPlayground: React.FC = () => {
   // DateFilter 상태
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
   // CategorySearch 상태
   const [searchValue, setSearchValue] = useState('');
   // DepartmentSelect 상태
-  const [department, setDepartment] = useState('전체');
+  const [department, setDepartment] = useState<string | null>(null);
   // FileSearch 상태
   const [fileSearch, setFileSearch] = useState('');
   // HistoryFilter 상태
@@ -24,7 +24,7 @@ const FilterPlayground: React.FC = () => {
     file: string[];
   }>({ menu: [], category: [], file: [] });
 
-  const handleDateChange = (start: Date | null, end: Date | null) => {
+  const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
   };
@@ -42,10 +42,11 @@ const FilterPlayground: React.FC = () => {
     console.log('History filter cancelled');
   };
 
-  const formatDate = (date: Date | null) =>
-    date
-      ? date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-      : '';
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  };
 
   return (
     <Container>
@@ -71,9 +72,9 @@ const FilterPlayground: React.FC = () => {
         <SectionTitle>DepartmentSelect</SectionTitle>
         <DepartmentSelect value={department} onChange={setDepartment} />
         <Info>
-          <span>선택된 부서: {department}</span>
+          <span>선택된 부서: {department || '전체'}</span>
         </Info>
-        <ResetButton onClick={() => setDepartment('전체')}>부서 초기화</ResetButton>
+        <ResetButton onClick={() => setDepartment(null)}>부서 초기화</ResetButton>
       </Section>
       <Section>
         <SectionTitle>FileSearch</SectionTitle>
