@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { SearchIcon } from '@/assets/icons/common';
-import { FileSearchProps } from './FileSearch.types';
+import { Props } from './FileSearch.types';
 import {
   INPUT_HEIGHT,
   INPUT_ICON_SIZE,
@@ -16,11 +16,7 @@ import {
   INPUT_PADDING,
 } from '@/constants/FilterSearch.constants';
 
-export const FileSearch: React.FC<FileSearchProps> = ({
-  value,
-  onChange,
-  placeholder = '파일 검색',
-}) => (
+export const FileSearch: React.FC<Props> = ({ value, onChange, placeholder = '파일 검색' }) => (
   <SearchBox>
     <SearchIconWrapper>
       <SearchIcon />

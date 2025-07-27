@@ -8,7 +8,7 @@ export interface MenuItemType {
   subMenuItems?: MenuItemType[];
 }
 
-export interface SideBarProps {
+export interface Props {
   logoSymbol: string;
   menuItems: MenuItemType[];
   activeMenuId?: string;

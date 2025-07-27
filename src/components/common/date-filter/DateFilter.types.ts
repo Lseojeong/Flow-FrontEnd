@@ -10,14 +10,14 @@ export interface DateFilterProps {
   error?: boolean;
 }
 
-export interface CustomNavigationProps {
+export interface NavigationProps {
   className?: string;
   onClick: () => void;
   type: 'previous' | 'next';
   disabled?: boolean;
 }
 
-export interface CustomInputProps {
+export interface InputProps {
   value?: string;
   onClick?: () => void;
   onChange?: (_e: React.ChangeEvent<HTMLInputElement>) => void;

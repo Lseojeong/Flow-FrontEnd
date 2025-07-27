@@ -1,6 +1,6 @@
 import React from 'react';
 
-export interface FileSearchProps {
+export interface Props {
   value: string;
   onChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
