@@ -61,6 +61,7 @@ export const CategoryInput: React.FC<Props> = ({
         onBlur={handleBlur}
         placeholder={PLACEHOLDER_TEXT}
         $hasError={hasError}
+        $hasValue={!!value.trim()}
       />
     </Container>
   );
@@ -90,14 +91,19 @@ const ErrorMessage = styled.span`
   color: ${colors.MainRed};
 `;
 
-const Input = styled.input<{ $hasError: boolean }>`
+const Input = styled.input<{ $hasError: boolean; $hasValue: boolean }>`
   width: 660px;
   height: 48px;
   padding: 0 12px;
   font-size: 12px;
   font-weight: ${fontWeight.Regular};
   border-radius: 4px;
-  border: 1px solid ${({ $hasError }) => ($hasError ? colors.MainRed : colors.BoxStroke)};
+  border: 1px solid
+    ${({ $hasError, $hasValue }) => {
+      if ($hasError) return colors.MainRed;
+      if ($hasValue) return colors.Normal;
+      return colors.BoxStroke;
+    }};
   background-color: ${colors.White};
   color: ${colors.Black};
   line-height: 48px;
@@ -106,7 +112,10 @@ const Input = styled.input<{ $hasError: boolean }>`
   &::placeholder {
     color: ${colors.BoxText};
   }
-
+  &:hover {
+    border-color: ${({ $hasError }) => ($hasError ? colors.MainRed : colors.Normal)};
+    background-color: ${({ $hasError }) => ($hasError ? colors.GridLine : colors.Light)};
+  }
   &:focus {
     outline: none;
     border-color: ${({ $hasError }) => ($hasError ? colors.MainRed : colors.Normal)};
