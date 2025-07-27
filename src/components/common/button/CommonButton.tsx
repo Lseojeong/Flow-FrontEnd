@@ -24,7 +24,7 @@ const BUTTON_VARIANTS = {
     hoverBackground: colors.Normal_active,
   },
   dark: {
-    background: colors.Dark,
+    background: colors.Dark_active,
     hoverBackground: colors.Black,
   },
 } as const;

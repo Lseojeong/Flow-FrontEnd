@@ -25,15 +25,32 @@ const ButtonPlayground: React.FC = () => {
       </PlaygroundHeader>
 
       <Section>
-        <SectionTitle>Variant 테스트</SectionTitle>
-        <ButtonGroup>
-          <CommonButton variant="primary" onClick={handleClick}>
-            Primary 버튼
-          </CommonButton>
-          <CommonButton variant="dark" onClick={handleClick}>
-            Dark 버튼
-          </CommonButton>
-        </ButtonGroup>
+        <SectionTitle>Variant 테스트 (폼 포함)</SectionTitle>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            console.log('폼 제출됨!');
+          }}
+        >
+          <FormContainer>
+            <FormField>
+              <label>이메일:</label>
+              <input type="email" name="email" placeholder="이메일을 입력하세요" />
+            </FormField>
+            <FormField>
+              <label>비밀번호:</label>
+              <input type="password" name="password" placeholder="비밀번호를 입력하세요" />
+            </FormField>
+            <ButtonGroup>
+              <CommonButton variant="primary" type="submit">
+                확인
+              </CommonButton>
+              <CommonButton variant="dark" type="reset">
+                취소
+              </CommonButton>
+            </ButtonGroup>
+          </FormContainer>
+        </form>
       </Section>
 
       <Section>
@@ -61,15 +78,6 @@ const ButtonPlayground: React.FC = () => {
       </Section>
 
       <Section>
-        <SectionTitle>Full Width 테스트</SectionTitle>
-        <FullWidthContainer>
-          <CommonButton fullWidth onClick={handleClick}>
-            Full Width 버튼
-          </CommonButton>
-        </FullWidthContainer>
-      </Section>
-
-      <Section>
         <SectionTitle>Icon 테스트</SectionTitle>
         <ButtonGroup>
           <CommonButton icon={<span>📁</span>} onClick={handleClick}>
@@ -85,7 +93,7 @@ const ButtonPlayground: React.FC = () => {
         <SectionTitle>Loading 상태 테스트</SectionTitle>
         <ButtonGroup>
           <CommonButton disabled={isLoading} onClick={handleAsyncClick}>
-            {isLoading ? '로딩 중...' : '비동기 작업'}
+            {isLoading ? '진행 중...' : '비동기 작업'}
           </CommonButton>
         </ButtonGroup>
       </Section>
@@ -146,8 +154,38 @@ const ButtonGroup = styled.div`
   align-items: center;
 `;
 
-const FullWidthContainer = styled.div`
-  width: 100%;
+const FormContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid ${colors.BoxStroke};
+  border-radius: 8px;
+  background: ${colors.White};
+`;
+
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: ${colors.Black};
+  }
+
+  input {
+    padding: 8px 12px;
+    border: 1px solid ${colors.BoxStroke};
+    border-radius: 4px;
+    font-size: 14px;
+
+    &:focus {
+      outline: none;
+      border-color: ${colors.Normal};
+    }
+  }
 `;
 
 export default ButtonPlayground;
