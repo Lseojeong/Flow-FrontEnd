@@ -101,7 +101,6 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
         <Text $hasFile={hasFile}>{displayText}</Text>
         {hasError && (
           <ErrorWrapper>
-            <ErrorMessage>{error}</ErrorMessage>
             <ErrorIcon />
           </ErrorWrapper>
         )}
@@ -163,14 +162,7 @@ const ErrorWrapper = styled.div`
   gap: 8px;
 
   svg {
-    width: 16px;
-    height: 16px;
-    fill: ${colors.MainRed};
+    width: 20px;
+    height: 20px;
   }
-`;
-
-const ErrorMessage = styled.span`
-  font-size: 12px;
-  color: ${colors.MainRed};
-  white-space: nowrap;
 `;
