@@ -15,9 +15,9 @@ import {
   INPUT_RADIUS,
   INPUT_PADDING,
 } from '@/constants/FilterSearch.constants';
-import { CategorySearchProps } from './CategorySearch.types';
+import { Props } from './CategorySearch.types';
 
-export const CategorySearch: React.FC<CategorySearchProps> = ({
+export const CategorySearch: React.FC<Props> = ({
   value,
   onChange,
   placeholder = '카테고리 검색',

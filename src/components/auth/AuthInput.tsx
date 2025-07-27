@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
-import { FormInputProps } from './auth.types';
+import { Props } from './Auth.types';
 
 const DEFAULT_WIDTH = '368px';
 
@@ -17,7 +17,7 @@ export function FormInput({
   hasMarginBottom = true,
   maxLength,
   width = DEFAULT_WIDTH,
-}: FormInputProps) {
+}: Props) {
   const finalMaxLength = useMemo(() => {
     return maxLength ?? getDefaultMaxLength(id);
   }, [id, maxLength]);

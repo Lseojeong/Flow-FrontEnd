@@ -1,11 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { TableLayout } from '@/components/common/table/TableLayout';
-import { TableHeader } from '@/components/common/table/TableHeader';
-import { TableRow } from '@/components/common/table/TableRow';
-import { ScrollableCell } from '@/components/common/table/ScrollableCell';
-import { StatusBadge, StatusSummary } from '@/components/common/status';
-import { DepartmentTagList } from '@/components/common/department';
+import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
+import { StatusBadge } from '@/components/common/status/StatusBadge';
+import { StatusSummary } from '@/components/common/status/StatusSummary';
+import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
+import { Department } from '@/components/common/department/Department.types';
 import { colors } from '@/styles/index';
 
 const mockData = [
@@ -132,7 +131,9 @@ const TablePlayground: React.FC = () => {
           <div>
             <h4>부서 태그 목록:</h4>
             <DepartmentTagList
-              onDepartmentClick={(department) => console.log('선택된 부서:', department)}
+              onDepartmentClick={(department: Department) =>
+                console.log('선택된 부서:', department)
+              }
             />
           </div>
         </SubSection>

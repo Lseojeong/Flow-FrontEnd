@@ -1,17 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
+import { Props } from './CheckBox.types';
 
-interface CheckBoxProps {
-  id: string;
-  label: string;
-  checked: boolean;
-  onChange: (_checked: boolean) => void;
-  disabled?: boolean;
-  className?: string;
-}
-
-export const CheckBox: React.FC<CheckBoxProps> = ({
+export const CheckBox: React.FC<Props> = ({
   id,
   label,
   checked,

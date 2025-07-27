@@ -1,20 +1,15 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 import { colors, fontWeight } from '@/styles';
+import { Loading } from '@/components/common/loading/Loading';
+import { Props, ButtonVariant, ButtonSize } from './Button.types';
 
-interface CommonButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
-  icon?: React.ReactNode;
-  variant?: 'primary' | 'dark';
-  size?: 'small' | 'medium';
-  disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
-}
-
-type ButtonVariant = 'primary' | 'dark';
-type ButtonSize = 'small' | 'medium';
-
+/**
+ * Note:
+ * 확인, 취소는 medium
+ * auth 페이지는 large
+ * 나머지는 medium으로 통일
+ */
 const DOUBLE_CLICK_DELAY = 300;
 
 const BUTTON_VARIANTS = {
@@ -37,7 +32,12 @@ const BUTTON_SIZES = {
   medium: {
     height: '32px',
     fontSize: '14px',
-    padding: '0 12px',
+    padding: '0 18px',
+  },
+  large: {
+    height: '52px',
+    padding: '0 168px',
+    fontSize: '15px',
   },
 } as const;
 
@@ -71,35 +71,70 @@ const getSizeStyles = (size: ButtonSize) => {
   `;
 };
 
-export const CommonButton: React.FC<CommonButtonProps> = ({
-  children,
-  onClick,
-  icon,
-  variant = 'primary',
-  size = 'medium',
-  disabled = false,
-  type = 'button',
-}) => {
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled) return;
+export const Button = forwardRef<HTMLButtonElement, Props>(
+  (
+    {
+      children,
+      onClick,
+      icon,
+      variant = 'primary',
+      size = 'medium',
+      disabled = false,
+      isLoading = false,
+      type = 'button',
+    },
+    ref
+  ) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (disabled || isLoading) return;
 
-    preventDoubleClick(e.currentTarget);
-    onClick?.();
-  };
+      preventDoubleClick(e.currentTarget);
+      onClick?.();
+    };
 
-  return (
-    <StyledButton
-      onClick={handleClick}
-      $variant={variant}
-      $size={size}
-      disabled={disabled}
-      type={type}
-    >
-      {icon && <IconWrapper>{icon}</IconWrapper>}
-      {children}
-    </StyledButton>
-  );
-};
+    const isDisabled = disabled || isLoading;
+
+    return (
+      <StyledButton
+        ref={ref}
+        onClick={handleClick}
+        $variant={variant}
+        $size={size}
+        disabled={isDisabled}
+        type={type}
+      >
+        <ButtonContent $isLoading={isLoading}>
+          {icon && <IconWrapper>{icon}</IconWrapper>}
+          {children}
+        </ButtonContent>
+
+        {isLoading && (
+          <LoadingOverlay>
+            <Loading size={16} color="white" />
+          </LoadingOverlay>
+        )}
+      </StyledButton>
+    );
+  }
+);
+
+Button.displayName = 'Button';
+
+const ButtonContent = styled.div<{ $isLoading: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: ${({ $isLoading }) => ($isLoading ? 0 : 1)};
+  transition: opacity 0.2s ease;
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
 
 const StyledButton = styled.button<{
   $variant: ButtonVariant;
@@ -114,6 +149,7 @@ const StyledButton = styled.button<{
   gap: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative; /* LoadingOverlay를 위해 필요 */
 
   ${({ $variant }) => getVariantStyles($variant)}
   ${({ $size }) => getSizeStyles($size)}
@@ -121,7 +157,6 @@ const StyledButton = styled.button<{
   &:disabled {
     background-color: ${colors.Disabled};
     cursor: not-allowed;
-    opacity: 0.6;
   }
 `;
 

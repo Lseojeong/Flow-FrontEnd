@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
-import { MenuItemType, SideBarProps } from './SideBar.types';
+import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
 
 /**
@@ -14,7 +14,7 @@ import { ArrowIcon } from '@/assets/icons/common/index';
 />;
 */
 
-const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: SideBarProps) => {
+const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   const handleClick = (item: MenuItemType) => {

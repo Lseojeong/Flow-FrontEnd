@@ -5,7 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { colors, fontWeight } from '@/styles/index';
 import { CalenderIcon, ArrowIcon } from '@/assets/icons/common/index';
 import { ko } from 'date-fns/locale';
-import { DateFilterProps, CustomNavigationProps, CustomInputProps } from './DateFilter.types';
+import { DateFilterProps, NavigationProps, InputProps } from './DateFilter.types';
 import {
   DATE_FORMAT,
   DATE_FORMAT_CALENDAR,
@@ -27,12 +27,7 @@ import {
 
 registerLocale('ko', ko);
 
-const CustomNavigation: React.FC<CustomNavigationProps> = ({
-  className,
-  onClick,
-  type,
-  disabled,
-}) => {
+const CustomNavigation: React.FC<NavigationProps> = ({ className, onClick, type, disabled }) => {
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
     const target = e.currentTarget;
     target.style.background = colors.Light;
@@ -236,7 +231,7 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   );
 };
 
-const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(
+const CustomInput = React.forwardRef<HTMLInputElement, InputProps>(
   ({ value, onClick, onChange, placeholder, disabled, error, focused, hasValue }, ref) => {
     const handleClearClick = (e: React.MouseEvent) => {
       e.stopPropagation();

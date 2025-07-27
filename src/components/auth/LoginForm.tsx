@@ -1,24 +1,24 @@
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo';
-import { AuthButton } from '@/components/common/button/AuthButton';
+import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
 export function LoginForm() {
-  const idField = useFormField({
+  const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
   });
 
-  const pwField = useFormField({
+  const passwordField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' }],
   });
 
   const isDisabled =
-    idField.value.trim() === '' ||
-    pwField.value.trim() === '' ||
-    idField.errorMessage !== '' ||
-    pwField.errorMessage !== '';
+    adminIdField.value.trim() === '' ||
+    passwordField.value.trim() === '' ||
+    adminIdField.errorMessage !== '' ||
+    passwordField.errorMessage !== '';
 
   return (
     <Card>
@@ -29,25 +29,27 @@ export function LoginForm() {
           id="login-id"
           label="아이디"
           placeholder="아이디를 입력하세요."
-          value={idField.value}
-          onChange={idField.onChange}
-          onBlur={idField.onBlur}
-          error={idField.errorMessage}
+          value={adminIdField.value}
+          onChange={adminIdField.onChange}
+          onBlur={adminIdField.onBlur}
+          error={adminIdField.errorMessage}
         />
         <FormInput
           id="login-pw"
           type="password"
           label="비밀번호"
           placeholder="비밀번호를 입력하세요."
-          value={pwField.value}
-          onChange={pwField.onChange}
-          onBlur={pwField.onBlur}
-          error={pwField.errorMessage}
+          value={passwordField.value}
+          onChange={passwordField.onChange}
+          onBlur={passwordField.onBlur}
+          error={passwordField.errorMessage}
           hasMarginBottom={false}
         />
         <Spacer />
         <LoginErrorMessage />
-        <AuthButton disabled={isDisabled}>로그인</AuthButton>
+        <Button size="large" disabled={isDisabled}>
+          로그인
+        </Button>
       </Form>
     </Card>
   );

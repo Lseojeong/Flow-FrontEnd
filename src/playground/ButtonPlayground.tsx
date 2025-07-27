@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { CommonButton } from '@/components/common/button/CommonButton';
+import { Button } from '@/components/common/button/Button';
 import { colors } from '@/styles';
 
 const ButtonPlayground: React.FC = () => {
@@ -42,12 +42,12 @@ const ButtonPlayground: React.FC = () => {
               <input type="password" name="password" placeholder="비밀번호를 입력하세요" />
             </FormField>
             <ButtonGroup>
-              <CommonButton variant="primary" type="submit">
+              <Button variant="primary" type="submit">
                 확인
-              </CommonButton>
-              <CommonButton variant="dark" type="reset">
+              </Button>
+              <Button variant="dark" type="reset">
                 취소
-              </CommonButton>
+              </Button>
             </ButtonGroup>
           </FormContainer>
         </form>
@@ -56,57 +56,60 @@ const ButtonPlayground: React.FC = () => {
       <Section>
         <SectionTitle>Size 테스트</SectionTitle>
         <ButtonGroup>
-          <CommonButton size="small" onClick={handleClick}>
+          <Button size="small" onClick={handleClick}>
             Small 버튼
-          </CommonButton>
-          <CommonButton size="medium" onClick={handleClick}>
+          </Button>
+          <Button size="medium" onClick={handleClick}>
             Medium 버튼
-          </CommonButton>
+          </Button>
+          <Button size="large" onClick={handleClick}>
+            Large 버튼
+          </Button>
         </ButtonGroup>
       </Section>
 
       <Section>
         <SectionTitle>Disabled 상태 테스트</SectionTitle>
         <ButtonGroup>
-          <CommonButton disabled onClick={handleClick}>
+          <Button disabled onClick={handleClick}>
             Disabled 버튼
-          </CommonButton>
-          <CommonButton variant="dark" disabled onClick={handleClick}>
+          </Button>
+          <Button variant="dark" disabled onClick={handleClick}>
             Disabled Dark 버튼
-          </CommonButton>
+          </Button>
         </ButtonGroup>
       </Section>
 
       <Section>
         <SectionTitle>Icon 테스트</SectionTitle>
         <ButtonGroup>
-          <CommonButton icon={<span>📁</span>} onClick={handleClick}>
+          <Button icon={<span>📁</span>} onClick={handleClick}>
             아이콘 버튼
-          </CommonButton>
-          <CommonButton variant="dark" icon={<span>⚙️</span>} onClick={handleClick}>
+          </Button>
+          <Button variant="dark" icon={<span>⚙️</span>} onClick={handleClick}>
             설정 버튼
-          </CommonButton>
+          </Button>
         </ButtonGroup>
       </Section>
 
       <Section>
         <SectionTitle>Loading 상태 테스트</SectionTitle>
         <ButtonGroup>
-          <CommonButton disabled={isLoading} onClick={handleAsyncClick}>
-            {isLoading ? '진행 중...' : '비동기 작업'}
-          </CommonButton>
+          <Button isLoading={isLoading} onClick={handleAsyncClick}>
+            비동기 작업
+          </Button>
         </ButtonGroup>
       </Section>
 
       <Section>
         <SectionTitle>모든 조합 테스트</SectionTitle>
         <ButtonGroup>
-          <CommonButton variant="primary" size="small" icon={<span>➕</span>} onClick={handleClick}>
+          <Button variant="primary" size="small" icon={<span>➕</span>} onClick={handleClick}>
             Primary Small
-          </CommonButton>
-          <CommonButton variant="dark" size="medium" icon={<span>🔍</span>} onClick={handleClick}>
+          </Button>
+          <Button variant="dark" size="medium" icon={<span>🔍</span>} onClick={handleClick}>
             Dark Medium
-          </CommonButton>
+          </Button>
         </ButtonGroup>
       </Section>
     </PlaygroundContainer>

@@ -7,7 +7,7 @@ export interface StatusItemData {
   count: number;
 }
 
-export interface StatusSummaryProps {
+export interface Props {
   items: StatusItemData[];
 }
 
