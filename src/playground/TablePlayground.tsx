@@ -4,7 +4,8 @@ import { TableLayout } from '@/components/common/table/TableLayout';
 import { TableHeader } from '@/components/common/table/TableHeader';
 import { TableRow } from '@/components/common/table/TableRow';
 import { ScrollableCell } from '@/components/common/table/ScrollableCell';
-import { StatusBadge } from '@/components/common/status/StatusBadge';
+import { StatusBadge, StatusSummary } from '@/components/common/status';
+import { DepartmentTagList } from '@/components/common/department';
 import { colors } from '@/styles/index';
 
 const mockData = [
@@ -41,6 +42,12 @@ const mockData = [
     departments: 'UX팀, 마케팅팀',
     lastModified: '2025.07.02',
   },
+];
+
+const statusSummaryData = [
+  { type: 'Completed' as const, count: 25 },
+  { type: 'Processing' as const, count: 8 },
+  { type: 'Fail' as const, count: 3 },
 ];
 
 const columns = [
@@ -102,6 +109,34 @@ const TablePlayground: React.FC = () => {
           </tbody>
         </TableLayout>
       </Section>
+
+      <Section>
+        <SectionTitle>상태 컴포넌트 테스트</SectionTitle>
+
+        <SubSection>
+          <SubSectionTitle>StatusBadge 컴포넌트</SubSectionTitle>
+          <BadgeContainer>
+            <StatusBadge status="Completed">Completed</StatusBadge>
+            <StatusBadge status="Processing">Processing</StatusBadge>
+            <StatusBadge status="Fail">Fail</StatusBadge>
+          </BadgeContainer>
+        </SubSection>
+
+        <SubSection>
+          <SubSectionTitle>StatusSummary 컴포넌트</SubSectionTitle>
+          <StatusSummary items={statusSummaryData} />
+        </SubSection>
+
+        <SubSection>
+          <SubSectionTitle>DepartmentTagList 컴포넌트</SubSectionTitle>
+          <div>
+            <h4>부서 태그 목록:</h4>
+            <DepartmentTagList
+              onDepartmentClick={(department) => console.log('선택된 부서:', department)}
+            />
+          </div>
+        </SubSection>
+      </Section>
     </PlaygroundContainer>
   );
 };
@@ -135,6 +170,23 @@ const SectionTitle = styled.h2`
   margin-bottom: 16px;
   font-size: 18px;
   font-weight: 600;
+`;
+
+const SubSection = styled.div`
+  margin-bottom: 24px;
+`;
+
+const SubSectionTitle = styled.h3`
+  color: ${colors.Black};
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 500;
+`;
+
+const BadgeContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
 `;
 
 export default TablePlayground;

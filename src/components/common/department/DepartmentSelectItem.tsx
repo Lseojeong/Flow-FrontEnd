@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { INPUT_FONT_SIZE } from '@/constants/FilterSearch.constants';
-import { DepartmentSelectItemProps, DropdownItemStateProps } from './DepartmentSelect.types';
+import { DepartmentSelectItemProps, DropdownItemStateProps } from './Department.types';
 
 const DepartmentSelectItem: React.FC<DepartmentSelectItemProps> = ({
   option,
@@ -10,7 +10,7 @@ const DepartmentSelectItem: React.FC<DepartmentSelectItemProps> = ({
   onClick,
 }) => (
   <DropdownItem $selected={selected} onClick={onClick}>
-    {option}
+    {option.departmentName}
   </DropdownItem>
 );
 

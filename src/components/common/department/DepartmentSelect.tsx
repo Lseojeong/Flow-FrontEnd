@@ -6,15 +6,25 @@ import {
   INPUT_FONT_SIZE,
   INPUT_FONT_WEIGHT,
 } from '@/constants/FilterSearch.constants';
-import DepartmentSelectItem from './DepartmentSelectItem';
 import { ArrowIcon } from '@/assets/icons/common/index';
-import { DepartmentSelectProps, DropdownStateProps } from './DepartmentSelect.types';
+import { DepartmentSelectProps, DropdownStateProps, Department } from './Department.types';
+import DepartmentSelectItem from './DepartmentSelectItem';
 
-const Department_OPTIONS = ['전체', '기술 전략실', '재무실'];
+//더미 데이터
+const MOCK_DEPARTMENTS: Department[] = [
+  {
+    departmentId: 'a1b2c3d4-e5f6-7890-abcd-1234567890ab',
+    departmentName: '고객지원팀',
+  },
+  {
+    departmentId: 'b2c3d4e5-f6a1-8901-bcda-2345678901bc',
+    departmentName: '기술지원팀',
+  },
+];
 
 const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
-  options = Department_OPTIONS,
-  value = '전체',
+  options = MOCK_DEPARTMENTS,
+  value,
   onChange,
   placeholder = '부서를 선택하세요',
 }) => {
@@ -31,10 +41,12 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
+  const selectedDepartment = options.find((dept) => dept.departmentId === value);
+
   return (
     <DropdownContainer ref={ref}>
       <DropdownButton onClick={() => setOpen((prev) => !prev)} $open={open}>
-        {value || <span className="placeholder">{placeholder}</span>}
+        {selectedDepartment?.departmentName || <span className="placeholder">{placeholder}</span>}
         <Arrow $open={open}>
           <ArrowIcon />
         </Arrow>
@@ -43,11 +55,11 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
         <DropdownList>
           {options.map((option) => (
             <DepartmentSelectItem
-              key={option}
+              key={option.departmentId}
               option={option}
-              selected={option === value}
+              selected={option.departmentId === value}
               onClick={() => {
-                onChange(option);
+                onChange(option.departmentId);
                 setOpen(false);
               }}
             />
