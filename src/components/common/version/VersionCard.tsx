@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { VersionSelectorProps, VersionType } from './VersionCard.types';
 
+//TODO: 모달창에서 등록 버튼을 눌렀을 때 *필수 에러처리 추가해야함
 export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) => {
   const [selectedVersionType, setSelectedVersionType] = useState<VersionType | null>(null);
 
