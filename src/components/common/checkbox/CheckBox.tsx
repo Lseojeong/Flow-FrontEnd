@@ -72,6 +72,15 @@ const CustomBox = styled.span<{ $checked: boolean; $disabled: boolean }>`
     opacity: 0.4;
     cursor: not-allowed;
   `}
+
+  ${({ $disabled, $checked }) =>
+    !$disabled &&
+    `
+    label:hover & {
+      border-color: ${colors.Normal};
+      background-color: ${$checked ? 'rgba(15, 66, 157, 0.9)' : 'colors.Normal'};
+    }
+  `}
 `;
 
 const Text = styled.span<{ $disabled: boolean }>`
