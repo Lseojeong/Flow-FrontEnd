@@ -4,6 +4,7 @@ import { SideBarPlayground } from '@/playground/SideBarPlayground';
 import CategorySearchPlayground from '@/playground/FilterPlayground';
 import TablePlayground from '@/playground/TablePlayground';
 import ButtonPlayground from '@/playground/ButtonPlayground';
+import { VersionPlayground } from '@/playground/VersionPlayground';
 import InputPlayground from '@/playground/InputPlayground';
 
 const PlaygroundRoutes: React.FC = () => (
@@ -12,6 +13,7 @@ const PlaygroundRoutes: React.FC = () => (
     <Route path="/playground/filter" element={<CategorySearchPlayground />} />
     <Route path="/playground/table" element={<TablePlayground />} />
     <Route path="/playground/button" element={<ButtonPlayground />} />
+    <Route path="/playground/version" element={<VersionPlayground />} />
     <Route path="/playground/input" element={<InputPlayground />} />
   </Routes>
 );
