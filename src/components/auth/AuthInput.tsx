@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useMemo } from 'react';
+=======
+import { useMemo, useState } from 'react';
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { Props } from './Auth.types';
@@ -22,6 +26,11 @@ export function FormInput({
     return maxLength ?? getDefaultMaxLength(id);
   }, [id, maxLength]);
 
+<<<<<<< HEAD
+=======
+  const [isFocused, setIsFocused] = useState(false);
+
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
   return (
     <>
       <InputLabelRow $width={width}>
@@ -32,10 +41,21 @@ export function FormInput({
         <StyledInput
           id={id}
           type={type}
+<<<<<<< HEAD
           placeholder={placeholder}
           value={value}
           onChange={onChange}
           onBlur={onBlur}
+=======
+          placeholder={isFocused ? '' : placeholder}
+          value={value}
+          onChange={onChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={(e) => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
           $isError={!!error}
           maxLength={finalMaxLength}
         />
@@ -44,7 +64,11 @@ export function FormInput({
   );
 }
 
+<<<<<<< HEAD
 //maxLength 기본값 설정
+=======
+// maxLength 기본값 설정
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 function getDefaultMaxLength(id: string): number | undefined {
   const maxLengths: Record<string, number> = {
     'login-nickname': 4,

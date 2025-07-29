@@ -4,6 +4,10 @@ import { textV1Logo } from '@/assets/logo/index';
 import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
+<<<<<<< HEAD
+=======
+import { useState } from 'react'; // 이미 되어 있다면 생략
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 
 export function SigninForm() {
   const nameField = useFormField({
@@ -26,6 +30,11 @@ export function SigninForm() {
     ],
   });
 
+<<<<<<< HEAD
+=======
+  const [isIdFocused, setIsIdFocused] = useState(false);
+
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
   const passwordField = useFormField({
     validations: [
       { validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' },
@@ -91,10 +100,21 @@ export function SigninForm() {
             <IdInput
               id="login-id"
               type="text"
+<<<<<<< HEAD
               placeholder="아이디를 입력하세요.(영어&숫자만 가능/최대 12자)"
               value={adminIdField.value}
               onChange={adminIdField.onChange}
               onBlur={adminIdField.onBlur}
+=======
+              placeholder={isIdFocused ? '' : '아이디를 입력하세요.(영어&숫자만 가능/최대 12자)'}
+              value={adminIdField.value}
+              onChange={adminIdField.onChange}
+              onFocus={() => setIsIdFocused(true)}
+              onBlur={() => {
+                setIsIdFocused(false);
+                adminIdField.onBlur(); // 기존 onBlur 호출 유지
+              }}
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
               maxLength={12}
               $isError={!!adminIdField.errorMessage}
             />

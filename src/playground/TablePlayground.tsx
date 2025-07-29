@@ -190,4 +190,8 @@ const BadgeContainer = styled.div`
   align-items: center;
 `;
 
+<<<<<<< HEAD
 export default TablePlayground;
+=======
+export default TablePlayground;
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)

@@ -3,6 +3,10 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
+<<<<<<< HEAD
+=======
+import { useNavigate } from 'react-router-dom'; 
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 
 /**
  * @example
@@ -16,12 +20,22 @@ import { ArrowIcon } from '@/assets/icons/common/index';
 
 const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+<<<<<<< HEAD
+=======
+  const navigate = useNavigate(); 
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
       setOpenDropdownId(openDropdownId === item.id ? null : item.id);
     } else {
       onMenuClick?.(item.id);
+<<<<<<< HEAD
+=======
+      if (item.path) {
+        navigate(item.path);
+      }
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
     }
   };
 
@@ -63,7 +77,16 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                       <SubMenuItem
                         key={subItem.id}
                         $active={activeMenuId === subItem.id}
+<<<<<<< HEAD
                         onClick={() => onMenuClick?.(subItem.id)}
+=======
+                        onClick={() => {
+                          onMenuClick?.(subItem.id);
+                          if (subItem.path) {
+                            navigate(subItem.path); 
+                          }
+                        }}
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
                       >
                         {subItem.label}
                       </SubMenuItem>
@@ -81,6 +104,10 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 
 export default SideBar;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 const SideBarContainer = styled.aside`
   position: fixed;
   top: 0;
@@ -109,6 +136,17 @@ const LogoImg = styled.img`
   margin-top: 40px;
 `;
 
+<<<<<<< HEAD
+=======
+const MenuWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 40px;
+  margin-bottom: 40px;
+`;
+
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 const MenuList = styled.ul`
   list-style: none;
   width: 100%;
@@ -121,10 +159,16 @@ const MenuItem = styled.li<{ $active?: boolean }>`
   gap: 8px;
   padding: 12px 0 24px 32px;
   color: ${({ $active }) => ($active ? colors.Normal : colors.Dark_active)};
+<<<<<<< HEAD
   font-size: 20px;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;
   font-size: 18px;
+=======
+  font-size: 18px;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
   transition: color 0.2s;
   outline: none;
 
@@ -139,6 +183,7 @@ const MenuItem = styled.li<{ $active?: boolean }>`
   }
 `;
 
+<<<<<<< HEAD
 const MenuWrapper = styled.div`
   display: flex;
   align-items: center;
@@ -147,6 +192,8 @@ const MenuWrapper = styled.div`
   margin-bottom: 40px;
 `;
 
+=======
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 const SubMenuList = styled.ul`
   list-style: none;
   padding-left: 35px;
@@ -170,3 +217,7 @@ const SubMenuItem = styled.li<{ $active?: boolean }>`
     color: ${colors.Normal};
   }
 `;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
