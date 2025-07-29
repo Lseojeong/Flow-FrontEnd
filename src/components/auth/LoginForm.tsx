@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import React, { useState } from 'react';
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo';
@@ -9,15 +6,10 @@ import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
-<<<<<<< HEAD
-export function LoginForm() {
-=======
-import { useNavigate } from 'react-router-dom'; // ✅ 추가
+import { useNavigate } from 'react-router-dom'; 
 
 export function LoginForm() {
-  const navigate = useNavigate(); // ✅ 추가
-
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
+  const navigate = useNavigate(); 
   const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
   });
@@ -26,19 +18,14 @@ export function LoginForm() {
     validations: [{ validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' }],
   });
 
-<<<<<<< HEAD
-=======
   const [isError, setIsError] = useState(false);
 
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
   const isDisabled =
     adminIdField.value.trim() === '' ||
     passwordField.value.trim() === '' ||
     adminIdField.errorMessage !== '' ||
     passwordField.errorMessage !== '';
 
-<<<<<<< HEAD
-=======
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -53,16 +40,11 @@ export function LoginForm() {
     }
   };
 
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
   return (
     <Card>
       <Title>모든 질문의 시작과 끝,</Title>
       <LogoTextImage src={textV1Logo} alt="로고" />
-<<<<<<< HEAD
-      <Form>
-=======
       <Form onSubmit={handleSubmit}>
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
         <FormInput
           id="login-id"
           label="아이디"
@@ -84,13 +66,8 @@ export function LoginForm() {
           hasMarginBottom={false}
         />
         <Spacer />
-<<<<<<< HEAD
-        <LoginErrorMessage />
-        <Button size="large" disabled={isDisabled}>
-=======
         {isError && <LoginErrorMessage />}
         <Button size="large" type="submit" disabled={isDisabled}>
->>>>>>> 5abfb6a (feat: #19 pr 리뷰 반영)
           로그인
         </Button>
       </Form>
