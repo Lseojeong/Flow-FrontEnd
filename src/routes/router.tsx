@@ -3,7 +3,7 @@ import LoginPage from '@/pages/auth/LoginPage';
 import SigninPage from '@/pages/auth/SigninPage';
 
 import DictionaryPage from '@/pages/dictionary/DictionaryPage';
-import FaqPage from '@/pages/faq/FaqPage'; // ✅ FAQ 페이지 import 추가
+import FaqPage from '@/pages/faq/FaqPage';
 import DocsPage from '@/pages/docs/DocsPage'; 
 
 const routes: RouteObject[] = [
