@@ -20,11 +20,11 @@ const routes: RouteObject[] = [
     element: <DictionaryPage/>,
   },
   {
-    path: '/faq', // ✅ FAQ 라우트 추가
+    path: '/faq',
     element: <FaqPage />,
   },
   {
-    path: '/docs', // ✅ FAQ 라우트 추가
+    path: '/docs',
     element: <DocsPage />,
   },
 ];
