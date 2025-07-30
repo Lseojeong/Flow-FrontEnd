@@ -29,11 +29,10 @@ export function LoginForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ 로그인 성공 조건
     if (adminIdField.value === 'admin' && passwordField.value === '1234') {
       console.log('✅ 로그인 성공');
       setIsError(false);
-      navigate('/dictionary'); // ✅ 성공 시 이동
+      navigate('/dictionary'); 
     } else {
       console.log('❌ 로그인 실패');
       setIsError(true);
