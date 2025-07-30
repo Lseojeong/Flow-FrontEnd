@@ -71,7 +71,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                         onClick={() => {
                           onMenuClick?.(subItem.id);
                           if (subItem.path) {
-                            navigate(subItem.path); // ✅ 서브 메뉴 경로 이동
+                            navigate(subItem.path);
                           }
                         }}
                       >
@@ -91,7 +91,6 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 
 export default SideBar;
 
-// ---------------- styled ----------------
 
 const SideBarContainer = styled.aside`
   position: fixed;
