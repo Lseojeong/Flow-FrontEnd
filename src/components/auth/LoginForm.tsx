@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo';
@@ -5,7 +6,10 @@ import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
+import { useNavigate } from 'react-router-dom'; 
+
 export function LoginForm() {
+  const navigate = useNavigate(); 
   const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
   });
@@ -14,17 +18,32 @@ export function LoginForm() {
     validations: [{ validate: (v) => v.trim() !== '', message: '* 비밀번호를 입력해주세요.' }],
   });
 
+  const [isError, setIsError] = useState(false);
+
   const isDisabled =
     adminIdField.value.trim() === '' ||
     passwordField.value.trim() === '' ||
     adminIdField.errorMessage !== '' ||
     passwordField.errorMessage !== '';
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (adminIdField.value === 'admin' && passwordField.value === '1234') {
+      console.log('✅ 로그인 성공');
+      setIsError(false);
+      navigate('/dictionary'); 
+    } else {
+      console.log('❌ 로그인 실패');
+      setIsError(true);
+    }
+  };
+
   return (
     <Card>
       <Title>모든 질문의 시작과 끝,</Title>
       <LogoTextImage src={textV1Logo} alt="로고" />
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <FormInput
           id="login-id"
           label="아이디"
@@ -46,8 +65,8 @@ export function LoginForm() {
           hasMarginBottom={false}
         />
         <Spacer />
-        <LoginErrorMessage />
-        <Button size="large" disabled={isDisabled}>
+        {isError && <LoginErrorMessage />}
+        <Button size="large" type="submit" disabled={isDisabled}>
           로그인
         </Button>
       </Form>

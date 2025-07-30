@@ -1,90 +1,239 @@
 import React from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { Props } from './CheckBox.types';
+import { Props, CheckBoxSize, CheckBoxVariant } from './CheckBox.types';
+
+const SIZE_CONFIG = {
+  small: {
+    boxSize: '12px',
+    fontSize: '12px',
+    gap: '8px',
+    checkWidth: '3px',
+    checkHeight: '6px',
+  },
+  medium: {
+    boxSize: '16px',
+    fontSize: '16px',
+    gap: '10px',
+    checkWidth: '4px',
+    checkHeight: '8px',
+  },
+} as const;
+
+const DESIGN_TOKENS = {
+  borderWidth: '0.3px',
+  borderRadius: '2px',
+  transitionDuration: '0.2s',
+  disabledOpacity: 0.4,
+  hoverScale: 1.05,
+  checkMarkPosition: {
+    left: '30%',
+    bottom: '30%',
+  },
+  outlineHoverOpacity: 0.1,
+} as const;
+
+const COLOR_SCHEME = {
+  default: {
+    border: {
+      checked: colors.Normal,
+      unchecked: colors.BoxStroke,
+    },
+    background: {
+      checked: colors.Normal,
+      unchecked: 'transparent',
+      hover: colors.Light,
+    },
+    text: {
+      normal: colors.Black,
+      disabled: colors.BoxStroke,
+    },
+    checkMark: 'white',
+  },
+  outline: {
+    border: colors.White,
+    background: {
+      normal: 'transparent',
+      hover: `rgba(255, 255, 255, ${DESIGN_TOKENS.outlineHoverOpacity})`,
+    },
+    text: colors.White,
+    checkMark: colors.White,
+  },
+} as const;
+
+type SizeConfiguration = (typeof SIZE_CONFIG)[CheckBoxSize];
+
+interface StyledProps {
+  $checked: boolean;
+  $disabled: boolean;
+  $size: CheckBoxSize;
+  $variant: CheckBoxVariant;
+}
+
+const getSizeConfig = (size: CheckBoxSize): SizeConfiguration => SIZE_CONFIG[size];
+
+const getBorderColor = (checked: boolean, variant: CheckBoxVariant): string => {
+  if (variant === 'outline') {
+    return COLOR_SCHEME.outline.border;
+  }
+
+  return checked ? COLOR_SCHEME.default.border.checked : COLOR_SCHEME.default.border.unchecked;
+};
+
+const getBackgroundColor = (checked: boolean, variant: CheckBoxVariant): string => {
+  if (variant === 'outline') {
+    return COLOR_SCHEME.outline.background.normal;
+  }
+
+  return checked
+    ? COLOR_SCHEME.default.background.checked
+    : COLOR_SCHEME.default.background.unchecked;
+};
+
+const getTextColor = (disabled: boolean, variant: CheckBoxVariant): string => {
+  if (disabled) {
+    return COLOR_SCHEME.default.text.disabled;
+  }
+
+  return variant === 'outline' ? COLOR_SCHEME.outline.text : COLOR_SCHEME.default.text.normal;
+};
+
+const getCheckMarkColor = (variant: CheckBoxVariant): string => {
+  return variant === 'outline' ? COLOR_SCHEME.outline.checkMark : COLOR_SCHEME.default.checkMark;
+};
+
+const createCheckMarkStyles = (size: CheckBoxSize, variant: CheckBoxVariant): string => {
+  const config = getSizeConfig(size);
+  const checkColor = getCheckMarkColor(variant);
+  const { left, bottom } = DESIGN_TOKENS.checkMarkPosition;
+
+  return `
+    content: '';
+    position: absolute;
+    left: ${left};
+    bottom: ${bottom};
+    width: ${config.checkWidth};
+    height: ${config.checkHeight};
+    border: solid ${checkColor};
+    border-width: 0 1px 1px 0;
+    transform: rotate(45deg);
+  `;
+};
+
+const createHoverStyles = (
+  checked: boolean,
+  disabled: boolean,
+  variant: CheckBoxVariant
+): string => {
+  if (disabled) return '';
+
+  const scale = `transform: scale(${DESIGN_TOKENS.hoverScale});`;
+
+  if (variant === 'outline') {
+    return `
+      &:hover {
+        border-color: ${COLOR_SCHEME.outline.border};
+        background-color: ${COLOR_SCHEME.outline.background.hover};
+        ${scale}
+      }
+    `;
+  }
+
+  const borderColor = COLOR_SCHEME.default.border.checked;
+  const backgroundColor = checked
+    ? COLOR_SCHEME.default.background.checked
+    : COLOR_SCHEME.default.background.hover;
+
+  return `
+    &:hover {
+      border-color: ${borderColor};
+      background-color: ${backgroundColor};
+      ${scale}
+    }
+  `;
+};
 
 export const CheckBox: React.FC<Props> = ({
   id,
   label,
   checked,
   onChange,
+  size = 'small',
+  variant = 'default',
   disabled = false,
   className,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.checked);
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    onChange(event.target.checked);
   };
 
   return (
-    <Label htmlFor={id} className={className}>
-      <HiddenCheckbox
+    <CheckBoxContainer
+      htmlFor={id}
+      className={className}
+      $size={size}
+      $variant={variant}
+      $checked={checked}
+      $disabled={disabled}
+    >
+      <HiddenInput
         id={id}
         type="checkbox"
         checked={checked}
-        onChange={handleChange}
+        onChange={handleInputChange}
         disabled={disabled}
       />
-      <CustomBox $checked={checked} $disabled={disabled} />
-      <Text $disabled={disabled}>{label}</Text>
-    </Label>
+      <CheckBoxIndicator $checked={checked} $disabled={disabled} $size={size} $variant={variant} />
+      <CheckBoxLabel $disabled={disabled} $size={size} $variant={variant}>
+        {label}
+      </CheckBoxLabel>
+    </CheckBoxContainer>
   );
 };
 
-const Label = styled.label`
+const CheckBoxContainer = styled.label<StyledProps>`
   display: flex;
   align-items: center;
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  gap: ${({ $size }) => getSizeConfig($size).gap};
+  opacity: ${({ $disabled }) => ($disabled ? DESIGN_TOKENS.disabledOpacity : 1)};
+  transition: all ${DESIGN_TOKENS.transitionDuration};
+`;
+
+const HiddenInput = styled.input`
+  position: absolute;
+  opacity: 0;
   cursor: pointer;
-  gap: 8px;
+  height: 0;
+  width: 0;
 `;
 
-const HiddenCheckbox = styled.input`
-  display: none;
-`;
-
-const CustomBox = styled.span<{ $checked: boolean; $disabled: boolean }>`
-  width: 12px;
-  height: 12px;
-  border: 0.3px solid ${({ $checked }) => ($checked ? colors.Normal : colors.BoxStroke)};
-  background-color: ${({ $checked }) => ($checked ? colors.Normal : 'transparent')};
-  border-radius: 2px;
+const CheckBoxIndicator = styled.span<StyledProps>`
+  width: ${({ $size }) => getSizeConfig($size).boxSize};
+  height: ${({ $size }) => getSizeConfig($size).boxSize};
+  border: ${DESIGN_TOKENS.borderWidth} solid
+    ${({ $checked, $variant }) => getBorderColor($checked, $variant)};
+  background-color: ${({ $checked, $variant }) => getBackgroundColor($checked, $variant)};
+  border-radius: ${DESIGN_TOKENS.borderRadius};
   position: relative;
-  transition: all 0.2s;
+  transition: all ${DESIGN_TOKENS.transitionDuration};
+  flex-shrink: 0;
 
-  ${({ $checked }) =>
+  ${({ $checked, $size, $variant }) =>
     $checked &&
     `
     &::after {
-      content: '';
-      position: absolute;
-      left: 30%;
-      bottom: 30%;
-      width: 3px;
-      height: 6px;
-      border: solid white;
-      border-width: 0 1px 1px 0;
-      transform: rotate(45deg);
+      ${createCheckMarkStyles($size, $variant)}
     }
   `}
 
-  ${({ $disabled }) =>
-    $disabled &&
-    `
-    opacity: 0.4;
-    cursor: not-allowed;
-  `}
-
-  ${({ $disabled, $checked }) =>
-    !$disabled &&
-    `
-    label:hover & {
-      border-color: ${colors.Normal};
-      background-color: ${$checked ? 'rgba(15, 66, 157, 0.9)' : 'colors.Normal'};
-    }
-  `}
+  ${({ $checked, $disabled, $variant }) => createHoverStyles($checked, $disabled, $variant)}
 `;
 
-const Text = styled.span<{ $disabled: boolean }>`
-  font-size: 12px;
-  color: ${({ $disabled }) => ($disabled ? colors.BoxStroke : colors.Black)};
+const CheckBoxLabel = styled.span<Omit<StyledProps, '$checked'>>`
+  font-size: ${({ $size }) => getSizeConfig($size).fontSize};
+  color: ${({ $disabled, $variant }) => getTextColor($disabled, $variant)};
   font-weight: ${fontWeight.Regular};
+  line-height: 1.4;
+  user-select: none;
 `;

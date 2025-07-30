@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
+import { useNavigate } from 'react-router-dom'; 
 
 /**
  * @example
@@ -16,12 +17,16 @@ import { ArrowIcon } from '@/assets/icons/common/index';
 
 const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const navigate = useNavigate(); 
 
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
       setOpenDropdownId(openDropdownId === item.id ? null : item.id);
     } else {
       onMenuClick?.(item.id);
+      if (item.path) {
+        navigate(item.path); 
+      }
     }
   };
 
@@ -63,7 +68,12 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                       <SubMenuItem
                         key={subItem.id}
                         $active={activeMenuId === subItem.id}
-                        onClick={() => onMenuClick?.(subItem.id)}
+                        onClick={() => {
+                          onMenuClick?.(subItem.id);
+                          if (subItem.path) {
+                            navigate(subItem.path);
+                          }
+                        }}
                       >
                         {subItem.label}
                       </SubMenuItem>
@@ -80,6 +90,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 };
 
 export default SideBar;
+
 
 const SideBarContainer = styled.aside`
   position: fixed;
@@ -109,6 +120,14 @@ const LogoImg = styled.img`
   margin-top: 40px;
 `;
 
+const MenuWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 40px;
+  margin-bottom: 40px;
+`;
+
 const MenuList = styled.ul`
   list-style: none;
   width: 100%;
@@ -121,10 +140,9 @@ const MenuItem = styled.li<{ $active?: boolean }>`
   gap: 8px;
   padding: 12px 0 24px 32px;
   color: ${({ $active }) => ($active ? colors.Normal : colors.Dark_active)};
-  font-size: 20px;
+  font-size: 18px;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;
-  font-size: 18px;
   transition: color 0.2s;
   outline: none;
 
@@ -137,14 +155,6 @@ const MenuItem = styled.li<{ $active?: boolean }>`
   &:hover {
     color: ${colors.Light_active};
   }
-`;
-
-const MenuWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 40px;
-  margin-bottom: 40px;
 `;
 
 const SubMenuList = styled.ul`
