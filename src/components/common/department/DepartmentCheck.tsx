@@ -50,7 +50,10 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
     <Container>
       {showTitle && (
         <Header>
-          <Title>{title}</Title>
+          <TitleSection>
+            <Title>{title}</Title>
+            <Description>보여질 부서를 선택하세요.</Description>
+          </TitleSection>
           {showSelectAll && departments.length > 0 && (
             <CheckBox
               id="select-all-departments"
@@ -87,15 +90,27 @@ const Container = styled.div`
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16px;
 `;
 
+const TitleSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
 const Title = styled.h3`
-  font-size: 16px;
-  font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Normal};
+  font-size: 14px;
+  font-weight: ${fontWeight.Medium};
+  color: ${colors.Black};
   margin: 0;
+`;
+
+const Description = styled.p`
+  font-size: 9px;
+  font-weight: ${fontWeight.Regular};
+  color: ${colors.BoxText};
 `;
 
 const CheckboxList = styled.div`
