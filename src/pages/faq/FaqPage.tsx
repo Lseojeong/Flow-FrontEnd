@@ -140,7 +140,6 @@ export default function FaqPage() {
   );
 }
 
-// ---------------------- styled ----------------------
 
 const PageWrapper = styled.div`
   display: flex;

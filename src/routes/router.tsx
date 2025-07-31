@@ -11,12 +11,9 @@ import FaqPage from '@/pages/faq/FaqPage';
 import FaqDetailPage from '@/pages/faq/FaqDetailPage';
 
 import DocsPage from '@/pages/docs/DocsPage';
-import DocsDetailPage from '@/pages/docs/DocsDetailPage';
+import DocsDetailPage from '@/pages/docs/DocsDetailPage'; 
 
-import TablePlayground from '@/playground/TablePlayground';
-
-
-const baseRoutes: RouteObject[] = [
+const routes: RouteObject[] = [
   {
     path: '/',
     element: <LoginPage />,
@@ -65,16 +62,5 @@ const baseRoutes: RouteObject[] = [
     ],
   },
 ];
-
-const devRoutes: RouteObject[] = import.meta.env.DEV
-  ? [
-      {
-        path: '/playground',
-        element: <TablePlayground />,
-      },
-    ]
-  : [];
-
-const routes: RouteObject[] = [...baseRoutes, ...devRoutes];
 
 export default routes;
