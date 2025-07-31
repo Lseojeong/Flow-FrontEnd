@@ -6,10 +6,10 @@ import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 export function LoginForm() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
   });
@@ -32,7 +32,7 @@ export function LoginForm() {
     if (adminIdField.value === 'admin' && passwordField.value === '1234') {
       console.log('✅ 로그인 성공');
       setIsError(false);
-      navigate('/dictionary'); 
+      navigate('/dictionary');
     } else {
       console.log('❌ 로그인 실패');
       setIsError(true);
@@ -122,6 +122,7 @@ const ErrorMessage = styled.div`
   color: ${colors.MainRed};
   font-size: 10px;
   text-align: right;
+  margin-bottom: 16px;
 `;
 
 const Spacer = styled.div`
