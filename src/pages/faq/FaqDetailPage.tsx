@@ -13,7 +13,7 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
-import DoubleDivider from '@/components/common/divider/DoubleDivider';
+
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -46,7 +46,7 @@ export default function FaqDetailPage() {
           </TitleGroup>
           <RegisterButton>+ 데이터 등록</RegisterButton>
         </Header>
-        <DoubleDivider />
+        <Divider />
         <InfoBox>
           <InfoItemColumn>
             <Label>상태:</Label>
@@ -69,7 +69,6 @@ export default function FaqDetailPage() {
             <Value><DepartmentTagList departments={detailData.departments} /></Value>
           </InfoItemColumn>
         </InfoBox>
-        <Divider />
         <FileSection>
           <SectionTitle>파일 관리</SectionTitle>
           <Table>
