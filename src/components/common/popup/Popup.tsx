@@ -126,7 +126,7 @@ const Content = styled.div`
 
 const Message = styled.p`
   font-size: 16px;
-  font-weight: ${fontWeight.Medium};
+  font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
   margin: 0 0 8px 0;
   line-height: 1.5;
