@@ -7,6 +7,7 @@ import ButtonPlayground from '@/playground/ButtonPlayground';
 import { VersionPlayground } from '@/playground/VersionPlayground';
 import InputPlayground from '@/playground/InputPlayground';
 import { PopupPlayground } from '@/playground/PopupPlayground';
+import { DepartmentPlayground } from '@/playground/DepartmentPlayground';
 
 const PlaygroundRoutes: React.FC = () => (
   <Routes>
@@ -17,6 +18,7 @@ const PlaygroundRoutes: React.FC = () => (
     <Route path="/playground/version" element={<VersionPlayground />} />
     <Route path="/playground/input" element={<InputPlayground />} />
     <Route path="/playground/popup" element={<PopupPlayground />} />
+    <Route path="/playground/department" element={<DepartmentPlayground />} />
   </Routes>
 );
 
