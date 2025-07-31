@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-
-interface RangeSliderProps {
-  min?: number;
-  max?: number;
-  defaultValue?: number;
-  value?: number;
-  onChange?: (_value: number) => void;
-  label?: string;
-  showValue?: boolean;
-}
+import { RangeSliderProps } from './FlowSetting.types';
 
 export const RangeSlider: React.FC<RangeSliderProps> = ({
   min = 0,
