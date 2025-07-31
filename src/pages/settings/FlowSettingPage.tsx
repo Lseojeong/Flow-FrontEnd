@@ -9,6 +9,7 @@ import { Button } from '@/components/common/button/Button';
 import { CopyIcon, InformationIcon } from '@/assets/icons/settings/index';
 import { RangeSlider } from '@/components/flow-setting/RangeSlider';
 import { Tooltip } from '@/components/flow-setting/Tooltip';
+import { PromptInput } from '@/components/flow-setting/PromptInput';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -20,6 +21,7 @@ export default function FlowSettingPage() {
   const [maxTokens, setMaxTokens] = useState(128);
   const [topK, setTopK] = useState(3);
   const [topP, setTopP] = useState(0);
+  const [prompt, setPrompt] = useState('');
 
   const handleTopKChange = (value: number) => {
     setTopK(value);
@@ -163,6 +165,10 @@ export default function FlowSettingPage() {
               </SliderItem>
             </SliderGroup>
           </ParameterSection>
+
+          <PromptSection>
+            <PromptInput value={prompt} onChange={setPrompt} />
+          </PromptSection>
         </ContentWrapper>
       </Content>
     </PageWrapper>
@@ -231,6 +237,7 @@ const ButtonGroup = styled.div`
 const TokenSection = styled.section`
   margin-top: 24px;
   margin-left: 24px;
+  margin-right: 24px;
 `;
 
 const TokenTitle = styled.h2`
@@ -283,13 +290,20 @@ const CopyButton = styled.button`
 const Divider2 = styled(Divider)`
   border: none;
   height: 1.5px;
-  margin: 16px 0 24px 24px;
+  margin: 16px 24px 24px 24px;
   background: ${colors.GridLine};
+`;
+
+const PromptSection = styled.section`
+  margin-top: 24px;
+  margin-left: 24px;
+  margin-right: 24px;
 `;
 
 const ParameterSection = styled.section`
   margin-top: 44px;
   margin-left: 24px;
+  margin-right: 24px;
 `;
 
 const ParameterTitle = styled.h2`
@@ -301,8 +315,8 @@ const ParameterTitle = styled.h2`
 
 const SliderGroup = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 0;
+  grid-template-columns: 360px 360px;
+  gap: 16px 60px;
 `;
 
 const SliderItem = styled.div`
