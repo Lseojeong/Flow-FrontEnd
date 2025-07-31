@@ -36,3 +36,18 @@ export interface DepartmentTagListProps {
   onDepartmentClick?: (_department: Department) => void;
   showAll?: boolean;
 }
+
+export interface DepartmentCheckProps {
+  /** 부서 목록 */
+  departments: Department[];
+  /** 선택된 부서 ID 목록 */
+  selectedDepartmentIds: string[];
+  /** 부서 선택 변경 시 호출되는 함수 */
+  onChange: (_selectedDepartmentIds: string[]) => void;
+  /** 제목 표시 여부 (기본값: true) */
+  showTitle?: boolean;
+  /** 모두 선택 버튼 표시 여부 (기본값: true) */
+  showSelectAll?: boolean;
+  /** 커스텀 제목 */
+  title?: string;
+}
