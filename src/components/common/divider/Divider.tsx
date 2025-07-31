@@ -1,15 +1,11 @@
 import styled from 'styled-components';
+import colors from '@/styles/colors';
 
 const Divider = styled.hr`
   border: none;
-  height: 1px;
+  height: 1.5px;
   margin: 16px 0 24px;
-  background: linear-gradient(
-    to right,
-    rgba(221, 221, 221, 0),
-    rgba(221, 221, 221, 1),
-    rgba(221, 221, 221, 0)
-  );
+  background: ${colors.Linear};
 `;
 
 export default Divider;
