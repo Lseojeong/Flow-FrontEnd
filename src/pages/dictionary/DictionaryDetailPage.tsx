@@ -3,13 +3,13 @@ import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { symbolTextLogo } from '@/assets/logo';
-import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
 import DownloadIcon from '@/assets/icons/common/download.svg?react';
 import EditIcon from '@/assets/icons/common/edit.svg?react';
 import DeleteIcon from '@/assets/icons/common/delete.svg?react';
 import { dictMockData } from '@/pages/mock/dictMock';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { StatusItemData } from '@/components/common/status/Status.types';
+import { StatusBadge } from '@/components/common/status/StatusBadge';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -38,40 +38,35 @@ export default function DictionaryDetailPage() {
         <Header>
           <TitleGroup>
             <Title>{detailData.name}</Title>
-            <SubTitle>{detailData.name}는 익숙하면서도 안전하게, 온라인과 오프라인의 구분 없이 어디서나 빠른 협업을 할 수 있도록 최신 기술과 AI 기술을 활용</SubTitle>
+            <SubTitle>{detailData.description}</SubTitle>
           </TitleGroup>
           <RegisterButton>+ 데이터 등록</RegisterButton>
         </Header>
 
         <InfoBox>
-          <InfoItem>
+          <InfoItemColumn>
             <Label>상태:</Label>
             <Value>
               <StatusSummary items={statusItems} />
             </Value>
-          </InfoItem>
+          </InfoItemColumn>
 
-          <InfoItem>
+          <InfoItemColumn>
             <Label>등록일:</Label>
             <Value>{detailData.registeredDate}</Value>
-          </InfoItem>
+          </InfoItemColumn>
 
-          <InfoItem>
+          <InfoItemColumn>
             <Label>최종 수정일:</Label>
             <Value>{detailData.lastModified}</Value>
-          </InfoItem>
+          </InfoItemColumn>
 
-          <InfoItem>
+          <InfoItemColumn>
             <Label>최종 수정자:</Label>
             <Value>{detailData.lastEditor}</Value>
-          </InfoItem>
+          </InfoItemColumn>
 
-          <InfoItem style={{ flexBasis: '100%', marginTop: '12px' }}>
-            <Label>포함 부서:</Label>
-            <Value>
-              <DepartmentTagList departments={detailData.departments} />
-            </Value>
-          </InfoItem>
+
         </InfoBox>
 
         <FileSection>
@@ -81,11 +76,11 @@ export default function DictionaryDetailPage() {
               <tr>
                 <Th style={{ width: '50px' }}>번호</Th>
                 <Th>파일명</Th>
-                <Th style={{ width: '120px' }}>상태</Th>
+                <Th style={{ width: '100px' }}>상태</Th>
                 <Th style={{ width: '160px' }}>관리자</Th>
                 <Th style={{ width: '150px' }}>등록일</Th>
                 <Th style={{ width: '150px' }}>수정일</Th>
-                <Th style={{ width: '160px', textAlign: 'left' }}>파일 다운로드</Th>
+                <Th style={{ width: '160px' }}>파일 다운로드</Th>
               </tr>
             </thead>
             <tbody>
@@ -94,17 +89,7 @@ export default function DictionaryDetailPage() {
                   <Td>{index + 1}</Td>
                   <Td>{file.name}</Td>
                   <Td>
-                    <OutlinedStatusBadge
-                      status={
-                        file.status === 'Completed'
-                          ? 'green'
-                          : file.status === 'Processing'
-                          ? 'yellow'
-                          : 'red'
-                      }
-                    >
-                      {file.status}
-                    </OutlinedStatusBadge>
+                    <StatusBadge status={file.status}>{file.status}</StatusBadge>
                   </Td>
                   <Td>{file.manager}</Td>
                   <Td>{file.registeredAt}</Td>
@@ -129,6 +114,7 @@ export default function DictionaryDetailPage() {
     </PageWrapper>
   );
 }
+
 
 const PageWrapper = styled.div`
   display: flex;
@@ -204,6 +190,12 @@ const InfoItem = styled.div`
   min-width: 160px;
 `;
 
+const InfoItemColumn = styled(InfoItem)`
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+`;
+
 const Label = styled.div`
   font-weight: 600;
   color: #444;
@@ -275,24 +267,10 @@ const ActionIcons = styled.div`
   }
 `;
 
-const OutlinedStatusBadge = styled.span<{ status: 'green' | 'yellow' | 'red' }>`
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 1.5px solid
-    ${({ status }) =>
-      status === 'green' ? '#3FC36C' : status === 'yellow' ? '#F7B500' : '#F04438'};
-  color: ${({ status }) =>
-    status === 'green' ? '#3FC36C' : status === 'yellow' ? '#F7B500' : '#F04438'};
-  background: transparent;
-  white-space: nowrap;
-`;
-
 const NoData = styled.div`
   margin-left: 280px;
   padding: 40px;
   font-size: 18px;
   color: #999;
 `;
+
