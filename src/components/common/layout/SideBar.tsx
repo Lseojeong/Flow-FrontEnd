@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
@@ -71,7 +71,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                         onClick={() => {
                           onMenuClick?.(subItem.id);
                           if (subItem.path) {
-                            navigate(subItem.path);
+                            navigate(subItem.path); 
                           }
                         }}
                       >
@@ -90,6 +90,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 };
 
 export default SideBar;
+
 
 
 const SideBarContainer = styled.aside`
@@ -180,3 +181,4 @@ const SubMenuItem = styled.li<{ $active?: boolean }>`
     color: ${colors.Normal};
   }
 `;
+
