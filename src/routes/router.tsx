@@ -4,7 +4,8 @@ import SigninPage from '@/pages/auth/SigninPage';
 
 import DictionaryPage from '@/pages/dictionary/DictionaryPage';
 import FaqPage from '@/pages/faq/FaqPage';
-import DocsPage from '@/pages/docs/DocsPage'; 
+import DocsPage from '@/pages/docs/DocsPage';
+import FlowSettingPage from '@/pages/settings/FlowSettingPage';
 
 const routes: RouteObject[] = [
   {
@@ -17,7 +18,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/dictionary',
-    element: <DictionaryPage/>,
+    element: <DictionaryPage />,
   },
   {
     path: '/faq',
@@ -26,6 +27,10 @@ const routes: RouteObject[] = [
   {
     path: '/docs',
     element: <DocsPage />,
+  },
+  {
+    path: '/settings/flow',
+    element: <FlowSettingPage />,
   },
 ];
 
