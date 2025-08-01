@@ -13,7 +13,7 @@ import StatusSummary from '@/components/common/status/StatusSummary';
 import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
-import CategorySearch from '@/components/common/category-search/CategorySearch';
+import FileSearch from '@/components/common/file-search/FileSearch';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -80,7 +80,7 @@ export default function DictionaryDetailPage() {
         <FileSection>
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
-            <CategorySearch
+            <FileSearch
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               placeholder="파일 검색"
