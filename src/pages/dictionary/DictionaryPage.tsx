@@ -14,15 +14,16 @@ import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constant
 import { dictMockData } from '@/pages/mock/dictMock';
 import { DeleteIcon, EditIcon } from '@/assets/icons/common';
 import { colors, fontWeight } from '@/styles/index';
+import Divider from '@/components/common/divider/Divider';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
-
-export default function GlossaryPage() {
+export default function DictionaryPage() {
   const [activeMenuId, setActiveMenuId] = useState('dictionary');
   const [categories] = useState(dictMockData);
-
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
 
@@ -40,10 +41,10 @@ export default function GlossaryPage() {
   };
 
   const toggleCheckItem = (id: number) => {
-    setCheckedItems(prev => {
-      const newChecked = { ...prev, [id]: !prev[id] };
-      return newChecked;
-    });
+    setCheckedItems(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   const handleDeleteSelected = () => {
@@ -55,16 +56,22 @@ export default function GlossaryPage() {
     alert(`수정 요청: 카테고리 ID ${id}`);
   };
 
+  const handleDateChange = (start: string | null, end: string | null) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
   return (
     <PageWrapper>
-    <SideBarWrapper>
-      <SideBar
-        logoSymbol={symbolTextLogo}
-        menuItems={menuItems}
-        activeMenuId={activeMenuId}
-        onMenuClick={setActiveMenuId}
-      />
-      </SideBarWrapper>  
+      <SideBarWrapper>
+        <SideBar
+          logoSymbol={symbolTextLogo}
+          menuItems={menuItems}
+          activeMenuId={activeMenuId}
+          onMenuClick={setActiveMenuId}
+        />
+      </SideBarWrapper>
+
       <Content>
         <PageTitle>용어 사전</PageTitle>
         <Description>실제 사용하는 단어를 등록하여 Flow의 이해도를 높일 수 있습니다.</Description>
@@ -91,11 +98,7 @@ export default function GlossaryPage() {
 
           <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
 
-          <DateFilter
-            startDate={new Date().toISOString()}
-            endDate={new Date().toISOString()}
-            onDateChange={() => {}}
-          />
+          <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
         </FilterBar>
 
         <SelectAllWrapper>
@@ -177,6 +180,8 @@ export default function GlossaryPage() {
   );
 }
 
+
+
 const PageWrapper = styled.div`
   display: flex;
 `;
@@ -207,11 +212,6 @@ const Description = styled.p`
   margin-bottom: 8px;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #ddd;
-  margin-bottom: 24px;
-`;
 
 const TopBar = styled.div`
   display: flex;
