@@ -90,7 +90,6 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 };
 
 export default SideBar;
-
 const SideBarContainer = styled.aside`
   position: fixed;
   top: 0;
