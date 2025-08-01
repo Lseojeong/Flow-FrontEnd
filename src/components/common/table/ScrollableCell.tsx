@@ -22,17 +22,17 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
   };
 
   return (
-    <CellContainer align={align} maxWidth={maxWidth}>
-      <ScrollableContent align={align} onWheel={handleWheel} onMouseDown={handleMouseDown}>
+    <CellContainer $align={align} $maxWidth={maxWidth}>
+      <ScrollableContent $align={align} onWheel={handleWheel} onMouseDown={handleMouseDown}>
         {children}
       </ScrollableContent>
     </CellContainer>
   );
 };
 
-const CellContainer = styled.td<{ align: string; maxWidth: string }>`
-  max-width: ${({ maxWidth }) => maxWidth};
-  text-align: ${({ align }) => align};
+const CellContainer = styled.td<{ $align: string; $maxWidth: string }>`
+  max-width: ${({ $maxWidth }) => $maxWidth};
+  text-align: ${({ $align }) => $align};
   padding: 16px 24px;
   color: ${colors.Black};
   font-weight: 400;
@@ -40,11 +40,11 @@ const CellContainer = styled.td<{ align: string; maxWidth: string }>`
   border-bottom: 1px solid #f2f2f2;
 `;
 
-const ScrollableContent = styled.div<{ align: string }>`
+const ScrollableContent = styled.div<{ $align: string }>`
   overflow-x: auto;
   white-space: nowrap;
   position: relative;
-  text-align: ${({ align }) => align};
+  text-align: ${({ $align }) => $align};
   padding-right: 8px;
   padding-bottom: 8px;
   min-width: 0;

@@ -241,9 +241,9 @@ const CustomInput = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <DateInputContainer
         disabled={disabled}
-        error={error}
-        focused={focused}
-        hasValue={hasValue}
+        $error={error}
+        $focused={focused}
+        $hasValue={hasValue}
         onClick={onClick}
       >
         <CalendarIcon disabled={disabled}>
@@ -272,9 +272,9 @@ const DateFilterContainer = styled.div`
 
 const DateInputContainer = styled.div<{
   disabled?: boolean;
-  error?: boolean;
-  focused?: boolean;
-  hasValue?: boolean;
+  $error?: boolean;
+  $focused?: boolean;
+  $hasValue?: boolean;
 }>`
   position: relative;
   display: flex;
@@ -282,8 +282,14 @@ const DateInputContainer = styled.div<{
   width: ${INPUT_WIDTH};
   height: ${INPUT_HEIGHT};
   border: 1px solid
-    ${({ error, focused, disabled }) =>
-      error ? '#ff4757' : focused ? INPUT_FOCUS_COLOR : disabled ? '#e1e5e9' : INPUT_BORDER_COLOR};
+    ${({ $error, $focused, disabled }) =>
+      $error
+        ? '#ff4757'
+        : $focused
+          ? INPUT_FOCUS_COLOR
+          : disabled
+            ? '#e1e5e9'
+            : INPUT_BORDER_COLOR};
   border-radius: ${INPUT_RADIUS};
   background: ${INPUT_BG_COLOR};
   padding: ${INPUT_PADDING};
