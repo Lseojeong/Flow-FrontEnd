@@ -195,9 +195,8 @@ const UserMessage = styled.div`
 `;
 
 const UserBubble = styled.div`
-  background: ${colors.background};
-  border: 1px solid ${colors.GridLine};
-  border-radius: 8px;
+  background: ${colors.Light};
+  border-radius: 4px;
   padding: 12px 16px;
   color: ${colors.Black};
   font-size: 14px;
@@ -215,8 +214,8 @@ const AssistantMessage = styled.div`
 const MessageBubble = styled.div`
   flex: 1;
   background: ${colors.Normal};
-  border-radius: 8px;
-  padding: 16px 20px;
+  border-radius: 4px;
+  padding: 12px 16px;
   color: white;
 `;
 
