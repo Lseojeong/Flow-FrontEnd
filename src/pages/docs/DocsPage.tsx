@@ -1,35 +1,65 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
-import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { TableLayout, TableHeader, TableRow, ScrollableCell as TableCell } from '@/components/common/table';
-import { Button } from '@/components/common/button/Button';
-import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
+import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
+import { CheckBox } from '@/components/common/checkbox/CheckBox';
+import {
+  TableLayout,
+  TableHeader,
+  TableRow,
+  ScrollableCell as TableCell,
+} from '@/components/common/table';
+import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import EditIcon from '@/assets/icons/common/edit.svg?react';
-import { Department } from '@/components/common/department/Department.types';
+import DeleteIcon from '@/assets/icons/common/delete.svg?react';
 import { dictMockData } from '@/pages/mock/dictMock';
+import Divider from '@/components/common/divider/Divider';
+import { colors } from '@/styles/index';
+import StatusSummary from '@/components/common/status/StatusSummary';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
-
 export default function DocsPage() {
+  const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState('docs');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-
-  const [docsData] = useState(dictMockData);
+  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const selectedCount = Object.values(checkedItems).filter(Boolean).length;
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
+  };
+
+  const toggleCheckItem = (id: number) => {
+    setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleSelectAll = () => {
+    const allSelected = selectedCount === filteredFaqData.length;
+    if (allSelected) {
+      setCheckedItems({});
+    } else {
+      const newChecked: Record<number, boolean> = {};
+      filteredFaqData.forEach(item => {
+        newChecked[item.id] = true;
+      });
+      setCheckedItems(newChecked);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedCount === 0) return;
+    alert(`삭제 요청: ${selectedCount}개 항목`);
   };
 
   const isDateInRange = (dateStr: string) => {
@@ -40,40 +70,68 @@ export default function DocsPage() {
     return (!start || date >= start) && (!end || date <= end);
   };
 
-  const filteredDocsData = docsData.filter(
-    (item) =>
-      (!selectedDepartment || item.departments?.some((dep: Department) => dep.departmentName === selectedDepartment)) &&
-      isDateInRange(item.lastModified.replace(/\./g, '-'))
-  );
+  const filteredFaqData = dictMockData.filter((item) => {
+    const matchesDepartment =
+      !selectedDepartment || item.departments?.some(d => d.departmentName === selectedDepartment);
+    const matchesDate = isDateInRange(item.lastModified.replace(/\./g, '-'));
+    return matchesDepartment && matchesDate;
+  });
 
   return (
     <PageWrapper>
-      <SideBar
-        logoSymbol={symbolTextLogo}
-        menuItems={menuItems}
-        activeMenuId={activeMenuId}
-        onMenuClick={setActiveMenuId}
-      />
+      <SideBarWrapper>
+        <SideBar
+          logoSymbol={symbolTextLogo}
+          menuItems={menuItems}
+          activeMenuId={activeMenuId}
+          onMenuClick={setActiveMenuId}
+        />
+      </SideBarWrapper>
       <Content>
-        <PageTitle>사내문서 관리</PageTitle>
-        <Description>Flow에서 사용되는 사내문서 데이터를 관리하는 어드민입니다.</Description>
+        <PageTitle>사내 문서 관리</PageTitle>
+        <Description>사내 문서를 등록 및 관리하는 페이지입니다.</Description>
         <Divider />
 
+        <TopBar>
+          <ButtonWrapper>
+            <Button size="small">+ 문서 등록</Button>
+          </ButtonWrapper>
+        </TopBar>
+
         <FilterBar>
+          <DeleteIcon
+            style={{
+              cursor: selectedCount > 0 ? 'pointer' : 'default',
+              color: selectedCount > 0 ? colors.Normal : colors.BoxText,
+              pointerEvents: selectedCount > 0 ? 'auto' : 'none',
+              marginRight: 6,
+              width: 24,
+              height: 24,
+            }}
+            onClick={handleDeleteSelected}
+          />
           <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
-          <ButtonWrapper>
-            <Button size="small">+ 카테고리 등록</Button>
-          </ButtonWrapper>
         </FilterBar>
+
+        <SelectAllWrapper>
+          <CheckBox
+            size="medium"
+            variant="outline"
+            id="select-all"
+            checked={selectedCount === filteredFaqData.length && filteredFaqData.length > 0}
+            onChange={toggleSelectAll}
+            label="전체 선택"
+          />
+        </SelectAllWrapper>
 
         <TableLayout>
           <TableHeader
             columns={[
-              { label: '선택', width: '80px', align: 'center' },
-              { label: '카테고리', align: 'left' },
-              { label: '상태', align: 'center' },
+              { label: '선택', width: '80px', align: 'left' },
+              { label: '카테고리', width: '300px', align: 'left' },
+              { label: '상태', align: 'left' },
               { label: '문서 수', align: 'center' },
               { label: '포함 부서', align: 'left' },
               { label: '최종 수정일', width: '120px', align: 'center' },
@@ -81,42 +139,68 @@ export default function DocsPage() {
             ]}
           />
 
-          {filteredDocsData.length === 0 ? (
+          {filteredFaqData.length === 0 ? (
             <EmptyRow>
               <EmptyCell colSpan={7}>
-                <EmptyMessage>사내 문서를 등록해주세요.</EmptyMessage>
+                <EmptyMessage>문서를 등록해주세요.</EmptyMessage>
               </EmptyCell>
             </EmptyRow>
           ) : (
-            filteredDocsData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell align="center">
-                  <CheckBoxWrapper>
-                    <CheckBox id={`doc-${item.id}`} checked={false} onChange={() => {}} label="" />
-                  </CheckBoxWrapper>
-                </TableCell>
-                <TableCell align="left">
-                  <StyledLink to={`/docs/${item.id}`}>{item.name}</StyledLink>
-                </TableCell>
-                <TableCell align="center">
-                  <StatusWrapper>
-                    <StatusDot color="green" /> {item.status.green}건
-                    <StatusDot color="yellow" /> {item.status.yellow}건
-                    <StatusDot color="red" /> {item.status.red}건
-                  </StatusWrapper>
-                </TableCell>
-                <TableCell align="center">
-                  <DocumentCount>{item.documentCount}</DocumentCount>
-                </TableCell>
-                <TableCell align="left">
-                  <DepartmentTagList departments={item.departments || []} />
-                </TableCell>
-                <TableCell align="center">{item.lastModified}</TableCell>
-                <TableCell align="center">
-                  <EditIcon />
-                </TableCell>
-              </TableRow>
-            ))
+            filteredFaqData.map((item) => {
+              const isChecked = !!checkedItems[item.id];
+              return (
+                <TableRow key={item.id}>
+                  <TableCell align="center">
+                    <CheckBoxWrapper>
+                      <CheckBox
+                        size="medium"
+                        id={`faq-${item.id}`}
+                        checked={isChecked}
+                        onChange={() => toggleCheckItem(item.id)}
+                        label=""
+                      />
+                    </CheckBoxWrapper>
+                  </TableCell>
+
+                  <TableCell align="left">
+                    <StyledLink to={`/docs/${item.id}`}>{item.name}</StyledLink>
+                  </TableCell>
+
+                  <TableCell align="left">
+                    {item.status ? (
+                      <StatusWrapper>
+                        <StatusSummary
+                          items={[
+                            { type: 'Completed', count: item.status.green },
+                            { type: 'Processing', count: item.status.yellow },
+                            { type: 'Fail', count: item.status.red },
+                          ]}
+                        />
+                      </StatusWrapper>
+                    ) : (
+                      '-')
+                    }
+                  </TableCell>
+
+                  <TableCell align="center">
+                    <DocumentCount>{item.documentCount}</DocumentCount>
+                  </TableCell>
+
+                  <TableCell align="left">
+                    {item.departments ? <DepartmentTagList departments={item.departments} /> : '-'}
+                  </TableCell>
+
+                  <TableCell align="center">{item.lastModified}</TableCell>
+
+                  <TableCell align="center">
+                    <EditIcon
+                      onClick={() => navigate(`/docs/${item.id}`)}
+                      style={{ cursor: 'pointer', width: 20, height: 20 }}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableLayout>
       </Content>
@@ -124,22 +208,31 @@ export default function DocsPage() {
   );
 }
 
-// ---------------------- styled ----------------------
-
 const PageWrapper = styled.div`
   display: flex;
+`;
+
+const SideBarWrapper = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  z-index: 1000;
+  background: white;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 `;
 
 const Content = styled.div`
   margin-left: 280px;
   padding: 40px;
-  width: 100%;
+  width: calc(100% - 280px);
 `;
 
 const PageTitle = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-size: 40px;
+  font-weight: 600;
+  margin-bottom: 12px;
 `;
 
 const Description = styled.p`
@@ -148,22 +241,20 @@ const Description = styled.p`
   margin-bottom: 8px;
 `;
 
-const Divider = styled.hr`
-  border: none;
-  border-top: 1px solid #ddd;
-  margin: 16px 0 24px;
+const TopBar = styled.div`
+  display: flex;
+  justify-content: flex-end;
 `;
 
 const FilterBar = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
 `;
 
-const ButtonWrapper = styled.div`
-  margin-left: auto;
-`;
+const ButtonWrapper = styled.div``;
+
+const SelectAllWrapper = styled.div``;
 
 const EmptyRow = styled.tr`
   height: 200px;
@@ -190,19 +281,10 @@ const CheckBoxWrapper = styled.div`
 
 const StatusWrapper = styled.div`
   display: flex;
-  gap: 8px;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  justify-content: left;
   height: 100%;
-`;
-
-const StatusDot = styled.span<{ color: 'green' | 'yellow' | 'red' }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: ${({ color }) =>
-    color === 'green' ? '#3FC36C' : color === 'yellow' ? '#F7B500' : '#F04438'};
-  display: inline-block;
 `;
 
 const DocumentCount = styled.div`

@@ -25,6 +25,7 @@ export default function DictionaryDetailPage() {
     { type: 'Processing', count: detailData.status.yellow },
     { type: 'Fail', count: detailData.status.red },
   ];
+  
 
   return (
     <PageWrapper>
