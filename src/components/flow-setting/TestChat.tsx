@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { TestChatProps } from './FlowSetting.types';
 import { Button } from '@/components/common/button/Button';
+import { Tooltip } from './Tooltip';
+import { InformationIcon } from '@/assets/icons/settings/index';
 
 interface ChatMessage {
   id: string;
@@ -18,13 +20,11 @@ export const TestChat: React.FC<TestChatProps> = ({ onTestRun, loading = false }
   const handleTestRun = async () => {
     if (!testQuestion.trim()) return;
 
-    const question = testQuestion;
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: 'user',
-      content: question,
+      content: testQuestion,
     };
-
     const loadingMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
       type: 'assistant',
@@ -35,8 +35,7 @@ export const TestChat: React.FC<TestChatProps> = ({ onTestRun, loading = false }
     setMessages([userMessage, loadingMessage]);
     setTestQuestion('');
 
-    const result = await onTestRun?.(question);
-
+    const result = await onTestRun?.(testQuestion);
     setMessages((prev) =>
       prev.map((msg) =>
         msg.id === loadingMessage.id
@@ -46,31 +45,35 @@ export const TestChat: React.FC<TestChatProps> = ({ onTestRun, loading = false }
     );
   };
 
-  const handleQuestionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTestQuestion(event.target.value);
-  };
-
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       const currentValue = event.currentTarget.value;
       if (currentValue.trim()) {
         setTestQuestion(currentValue);
-        setTimeout(() => {
-          handleTestRun();
-        }, 0);
+        setTimeout(handleTestRun, 0);
       }
     }
   };
 
   return (
     <Container>
-      <Title>테스트</Title>
+      <TitleRow>
+        <Title>테스트</Title>
+        <Tooltip
+          content="파라미터와 프롬프트는 RAG 응답에만 적용되며,"
+          description="스몰톡은 고정된 설정값을 따릅니다."
+        >
+          <InfoIcon>
+            <InformationIcon />
+          </InfoIcon>
+        </Tooltip>
+      </TitleRow>
       <TestInputContainer>
         <TestInput
           type="text"
           value={testQuestion}
-          onChange={handleQuestionChange}
+          onChange={(e) => setTestQuestion(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="질문을 입력해주세요(ex. Flow는 무슨 뜻이야?)"
         />
@@ -124,11 +127,35 @@ const Container = styled.div`
   margin-bottom: 40px;
 `;
 
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
 const Title = styled.h3`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
   color: ${colors.Black};
   margin: 0;
+`;
+
+const InfoIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${colors.Light_active};
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${colors.Normal};
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 const TestInputContainer = styled.div`
@@ -207,12 +234,10 @@ const UserBubble = styled.div`
 const AssistantMessage = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 12px;
   max-width: 70%;
 `;
 
 const MessageBubble = styled.div`
-  flex: 1;
   background: ${colors.Normal};
   border-radius: 4px;
   padding: 12px 16px;
