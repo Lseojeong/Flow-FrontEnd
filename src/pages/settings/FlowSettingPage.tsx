@@ -80,7 +80,7 @@ export default function FlowSettingPage() {
           <HeaderSection>
             <PageTitle>Flow 설정</PageTitle>
             <DescriptionRow>
-              <Description>관리자의 Flow와 설정을 할 수 있는 어드민입니다.</Description>
+              <Description>전역적인 Flow의 설정을 할 수 있는 어드민입니다.</Description>
               <ButtonGroup>
                 <Button variant="dark" size="medium">
                   되돌리기
