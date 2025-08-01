@@ -94,7 +94,7 @@ export default function DocsPage() {
 
         <TopBar>
           <ButtonWrapper>
-            <Button size="small">+ 문서 등록</Button>
+            <Button size="small">+ 카테고리 등록</Button>
           </ButtonWrapper>
         </TopBar>
 
