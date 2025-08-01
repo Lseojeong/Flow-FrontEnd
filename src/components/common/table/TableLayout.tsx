@@ -11,7 +11,7 @@ export const TableLayout: React.FC<TableLayoutProps> = ({ children }) => {
 };
 
 const TableWrapper = styled.div`
-  width: 1152px;
+  width: 100%;
   border-radius: 4px;
 `;
 
