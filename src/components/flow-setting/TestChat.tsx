@@ -61,7 +61,7 @@ export const TestChat: React.FC<TestChatProps> = ({ onTestRun, loading = false }
       <TitleRow>
         <Title>테스트</Title>
         <Tooltip
-          content="파라미터와 프롬프트는 RAG 응답에만 적용되며,"
+          content="파라미터와 프롬프트는 문서 기반 응답에만 적용되며,"
           description="스몰톡은 고정된 설정값을 따릅니다."
         >
           <InfoIcon>
