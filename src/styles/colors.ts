@@ -21,6 +21,7 @@ const colors = {
   BoxText: '#848484',
   BoxStroke: '#C1C1C1',
   MainRed: '#FF3317',
+  Linear: 'linear-gradient(to right, rgba(15, 66, 157, 1), rgba(233, 235, 248, 1))',
 } as const;
 
 export type Colors = typeof colors;

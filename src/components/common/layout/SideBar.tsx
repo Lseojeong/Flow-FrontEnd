@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 /**
  * @example
@@ -25,7 +25,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
     } else {
       onMenuClick?.(item.id);
       if (item.path) {
-        navigate(item.path); 
+        navigate(item.path);
       }
     }
   };
@@ -71,7 +71,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                         onClick={() => {
                           onMenuClick?.(subItem.id);
                           if (subItem.path) {
-                            navigate(subItem.path); 
+                            navigate(subItem.path);
                           }
                         }}
                       >
@@ -90,9 +90,6 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
 };
 
 export default SideBar;
-
-
-
 const SideBarContainer = styled.aside`
   position: fixed;
   top: 0;
@@ -105,6 +102,7 @@ const SideBarContainer = styled.aside`
   flex-direction: column;
   align-items: flex-start;
   user-select: none;
+  z-index: 1000;
 `;
 
 const LogoWrapper = styled.div`
@@ -181,4 +179,3 @@ const SubMenuItem = styled.li<{ $active?: boolean }>`
     color: ${colors.Normal};
   }
 `;
-

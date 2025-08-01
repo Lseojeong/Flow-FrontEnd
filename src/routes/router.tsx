@@ -11,7 +11,8 @@ import FaqPage from '@/pages/faq/FaqPage';
 import FaqDetailPage from '@/pages/faq/FaqDetailPage';
 
 import DocsPage from '@/pages/docs/DocsPage';
-import DocsDetailPage from '@/pages/docs/DocsDetailPage'; 
+import DocsDetailPage from '@/pages/docs/DocsDetailPage';
+import FlowSettingPage from '@/pages/settings/FlowSettingPage';
 
 const routes: RouteObject[] = [
   {
@@ -60,6 +61,10 @@ const routes: RouteObject[] = [
         element: <DocsDetailPage />,
       },
     ],
+  },
+  {
+    path: '/settings/flow',
+    element: <FlowSettingPage />,
   },
 ];
 
