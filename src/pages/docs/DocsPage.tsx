@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
@@ -23,17 +23,29 @@ import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
+import { Popup } from '@/components/common/popup/Popup';
+import CategoryModal from '@/components/common/modal/CategoryModal';
+import CategoryModalEdit from '@/components/common/modal/CategoryModalEdit';
+
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DocsPage() {
-  const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState('docs');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+
+  
+
+
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -57,10 +69,6 @@ export default function DocsPage() {
     }
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedCount === 0) return;
-    alert(`삭제 요청: ${selectedCount}개 항목`);
-  };
 
   const isDateInRange = (dateStr: string) => {
     if (!startDate && !endDate) return true;
@@ -76,6 +84,16 @@ export default function DocsPage() {
     const matchesDate = isDateInRange(item.lastModified.replace(/\./g, '-'));
     return matchesDepartment && matchesDate;
   });
+  
+  const handleDeleteSelected = () => {
+  if (selectedCount === 0) return;
+  setIsPopupOpen(true); 
+};
+
+  const handleRegisterCategory = (newCategoryName: string) => {
+  console.log('등록된 카테고리:', newCategoryName);
+
+};
 
   return (
     <PageWrapper>
@@ -94,7 +112,9 @@ export default function DocsPage() {
 
         <TopBar>
           <ButtonWrapper>
-            <Button size="small">+ 문서 등록</Button>
+            <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
+              + 카테고리 등록
+            </Button>
           </ButtonWrapper>
         </TopBar>
 
@@ -194,9 +214,16 @@ export default function DocsPage() {
 
                   <TableCell align="center">
                     <EditIcon
-                      onClick={() => navigate(`/docs/${item.id}`)}
+                      onClick={() => {
+                        setEditingCategory({
+                          id: item.id,
+                          name: item.name,
+                          description: item.description,
+                        });
+                        setIsEditModalOpen(true);
+                      }}
                       style={{ cursor: 'pointer', width: 20, height: 20 }}
-                    />
+                    />                    
                   </TableCell>
                 </TableRow>
               );
@@ -204,6 +231,42 @@ export default function DocsPage() {
           )}
         </TableLayout>
       </Content>
+      <Popup
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            onDelete={() => {
+              setIsPopupOpen(false);
+              setIsSuccessPopupOpen(true);
+            }}
+            confirmText="삭제"
+            cancelText="취소"
+            warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
+          />
+          <Popup
+        isOpen={isSuccessPopupOpen}
+        isAlert
+        title="삭제 완료"
+        message="카테고리가 삭제되었습니다."  
+        alertButtonText="확인"
+        onClose={() => setIsSuccessPopupOpen(false)}
+      />
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSubmit={handleRegisterCategory}
+        />
+        {editingCategory && (
+      <CategoryModalEdit
+      isOpen={isEditModalOpen}
+      onClose={() => setIsEditModalOpen(false)}
+      onSubmit={({ name, description }) => {
+        console.log('수정된 카테고리:', name, description);
+        setIsEditModalOpen(false);
+      }}
+      initialName={editingCategory.name}
+      initialDescription={editingCategory.description}
+    />
+)}
     </PageWrapper>
   );
 }
@@ -224,9 +287,16 @@ const SideBarWrapper = styled.div`
 `;
 
 const Content = styled.div`
-  margin-left: 280px;
+  margin-left: 280px; 
   padding: 40px;
   width: calc(100% - 280px);
+
+  @media (min-width: 1920px) {
+    width: auto;
+    max-width: 1360px; 
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
 
 const PageTitle = styled.h2`

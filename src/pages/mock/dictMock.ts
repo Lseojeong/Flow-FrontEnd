@@ -33,6 +33,7 @@ export const dictMockData = [
         manager: 'Milo',
         registeredAt: '2025.07.01',
         updatedAt: '2025.07.05',
+        version: '1.0.0'
       },
       {
         id: 2,
@@ -41,6 +42,7 @@ export const dictMockData = [
         manager: 'Jane',
         registeredAt: '2025.07.02',
         updatedAt: '2025.07.04',
+        version: '1.0.0'
       },
     ],
   },
