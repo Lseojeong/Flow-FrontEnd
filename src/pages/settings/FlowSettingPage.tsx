@@ -206,6 +206,7 @@ export default function FlowSettingPage() {
           <TestSection>
             <TestChat onTestRun={handleTestRun} loading={isTestLoading} />
           </TestSection>
+          <Footer />
         </ContentWrapper>
       </Content>
     </PageWrapper>
@@ -430,4 +431,8 @@ const InfoIcon = styled.div`
     width: 20px;
     height: 20px;
   }
+`;
+
+const Footer = styled.footer`
+  height: 40px;
 `;
