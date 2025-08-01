@@ -1,6 +1,7 @@
-
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+
 import SideBar from '@/components/common/layout/SideBar';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { symbolTextLogo } from '@/assets/logo';
@@ -13,12 +14,13 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
-
+import CategorySearch from '@/components/common/category-search/CategorySearch';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function FaqDetailPage() {
   const { categoryId } = useParams();
+  const [searchKeyword, setSearchKeyword] = useState('');
   const detailData = dictMockData.find((item) => item.id.toString() === categoryId);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
@@ -28,6 +30,10 @@ export default function FaqDetailPage() {
     { type: 'Processing', count: detailData.status.yellow },
     { type: 'Fail', count: detailData.status.red },
   ];
+
+  const filteredFiles = detailData.files.filter((file) =>
+    file.name.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
 
   return (
     <PageWrapper>
@@ -47,6 +53,7 @@ export default function FaqDetailPage() {
           <RegisterButton>+ 데이터 등록</RegisterButton>
         </Header>
         <Divider />
+
         <InfoBox>
           <InfoItemColumn>
             <Label>상태:</Label>
@@ -69,8 +76,17 @@ export default function FaqDetailPage() {
             <Value><DepartmentTagList departments={detailData.departments} /></Value>
           </InfoItemColumn>
         </InfoBox>
+
         <FileSection>
-          <SectionTitle>파일 관리</SectionTitle>
+          <FileSectionHeader>
+            <SectionTitle>파일 관리</SectionTitle>
+            <CategorySearch
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="파일 검색"
+            />
+          </FileSectionHeader>
+
           <Table>
             <thead>
               <tr>
@@ -84,7 +100,7 @@ export default function FaqDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {detailData.files.map((file, index) => (
+              {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td style={{ textAlign: 'center' }}>{index + 1}</Td>
                   <Td>{file.name}</Td>
@@ -112,6 +128,7 @@ export default function FaqDetailPage() {
     </PageWrapper>
   );
 }
+
 const PageWrapper = styled.div` display: flex; `;
 const Content = styled.div`
   flex: 1;
@@ -173,12 +190,18 @@ const InfoItemColumn = styled(InfoItem)`
   gap: 4px;
 `;
 const Label = styled.div` font-weight: 600; color: #444; `;
-const Value = styled.div` color: #666; `;
+const Value = styled.div` color: #666;  `;
 const FileSection = styled.div``;
+const FileSectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
 const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 16px;
+  color: #0e3a95;
 `;
 const Table = styled.table`
   width: 100%;
