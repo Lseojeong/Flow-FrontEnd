@@ -7,9 +7,11 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { Button } from '@/components/common/button/Button';
 import { CopyIcon, InformationIcon } from '@/assets/icons/settings/index';
-import { RangeSlider } from '@/components/flow-setting/RangeSlider';
+import { ResetIcon } from '@/assets/icons/common/index';
+import { Parameter } from '@/components/flow-setting/Parameter';
 import { Tooltip } from '@/components/flow-setting/Tooltip';
 import { PromptInput } from '@/components/flow-setting/PromptInput';
+import { TestChat } from '@/components/flow-setting/TestChat';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -22,6 +24,7 @@ export default function FlowSettingPage() {
   const [topK, setTopK] = useState(3);
   const [topP, setTopP] = useState(0);
   const [prompt, setPrompt] = useState('');
+  const [isTestLoading, setIsTestLoading] = useState(false);
 
   const handleTopKChange = (value: number) => {
     setTopK(value);
@@ -29,6 +32,31 @@ export default function FlowSettingPage() {
 
   const handleTopPChange = (value: number) => {
     setTopP(value);
+  };
+
+  const handleParameterReset = () => {
+    setTemperature(0);
+    setMaxTokens(128);
+    setTopK(3);
+    setTopP(0);
+  };
+
+  const isParameterDefault = () => {
+    return temperature === 0 && maxTokens === 128 && topK === 3 && topP === 0;
+  };
+
+  const handleTestRun = async (question: string): Promise<string> => {
+    setIsTestLoading(true);
+    try {
+      // TODO: 실제 API 호출로 대체
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // 시뮬레이션
+      return `프롬프트: "${prompt}"\n\n질문: ${question}\n\n답변: 이것은 테스트 답변입니다. 설정된 파라미터(temperature: ${temperature}, max_tokens: ${maxTokens}, top_k: ${topK}, top_p: ${topP})를 사용하여 생성된 결과입니다.`;
+    } catch (error) {
+      console.error('Test execution error:', error);
+      return '테스트 실행 중 오류가 발생했습니다.';
+    } finally {
+      setIsTestLoading(false);
+    }
   };
 
   //TODO: Toast 팝업으로 변경
@@ -77,7 +105,12 @@ export default function FlowSettingPage() {
           <Divider2 />
 
           <ParameterSection>
-            <ParameterTitle>파라미터</ParameterTitle>
+            <ParameterHeader>
+              <ParameterTitle>파라미터</ParameterTitle>
+              <ParameterResetButton onClick={handleParameterReset} disabled={isParameterDefault()}>
+                <ResetIcon />
+              </ParameterResetButton>
+            </ParameterHeader>
 
             <SliderGroup>
               <SliderItem>
@@ -92,7 +125,7 @@ export default function FlowSettingPage() {
                     </InfoIcon>
                   </Tooltip>
                 </LabelWithIcon>
-                <RangeSlider
+                <Parameter
                   min={0}
                   max={1}
                   value={temperature}
@@ -113,7 +146,7 @@ export default function FlowSettingPage() {
                     </InfoIcon>
                   </Tooltip>
                 </LabelWithIcon>
-                <RangeSlider
+                <Parameter
                   min={128}
                   max={1024}
                   value={maxTokens}
@@ -134,7 +167,7 @@ export default function FlowSettingPage() {
                     </InfoIcon>
                   </Tooltip>
                 </LabelWithIcon>
-                <RangeSlider
+                <Parameter
                   min={3}
                   max={10}
                   value={topK}
@@ -155,7 +188,7 @@ export default function FlowSettingPage() {
                     </InfoIcon>
                   </Tooltip>
                 </LabelWithIcon>
-                <RangeSlider
+                <Parameter
                   min={0}
                   max={1}
                   value={topP}
@@ -169,6 +202,10 @@ export default function FlowSettingPage() {
           <PromptSection>
             <PromptInput value={prompt} onChange={setPrompt} />
           </PromptSection>
+
+          <TestSection>
+            <TestChat onTestRun={handleTestRun} loading={isTestLoading} />
+          </TestSection>
         </ContentWrapper>
       </Content>
     </PageWrapper>
@@ -300,17 +337,58 @@ const PromptSection = styled.section`
   margin-right: 24px;
 `;
 
+const TestSection = styled.section`
+  margin-top: 24px;
+  margin-left: 24px;
+  margin-right: 24px;
+`;
+
 const ParameterSection = styled.section`
   margin-top: 44px;
   margin-left: 24px;
   margin-right: 24px;
 `;
 
+const ParameterHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
 const ParameterTitle = styled.h2`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
   color: ${colors.Black};
-  margin-bottom: 12px;
+`;
+
+const ParameterResetButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: ${colors.BoxText};
+
+  &:hover:not(:disabled) {
+    background: ${colors.background};
+    color: ${colors.Normal};
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 `;
 
 const SliderGroup = styled.div`

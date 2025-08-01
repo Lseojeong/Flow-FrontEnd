@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { RangeSliderProps } from './FlowSetting.types';
+import { ParameterProps } from './FlowSetting.types';
 
-export const RangeSlider: React.FC<RangeSliderProps> = ({
+export const Parameter: React.FC<ParameterProps> = ({
   min = 0,
   max = 100,
   defaultValue = 50,
@@ -22,7 +22,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
 
   const currentValue = value ?? internalValue;
 
-  const getStep = (): number => {
+  const getStep = () => {
     if (max === 1) return 0.1;
     if (max === 1024) return 128;
     return 1;
@@ -38,7 +38,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
     return { right: `calc(${rightPercentage}% - ${rightPercentage * 0.48}px)` };
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(event.target.value);
     setInternalValue(newValue);
     onChange?.(newValue);
@@ -46,7 +46,11 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
 
   return (
     <Container>
-      {label && <Label>{label}</Label>}
+      {label && (
+        <LabelRow>
+          <Label>{label}</Label>
+        </LabelRow>
+      )}
       <SliderContainer>
         {showValue && <ValueDisplay style={getValuePosition()}>{currentValue}</ValueDisplay>}
         <SliderInput
@@ -67,9 +71,15 @@ const Container = styled.div`
   width: 360px;
 `;
 
+const LabelRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
 const Label = styled.label`
   display: block;
-  margin-bottom: 12px;
 `;
 
 const SliderContainer = styled.div`
@@ -84,7 +94,6 @@ const ValueDisplay = styled.span`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-
   font-size: 12px;
   font-weight: ${fontWeight.Medium};
   color: white;
@@ -93,14 +102,12 @@ const ValueDisplay = styled.span`
   border-radius: 16px;
   pointer-events: none;
   z-index: 1;
-
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   text-align: center;
   box-sizing: border-box;
-
   background: ${colors.Normal};
 `;
 
@@ -127,7 +134,6 @@ const SliderInput = styled.input<{ $percentage: number }>`
     -webkit-appearance: none;
     appearance: none;
     border: none;
-
     width: 48px;
     height: 24px;
     background: ${colors.Normal};

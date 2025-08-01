@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { PromptInputProps } from './FlowSetting.types';
+import { ResetIcon } from '@/assets/icons/common/index';
 
 const COUNTER_COLORS = {
   NORMAL: colors.BoxText,
@@ -42,9 +43,19 @@ export const PromptInput: React.FC<PromptInputProps> = ({
     return COUNTER_COLORS.NORMAL;
   };
 
+  const handleReset = () => {
+    setInternalValue('');
+    onChange?.('');
+  };
+
   return (
     <Container>
-      <Label>{label}</Label>
+      <LabelRow>
+        <Label>{label}</Label>
+        <ResetButton onClick={handleReset} disabled={!currentValue}>
+          <ResetIcon />
+        </ResetButton>
+      </LabelRow>
       <TextAreaContainer>
         <TextArea
           value={currentValue}
@@ -71,10 +82,45 @@ const Container = styled.div`
   gap: 12px;
 `;
 
+const LabelRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
 const Label = styled.label`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
   color: ${colors.Black};
+`;
+
+const ResetButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: ${colors.BoxText};
+
+  &:hover:not(:disabled) {
+    background: ${colors.background};
+    color: ${colors.Normal};
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
 `;
 
 const TextAreaContainer = styled.div`
@@ -97,8 +143,7 @@ const TextArea = styled.textarea`
   border-radius: 4px;
 
   text-align: center;
-  line-height: 120px;
-  vertical-align: middle;
+  line-height: 118px;
 
   &::placeholder {
     color: ${colors.BoxText};

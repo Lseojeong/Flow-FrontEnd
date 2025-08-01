@@ -1,6 +1,6 @@
 import React from 'react';
 
-export interface RangeSliderProps {
+export interface ParameterProps {
   min?: number;
   max?: number;
   defaultValue?: number;
@@ -22,4 +22,9 @@ export interface PromptInputProps {
   placeholder?: string;
   maxLength?: number;
   label?: string;
+}
+
+export interface TestChatProps {
+  onTestRun?: (_question: string) => Promise<string>;
+  loading?: boolean;
 }
