@@ -7,6 +7,8 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { StatusCard } from '@/components/dash-board/status-card/StatusCard';
+import { Chart } from '@/components/dash-board/chart/Chart';
+
 import {
   BadIcon,
   CompletedIcon,
@@ -26,6 +28,18 @@ export default function DashBoardPage() {
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+  const chartData = [
+    { date: '2025-01-01', count: 100 },
+    { date: '2025-01-02', count: 200 },
+    { date: '2025-01-03', count: 300 },
+    { date: '2025-01-04', count: 100 },
+    { date: '2025-01-05', count: 500 },
+    { date: '2025-01-06', count: 600 },
+    { date: '2025-01-07', count: 100 },
+    { date: '2025-01-08', count: 800 },
+    { date: '2025-01-09', count: 900 },
+    { date: '2025-01-10', count: 1000 },
+  ];
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -89,6 +103,7 @@ export default function DashBoardPage() {
               ]}
             />
           </StatusCardSection>
+          <Chart data={chartData} />
         </ContentWrapper>
       </Content>
     </PageWrapper>
