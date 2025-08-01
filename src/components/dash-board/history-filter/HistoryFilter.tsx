@@ -159,8 +159,7 @@ const FilterButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover,
-  &:focus {
+  &:hover {
     border-color: ${colors.Normal};
     color: ${colors.Normal};
   }
@@ -298,6 +297,7 @@ const Button = styled.button`
 const CancelButton = styled(Button)`
   background: ${colors.Dark_active};
   color: ${colors.White};
+
   &:hover {
     background: ${colors.Black};
   }
@@ -306,8 +306,17 @@ const CancelButton = styled(Button)`
 const ConfirmButton = styled(Button)`
   background: ${colors.Normal};
   color: ${colors.White};
+
+  &:hover {
+    background: ${colors.Normal_active};
+  }
+
   &:disabled {
-    background-color: rgba(15, 66, 157, 0.5);
+    background-color: ${colors.Disabled};
     cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: ${colors.Normal};
   }
 `;
