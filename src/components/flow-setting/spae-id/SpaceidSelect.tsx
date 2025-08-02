@@ -23,7 +23,7 @@ export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({
           isClearable={true}
           classNamePrefix="react-select"
         />
-        {children}
+        <ButtonGroup>{children}</ButtonGroup>
       </SpaceInputContainer>
     </SpaceSection>
   );
@@ -44,7 +44,12 @@ const SpaceTitle = styled.h2`
 const SpaceInputContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
 `;
 
 const StyledSelect = styled(Select)`
