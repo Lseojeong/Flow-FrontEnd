@@ -21,6 +21,7 @@ import {
   SmallTalkIcon,
   TermsIcon,
 } from '@/assets/icons/dash-board/index';
+import { chartData } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -28,19 +29,6 @@ export default function DashBoardPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('dashboard');
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
-
-  const chartData = [
-    { date: '2025-01-01', count: 100 },
-    { date: '2025-01-02', count: 200 },
-    { date: '2025-01-03', count: 300 },
-    { date: '2025-01-04', count: 100 },
-    { date: '2025-01-05', count: 500 },
-    { date: '2025-01-06', count: 600 },
-    { date: '2025-01-07', count: 100 },
-    { date: '2025-01-08', count: 800 },
-    { date: '2025-01-09', count: 900 },
-    { date: '2025-01-10', count: 1000 },
-  ];
   return (
     <PageWrapper>
       <SideBarWrapper>
