@@ -12,10 +12,6 @@ export const TableRow: React.FC<TableRowProps> = ({ children, onClick, style }) 
 };
 
 const StyledTableRow = styled.tr`
-  &:hover {
-    background-color: #f4f8ff;
-  }
-
   td {
     padding: 16px 24px;
     color: ${colors.Black};

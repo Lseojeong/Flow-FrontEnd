@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
@@ -19,6 +19,16 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const activeItem = menuItems.find((item) =>
+      item.subMenuItems?.some((subItem) => subItem.id === activeMenuId)
+    );
+
+    if (activeItem && openDropdownId !== activeItem.id) {
+      setOpenDropdownId(activeItem.id);
+    }
+  }, [activeMenuId, menuItems, openDropdownId]);
+
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
       setOpenDropdownId(openDropdownId === item.id ? null : item.id);
@@ -27,6 +37,13 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
       if (item.path) {
         navigate(item.path);
       }
+    }
+  };
+
+  const handleSubItemClick = (subItem: MenuItemType) => {
+    onMenuClick?.(subItem.id);
+    if (subItem.path) {
+      navigate(subItem.path);
     }
   };
 
@@ -68,12 +85,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
                       <SubMenuItem
                         key={subItem.id}
                         $active={activeMenuId === subItem.id}
-                        onClick={() => {
-                          onMenuClick?.(subItem.id);
-                          if (subItem.path) {
-                            navigate(subItem.path);
-                          }
-                        }}
+                        onClick={() => handleSubItemClick(subItem)}
                       >
                         {subItem.label}
                       </SubMenuItem>

@@ -13,6 +13,7 @@ import FaqDetailPage from '@/pages/faq/FaqDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import DocsDetailPage from '@/pages/docs/DocsDetailPage';
 import FlowSettingPage from '@/pages/settings/FlowSettingPage';
+import DashBoardPage from '@/pages/dash-board/DashBoardPage';
 
 const routes: RouteObject[] = [
   {
@@ -22,6 +23,10 @@ const routes: RouteObject[] = [
   {
     path: '/signin',
     element: <SigninPage />,
+  },
+  {
+    path: '/dashboard',
+    element: <DashBoardPage />,
   },
   {
     path: '/dictionary',

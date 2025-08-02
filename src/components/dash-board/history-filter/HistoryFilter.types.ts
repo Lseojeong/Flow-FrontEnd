@@ -18,3 +18,11 @@ export interface HistoryFilterApiResponse {
     menuList: HistoryMenu[];
   };
 }
+
+export interface HistoryFilterData {
+  menu: string;
+  categoryList: {
+    category: string;
+    fileList: string[];
+  }[];
+}

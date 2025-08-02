@@ -124,7 +124,6 @@ const Container = styled.div`
   background: ${colors.Light};
   border-radius: 4px;
   padding: 20px;
-  margin-bottom: 40px;
 `;
 
 const TitleRow = styled.div`
