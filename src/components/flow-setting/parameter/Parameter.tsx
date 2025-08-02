@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { ParameterProps } from './FlowSetting.types';
+import { ParameterProps } from './Parameter.types';
 
 export const Parameter: React.FC<ParameterProps> = ({
   min = 0,

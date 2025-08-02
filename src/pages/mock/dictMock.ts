@@ -169,3 +169,10 @@ export const mockApiResponse = {
     rag: 23,
   },
 };
+
+export const mockData = [
+  { spaceId: 265262, spaceName: '썬더일레븐' },
+  { spaceId: 265263, spaceName: '개발팀' },
+  { spaceId: 265264, spaceName: 'QA팀' },
+  { spaceId: 265265, spaceName: '마케팅팀' },
+];

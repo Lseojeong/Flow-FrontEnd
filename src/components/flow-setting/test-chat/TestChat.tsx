@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { TestChatProps } from './FlowSetting.types';
+import { TestChatProps } from './TestChat.types';
 import { Button } from '@/components/common/button/Button';
-import { Tooltip } from './Tooltip';
+import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
 import { InformationIcon } from '@/assets/icons/settings/index';
 
 interface ChatMessage {
@@ -135,7 +135,7 @@ const TitleRow = styled.div`
 const Title = styled.h3`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
+  color: ${colors.Dark_active};
   margin: 0;
 `;
 

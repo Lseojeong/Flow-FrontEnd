@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -6,18 +6,53 @@ import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constant
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { Button } from '@/components/common/button/Button';
-import { CopyIcon, InformationIcon } from '@/assets/icons/settings/index';
+import { InformationIcon } from '@/assets/icons/settings/index';
 import { ResetIcon } from '@/assets/icons/common/index';
-import { Parameter } from '@/components/flow-setting/Parameter';
-import { Tooltip } from '@/components/flow-setting/Tooltip';
-import { PromptInput } from '@/components/flow-setting/PromptInput';
-import { TestChat } from '@/components/flow-setting/TestChat';
+import {
+  Parameter,
+  Tooltip,
+  PromptInput,
+  TestChat,
+  SpaceidSelect,
+} from '@/components/flow-setting/index';
+import { SpaceidOption } from '@/components/flow-setting/spae-id/SpaceIdSelect.types';
+import { mockData } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function FlowSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('flow-settings');
-  const token = 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk';
+
+  const [selectedToken, setSelectedToken] = useState<string>('265262');
+  const [spaceOptions, setSpaceOptions] = useState<SpaceidOption[]>([]);
+  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+
+  useEffect(() => {
+    const fetchSpaces = async () => {
+      setIsLoadingSpaces(true);
+      try {
+        // TODO: 실제 API 호출로 대체
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const options = mockData.map((space) => ({
+          value: space.spaceId.toString(),
+          label: `${space.spaceName} (${space.spaceId})`,
+        }));
+
+        setSpaceOptions(options);
+
+        if (options.length > 0) {
+          setSelectedToken(options[0].value);
+        }
+      } catch (error) {
+        console.error('Failed to fetch spaces:', error);
+      } finally {
+        setIsLoadingSpaces(false);
+      }
+    };
+
+    fetchSpaces();
+  }, []);
 
   const [temperature, setTemperature] = useState(0);
   const [maxTokens, setMaxTokens] = useState(128);
@@ -59,12 +94,6 @@ export default function FlowSettingPage() {
     }
   };
 
-  //TODO: Toast 팝업으로 변경
-  const handleCopyToken = () => {
-    navigator.clipboard.writeText(token);
-    alert('토큰이 클립보드에 복사되었습니다.');
-  };
-
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -81,28 +110,23 @@ export default function FlowSettingPage() {
             <PageTitle>Flow 설정</PageTitle>
             <DescriptionRow>
               <Description>전역적인 Flow의 설정을 할 수 있는 어드민입니다.</Description>
-              <ButtonGroup>
-                <Button variant="dark" size="medium">
-                  되돌리기
-                </Button>
-                <Button variant="primary" size="medium">
-                  적용하기
-                </Button>
-              </ButtonGroup>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
 
-          <TokenSection>
-            <TokenTitle>토큰</TokenTitle>
-            <TokenInputContainer>
-              <TokenText>{token}</TokenText>
-              <CopyButton onClick={handleCopyToken}>
-                <CopyIcon />
-              </CopyButton>
-            </TokenInputContainer>
-          </TokenSection>
-          <Divider2 />
+          <SpaceidSelect
+            value={selectedToken}
+            onChange={setSelectedToken}
+            options={spaceOptions}
+            isLoading={isLoadingSpaces}
+          >
+            <Button variant="dark" size="medium">
+              초기화
+            </Button>
+            <Button variant="primary" size="medium">
+              적용하기
+            </Button>
+          </SpaceidSelect>
 
           <ParameterSection>
             <ParameterHeader>
@@ -267,87 +291,16 @@ const Description = styled.p`
   color: ${colors.BoxText};
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
-const TokenSection = styled.section`
-  margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
-`;
-
-const TokenTitle = styled.h2`
-  font-size: 16px;
-  font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
-  margin-bottom: 12px;
-`;
-
-const TokenInputContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const TokenText = styled.span`
-  font-size: 14px;
-  word-break: break-all;
-  user-select: text;
-  color: ${colors.Normal};
-`;
-
-const CopyButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  background: none;
-  outline: none;
-  color: ${colors.BoxText};
-
-  &:hover {
-    color: ${colors.Normal};
-  }
-
-  &:focus {
-    outline: none;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-`;
-
-const Divider2 = styled(Divider)`
-  border: none;
-  height: 1.5px;
-  margin: 16px 24px 24px 24px;
-  background: ${colors.GridLine};
-`;
-
 const PromptSection = styled.section`
   margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const TestSection = styled.section`
   margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const ParameterSection = styled.section`
   margin-top: 44px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const ParameterHeader = styled.div`
@@ -360,7 +313,7 @@ const ParameterHeader = styled.div`
 const ParameterTitle = styled.h2`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
+  color: ${colors.Dark_active};
 `;
 
 const ParameterResetButton = styled.button`

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { PromptInputProps } from './FlowSetting.types';
+import { PromptInputProps } from './PromptInput.types';
 import { ResetIcon } from '@/assets/icons/common/index';
 
 const COUNTER_COLORS = {
@@ -91,7 +91,7 @@ const LabelRow = styled.div`
 const Label = styled.label`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
+  color: ${colors.Dark_active};
 `;
 
 const ResetButton = styled.button`

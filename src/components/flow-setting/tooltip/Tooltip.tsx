@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { TooltipProps } from './FlowSetting.types';
+import { TooltipProps } from './Tooltip.types';
 
 export const Tooltip: React.FC<TooltipProps> = ({ children, content, description }) => {
   const [isVisible, setIsVisible] = useState(false);
