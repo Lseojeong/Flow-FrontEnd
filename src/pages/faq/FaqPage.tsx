@@ -54,7 +54,6 @@ export default function FaqPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
-  const [searchValue, setSearchValue] = useState('');
 
 
   const handleDateChange = (start: string | null, end: string | null) => {
