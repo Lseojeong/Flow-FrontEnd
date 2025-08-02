@@ -4,7 +4,12 @@ import Select from 'react-select';
 import { colors, fontWeight } from '@/styles/index';
 import { SpaceidSelectProps } from './SpaceIdSelect.types';
 
-export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({ value, onChange, options }) => {
+export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({
+  value,
+  onChange,
+  options,
+  children,
+}) => {
   return (
     <SpaceSection>
       <SpaceTitle>스페이스 ID</SpaceTitle>
@@ -18,6 +23,7 @@ export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({ value, onChange, o
           isClearable={true}
           classNamePrefix="react-select"
         />
+        {children}
       </SpaceInputContainer>
     </SpaceSection>
   );
@@ -25,8 +31,7 @@ export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({ value, onChange, o
 
 const SpaceSection = styled.section`
   margin-top: 8px;
-  margin-left: 24px;
-  margin-right: 24px;
+  margin-bottom: 24px;
 `;
 
 const SpaceTitle = styled.h2`
@@ -39,7 +44,7 @@ const SpaceTitle = styled.h2`
 const SpaceInputContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 `;
 
 const StyledSelect = styled(Select)`

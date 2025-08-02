@@ -80,19 +80,18 @@ export default function FlowSettingPage() {
             <PageTitle>Flow 설정</PageTitle>
             <DescriptionRow>
               <Description>전역적인 Flow의 설정을 할 수 있는 어드민입니다.</Description>
-              <ButtonGroup>
-                <Button variant="dark" size="medium">
-                  되돌리기
-                </Button>
-                <Button variant="primary" size="medium">
-                  적용하기
-                </Button>
-              </ButtonGroup>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
 
-          <SpaceidSelect value={selectedToken} onChange={setSelectedToken} options={tokenOptions} />
+          <SpaceidSelect value={selectedToken} onChange={setSelectedToken} options={tokenOptions}>
+            <Button variant="dark" size="medium">
+              초기화
+            </Button>
+            <Button variant="primary" size="medium">
+              적용하기
+            </Button>
+          </SpaceidSelect>
 
           <ParameterSection>
             <ParameterHeader>
@@ -257,27 +256,16 @@ const Description = styled.p`
   color: ${colors.BoxText};
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-`;
-
 const PromptSection = styled.section`
   margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const TestSection = styled.section`
   margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const ParameterSection = styled.section`
   margin-top: 44px;
-  margin-left: 24px;
-  margin-right: 24px;
 `;
 
 const ParameterHeader = styled.div`
