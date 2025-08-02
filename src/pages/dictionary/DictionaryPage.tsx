@@ -5,7 +5,12 @@ import { Link } from 'react-router-dom';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { TableLayout, TableHeader, TableRow, ScrollableCell as TableCell } from '@/components/common/table';
+import {
+  TableLayout,
+  TableHeader,
+  TableRow,
+  ScrollableCell as TableCell,
+} from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -33,7 +38,7 @@ export default function DictionaryPage() {
       setCheckedItems({});
     } else {
       const newChecked: Record<number, boolean> = {};
-      categories.forEach(cat => {
+      categories.forEach((cat) => {
         newChecked[cat.id] = true;
       });
       setCheckedItems(newChecked);
@@ -41,7 +46,7 @@ export default function DictionaryPage() {
   };
 
   const toggleCheckItem = (id: number) => {
-    setCheckedItems(prev => ({
+    setCheckedItems((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
@@ -131,7 +136,7 @@ export default function DictionaryPage() {
               </EmptyCell>
             </EmptyRow>
           ) : (
-            categories.map(category => {
+            categories.map((category) => {
               const isChecked = !!checkedItems[category.id];
               return (
                 <TableRow key={category.id}>
@@ -180,14 +185,12 @@ export default function DictionaryPage() {
   );
 }
 
-
-
 const PageWrapper = styled.div`
   display: flex;
 `;
 
 const Content = styled.div`
-  margin-left: 280px;  /* 사이드바 너비 확보 */
+  margin-left: 280px; /* 사이드바 너비 확보 */
   padding: 40px;
   width: calc(100% - 280px);
 
@@ -211,7 +214,6 @@ const Description = styled.p`
   font-size: 14px;
   margin-bottom: 8px;
 `;
-
 
 const TopBar = styled.div`
   display: flex;
@@ -273,13 +275,12 @@ const SideBarWrapper = styled.div`
   position: fixed; /* 또는 sticky */
   top: 0;
   left: 0;
-  height: 100vh; 
-  width: 280px; 
-  z-index: 1000; 
-  background: white; 
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); 
+  height: 100vh;
+  width: 280px;
+  z-index: 1000;
+  background: white;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 `;
-
 
 const StyledLink = styled(Link)`
   color: inherit;

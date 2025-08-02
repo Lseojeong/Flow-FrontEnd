@@ -1,5 +1,7 @@
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+
 import SideBar from '@/components/common/layout/SideBar';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { symbolTextLogo } from '@/assets/logo';
@@ -11,11 +13,13 @@ import StatusSummary from '@/components/common/status/StatusSummary';
 import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
+import FileSearch from '@/components/common/file-search/FileSearch';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams();
+  const [searchKeyword, setSearchKeyword] = useState('');
   const detailData = dictMockData.find((item) => item.id.toString() === dictionaryId);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
@@ -25,7 +29,10 @@ export default function DictionaryDetailPage() {
     { type: 'Processing', count: detailData.status.yellow },
     { type: 'Fail', count: detailData.status.red },
   ];
-  
+
+  const filteredFiles = detailData.files.filter((file) =>
+    file.name.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
 
   return (
     <PageWrapper>
@@ -45,6 +52,7 @@ export default function DictionaryDetailPage() {
           <RegisterButton>+ 데이터 등록</RegisterButton>
         </Header>
         <Divider />
+
         <InfoBox>
           <InfoItemColumn>
             <Label>상태:</Label>
@@ -67,11 +75,17 @@ export default function DictionaryDetailPage() {
             <Label>최종 수정자:</Label>
             <Value>{detailData.lastEditor}</Value>
           </InfoItemColumn>
-
-
         </InfoBox>
+
         <FileSection>
-          <SectionTitle>파일 관리</SectionTitle>
+          <FileSectionHeader>
+            <SectionTitle>파일 관리</SectionTitle>
+            <FileSearch
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
+          </FileSectionHeader>
+
           <Table>
             <thead>
               <tr>
@@ -85,7 +99,7 @@ export default function DictionaryDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {detailData.files.map((file, index) => (
+              {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td>{index + 1}</Td>
                   <Td>{file.name}</Td>
@@ -115,7 +129,6 @@ export default function DictionaryDetailPage() {
     </PageWrapper>
   );
 }
-
 
 const PageWrapper = styled.div`
   display: flex;
@@ -172,7 +185,6 @@ const RegisterButton = styled.button`
 const InfoBox = styled.div`
   padding: 20px 0;
   margin-bottom: 30px;
-
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -184,7 +196,6 @@ const InfoItem = styled.div`
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-
   flex: 1 1 0;
   min-width: 160px;
 `;
@@ -206,10 +217,17 @@ const Value = styled.div`
 
 const FileSection = styled.div``;
 
+const FileSectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
 const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 16px;
+  color: #0e3a95;
 `;
 
 const Table = styled.table`
@@ -258,6 +276,7 @@ const DownloadIconWrapper = styled.div`
 const ActionIcons = styled.div`
   display: flex;
   gap: 16px;
+
   svg {
     width: 20px;
     height: 20px;
@@ -272,4 +291,3 @@ const NoData = styled.div`
   font-size: 18px;
   color: #999;
 `;
-
