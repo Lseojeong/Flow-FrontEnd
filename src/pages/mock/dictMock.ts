@@ -168,12 +168,9 @@ export const mockApiResponse = {
   },
 };
 
-export const tokenOptions = [
-  {
-    value: 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk',
-    label: 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk',
-  },
-  { value: 'space1.token123--abcdefghijk', label: 'space1.token123--abcdefghijk' },
-  { value: 'space2.token456--lmnopqrstuv', label: 'space2.token456--lmnopqrstuv' },
-  { value: 'space3.token789--wxyz123456', label: 'space3.token789--wxyz123456' },
+export const mockData = [
+  { spaceId: 265262, spaceName: '썬더일레븐' },
+  { spaceId: 265263, spaceName: '개발팀' },
+  { spaceId: 265264, spaceName: 'QA팀' },
+  { spaceId: 265265, spaceName: '마케팅팀' },
 ];

@@ -3,26 +3,43 @@ import styled from 'styled-components';
 import Select from 'react-select';
 import { colors, fontWeight } from '@/styles/index';
 import { SpaceidSelectProps } from './SpaceIdSelect.types';
+import { Loading } from '@/components/common/loading/Loading';
 
 export const SpaceidSelect: React.FC<SpaceidSelectProps> = ({
   value,
   onChange,
   options,
+  isLoading = false,
   children,
 }) => {
+  const handleSelectChange = (selectedOption: unknown) => {
+    const option = selectedOption as { value: string; label: string } | null;
+    onChange(option?.value || '');
+  };
+
+  const renderLoadingState = () => (
+    <LoadingContainer>
+      <Loading size={20} color={colors.Normal} />
+    </LoadingContainer>
+  );
+
+  const renderSelectDropdown = () => (
+    <StyledSelect
+      value={options.find((option) => option.value === value)}
+      onChange={handleSelectChange}
+      options={options}
+      placeholder="스페이스 ID를 선택하세요"
+      isSearchable={true}
+      isClearable={true}
+      classNamePrefix="react-select"
+    />
+  );
+
   return (
     <SpaceSection>
       <SpaceTitle>스페이스 ID</SpaceTitle>
       <SpaceInputContainer>
-        <StyledSelect
-          value={options.find((option) => option.value === value)}
-          onChange={(selectedOption: any) => onChange(selectedOption?.value || '')} // eslint-disable-line @typescript-eslint/no-explicit-any
-          options={options}
-          placeholder="스페이스 ID를 선택하세요"
-          isSearchable={true}
-          isClearable={true}
-          classNamePrefix="react-select"
-        />
+        {isLoading ? renderLoadingState() : renderSelectDropdown()}
         <ButtonGroup>{children}</ButtonGroup>
       </SpaceInputContainer>
     </SpaceSection>
@@ -50,6 +67,19 @@ const SpaceInputContainer = styled.div`
 const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid ${colors.Light};
+  border-radius: 4px;
+  background: ${colors.White};
+  flex: 1;
+  min-width: 300px;
 `;
 
 const StyledSelect = styled(Select)`

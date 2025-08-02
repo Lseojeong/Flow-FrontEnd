@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -15,14 +15,44 @@ import {
   TestChat,
   SpaceidSelect,
 } from '@/components/flow-setting/index';
-import { tokenOptions } from '@/pages/mock/dictMock';
+import { SpaceidOption } from '@/components/flow-setting/spae-id/SpaceIdSelect.types';
+import { mockData } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function FlowSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('flow-settings');
 
-  const [selectedToken, setSelectedToken] = useState<string>(tokenOptions[0].value);
+  const [selectedToken, setSelectedToken] = useState<string>('265262');
+  const [spaceOptions, setSpaceOptions] = useState<SpaceidOption[]>([]);
+  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+
+  useEffect(() => {
+    const fetchSpaces = async () => {
+      setIsLoadingSpaces(true);
+      try {
+        // TODO: 실제 API 호출로 대체
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const options = mockData.map((space) => ({
+          value: space.spaceId.toString(),
+          label: `${space.spaceName} (${space.spaceId})`,
+        }));
+
+        setSpaceOptions(options);
+
+        if (options.length > 0) {
+          setSelectedToken(options[0].value);
+        }
+      } catch (error) {
+        console.error('Failed to fetch spaces:', error);
+      } finally {
+        setIsLoadingSpaces(false);
+      }
+    };
+
+    fetchSpaces();
+  }, []);
 
   const [temperature, setTemperature] = useState(0);
   const [maxTokens, setMaxTokens] = useState(128);
@@ -84,7 +114,12 @@ export default function FlowSettingPage() {
           </HeaderSection>
           <Divider />
 
-          <SpaceidSelect value={selectedToken} onChange={setSelectedToken} options={tokenOptions}>
+          <SpaceidSelect
+            value={selectedToken}
+            onChange={setSelectedToken}
+            options={spaceOptions}
+            isLoading={isLoadingSpaces}
+          >
             <Button variant="dark" size="medium">
               초기화
             </Button>
