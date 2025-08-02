@@ -19,8 +19,6 @@ import { Popup } from '@/components/common/popup/Popup';
 import DictUploadModal from '@/components/common/modal/DictUploadModal';
 import DictEditModal from '@/components/common/modal/DictEditModal';
 
-
-
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DictionaryDetailPage() {

@@ -20,6 +20,9 @@ import { Popup } from '@/components/common/popup/Popup';
 import DocsUploadModal from '@/components/common/modal/DocsUploadModal';
 import  DocsEditModal from '@/components/common/modal/DocsEditModal';
 
+import FileSearch from '@/components/common/file-search/FileSearch';
+
+
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DocsDetailPage() {
@@ -97,10 +100,9 @@ export default function DocsDetailPage() {
         <FileSection>
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
-            <CategorySearch
+            <FileSearch
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="파일 검색"
             />
           </FileSectionHeader>
 

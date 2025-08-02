@@ -40,6 +40,7 @@ export default function DictionaryPage() {
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+  const [searchValue, setSearchValue] = useState('');
 
   const toggleSelectAll = () => {
     const allSelected = selectedCount === categories.length;

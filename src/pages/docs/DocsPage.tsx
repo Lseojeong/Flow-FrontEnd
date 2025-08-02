@@ -37,6 +37,7 @@ export default function DocsPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -50,6 +51,8 @@ export default function DocsPage() {
   const [searchValue, setSearchValue] = useState('');
 
     const existingCategoryNames = dictMockData.map((item) => item.name);
+
+  const [searchValue, setSearchValue] = useState('');
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -126,9 +129,13 @@ export default function DocsPage() {
 
         <TopBar>
           <ButtonWrapper>
+
             <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
               + 카테고리 등록
             </Button>
+
+            <Button size="small">+ 카테고리 등록</Button>
+
           </ButtonWrapper>
         </TopBar>
 
