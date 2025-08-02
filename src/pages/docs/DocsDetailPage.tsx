@@ -84,7 +84,6 @@ export default function DocsDetailPage() {
             <FileSearch
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="파일 검색"
             />
           </FileSectionHeader>
 
