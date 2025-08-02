@@ -118,6 +118,12 @@ const StyledSelect = styled(Select)`
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 9999;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .react-select__menu-list {
+    padding: 0;
   }
 
   .react-select__option {
