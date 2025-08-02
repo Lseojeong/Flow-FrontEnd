@@ -38,7 +38,7 @@ export default function DictionaryPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
-  const [searchValue, setSearchValue] = useState('');
+
 
   
   

@@ -15,7 +15,6 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import Divider from '@/components/common/divider/Divider';
-import CategorySearch from '@/components/common/category-search/CategorySearch';
 import { Popup } from '@/components/common/popup/Popup';
 import DocsUploadModal from '@/components/common/modal/DocsUploadModal';
 import  DocsEditModal from '@/components/common/modal/DocsEditModal';
