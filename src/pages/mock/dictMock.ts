@@ -167,3 +167,13 @@ export const mockApiResponse = {
     rag: 23,
   },
 };
+
+export const tokenOptions = [
+  {
+    value: 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk',
+    label: 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk',
+  },
+  { value: 'space1.token123--abcdefghijk', label: 'space1.token123--abcdefghijk' },
+  { value: 'space2.token456--lmnopqrstuv', label: 'space2.token456--lmnopqrstuv' },
+  { value: 'space3.token789--wxyz123456', label: 'space3.token789--wxyz123456' },
+];

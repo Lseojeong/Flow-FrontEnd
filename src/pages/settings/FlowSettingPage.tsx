@@ -6,18 +6,23 @@ import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constant
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { Button } from '@/components/common/button/Button';
-import { CopyIcon, InformationIcon } from '@/assets/icons/settings/index';
+import { InformationIcon } from '@/assets/icons/settings/index';
 import { ResetIcon } from '@/assets/icons/common/index';
-import { Parameter } from '@/components/flow-setting/Parameter';
-import { Tooltip } from '@/components/flow-setting/Tooltip';
-import { PromptInput } from '@/components/flow-setting/PromptInput';
-import { TestChat } from '@/components/flow-setting/TestChat';
+import {
+  Parameter,
+  Tooltip,
+  PromptInput,
+  TestChat,
+  SpaceidSelect,
+} from '@/components/flow-setting/index';
+import { tokenOptions } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function FlowSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('flow-settings');
-  const token = 'dafmeb.asdfbqoxoxxx--asdfasdfasdfnwk';
+
+  const [selectedToken, setSelectedToken] = useState<string>(tokenOptions[0].value);
 
   const [temperature, setTemperature] = useState(0);
   const [maxTokens, setMaxTokens] = useState(128);
@@ -59,12 +64,6 @@ export default function FlowSettingPage() {
     }
   };
 
-  //TODO: Toast 팝업으로 변경
-  const handleCopyToken = () => {
-    navigator.clipboard.writeText(token);
-    alert('토큰이 클립보드에 복사되었습니다.');
-  };
-
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -93,16 +92,7 @@ export default function FlowSettingPage() {
           </HeaderSection>
           <Divider />
 
-          <TokenSection>
-            <TokenTitle>토큰</TokenTitle>
-            <TokenInputContainer>
-              <TokenText>{token}</TokenText>
-              <CopyButton onClick={handleCopyToken}>
-                <CopyIcon />
-              </CopyButton>
-            </TokenInputContainer>
-          </TokenSection>
-          <Divider2 />
+          <SpaceidSelect value={selectedToken} onChange={setSelectedToken} options={tokenOptions} />
 
           <ParameterSection>
             <ParameterHeader>
@@ -272,66 +262,6 @@ const ButtonGroup = styled.div`
   gap: 12px;
 `;
 
-const TokenSection = styled.section`
-  margin-top: 24px;
-  margin-left: 24px;
-  margin-right: 24px;
-`;
-
-const TokenTitle = styled.h2`
-  font-size: 16px;
-  font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
-  margin-bottom: 12px;
-`;
-
-const TokenInputContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const TokenText = styled.span`
-  font-size: 14px;
-  word-break: break-all;
-  user-select: text;
-  color: ${colors.Normal};
-`;
-
-const CopyButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  background: none;
-  outline: none;
-  color: ${colors.BoxText};
-
-  &:hover {
-    color: ${colors.Normal};
-  }
-
-  &:focus {
-    outline: none;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-`;
-
-const Divider2 = styled(Divider)`
-  border: none;
-  height: 1.5px;
-  margin: 16px 24px 24px 24px;
-  background: ${colors.GridLine};
-`;
-
 const PromptSection = styled.section`
   margin-top: 24px;
   margin-left: 24px;
@@ -360,7 +290,7 @@ const ParameterHeader = styled.div`
 const ParameterTitle = styled.h2`
   font-size: 16px;
   font-weight: ${fontWeight.Medium};
-  color: ${colors.Black};
+  color: ${colors.Dark_active};
 `;
 
 const ParameterResetButton = styled.button`
