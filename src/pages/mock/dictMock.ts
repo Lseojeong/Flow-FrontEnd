@@ -1,5 +1,6 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
+import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
 
 export const dictMockData = [
   {
@@ -52,7 +53,7 @@ export const historyMockData: HistoryData[] = [
     version: 'v2.0.1',
     fileName: '채팅방1',
     modifier: 'kodari385(Milo)',
-    timeStamp: '2025-07-11',
+    timeStamp: '2025.07.05 16:30',
     work: '수정',
     description: '로그인 설정 변경',
   },
@@ -60,7 +61,7 @@ export const historyMockData: HistoryData[] = [
     version: 'v1.0.0',
     fileName: 'flow 챗봇',
     modifier: 'kodari385(Milo)',
-    timeStamp: '2025-07-11',
+    timeStamp: '2025.07.11 10:00',
     work: '등록',
     description: '새 메뉴 추가',
   },
@@ -68,7 +69,7 @@ export const historyMockData: HistoryData[] = [
     version: 'v2.0.2',
     fileName: '채팅방2',
     modifier: 'kodari385(Milo)',
-    timeStamp: '2025-07-10',
+    timeStamp: '2025.07.10 15:00',
     work: '삭제',
     description: '불필요한 파일 정리',
   },
@@ -76,7 +77,7 @@ export const historyMockData: HistoryData[] = [
     version: 'v1.9.9',
     fileName: '사용자 가이드',
     modifier: 'kodari385(Milo)',
-    timeStamp: '2025-07-09',
+    timeStamp: '2025.07.09 12:00',
     work: '수정',
     description: '사용자 인터페이스 개선',
   },
@@ -84,20 +85,11 @@ export const historyMockData: HistoryData[] = [
     version: 'v1.9.8',
     fileName: 'API 문서',
     modifier: 'kodari385(Milo)',
-    timeStamp: '2025-07-08',
+    timeStamp: '2025.07.08 14:00',
     work: '등록',
     description: '새로운 API 엔드포인트 추가',
   },
 ];
-
-// HistoryFilter용 mock data (API 응답 형식)
-export interface HistoryFilterData {
-  menu: string;
-  categoryList: {
-    category: string;
-    fileList: string[];
-  }[];
-}
 
 export const historyFilterMockData: HistoryFilterData[] = [
   {
