@@ -53,6 +53,7 @@ export default function DashBoardPage() {
       ],
     },
     {
+      // TODO: 평균 응답시간 단위 변경 필요
       title: '평균 응답시간',
       count: `${mockApiResponse.responseTime.average}${mockApiResponse.responseTime.unit}`,
       items: [
