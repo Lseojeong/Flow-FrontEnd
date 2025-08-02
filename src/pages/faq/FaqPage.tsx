@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link} from 'react-router-dom';
 
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
@@ -23,18 +23,39 @@ import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
+import { Popup } from '@/components/common/popup/Popup';
+import FaqCategoryModal from '@/components/common/modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/common/modal/FaqCategoryModalEdit'; 
+import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
+
 export default function FaqPage() {
-  const navigate = useNavigate();
   const [activeMenuId, setActiveMenuId] = useState('faq');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ 
+    id: number; 
+    name: string; 
+    description: string ;
+    departments: { departmentId: string; departmentName: string }[];
+  } | null>(null);
   const [searchValue, setSearchValue] = useState('');
+  
+
+  const existingCategoryNames = dictMockData.map((item) => item.name);
+
+  const [searchValue, setSearchValue] = useState('');
+
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -59,9 +80,9 @@ export default function FaqPage() {
   };
 
   const handleDeleteSelected = () => {
-    if (selectedCount === 0) return;
-    alert(`삭제 요청: ${selectedCount}개 항목`);
-  };
+  if (selectedCount === 0) return;
+  setIsPopupOpen(true); 
+};
 
   const isDateInRange = (dateStr: string) => {
     if (!startDate && !endDate) return true;
@@ -77,6 +98,21 @@ export default function FaqPage() {
     const matchesDate = isDateInRange(item.lastModified.replace(/\./g, '-'));
     return matchesDepartment && matchesDate;
   });
+
+  const handleRegisterCategory = ({
+  name,
+  description,
+  departments,
+}: {
+  name: string;
+  description: string;
+  departments: string[];
+}) => {
+  console.log('카테고리명:', name);
+  console.log('설명:', description);
+  console.log('선택된 부서:', departments);
+
+};
 
   return (
     <PageWrapper>
@@ -95,7 +131,9 @@ export default function FaqPage() {
 
         <TopBar>
           <ButtonWrapper>
-            <Button size="small">+ 카테고리 등록</Button>
+            <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
+              + 카테고리 등록
+            </Button>
           </ButtonWrapper>
         </TopBar>
 
@@ -195,9 +233,17 @@ export default function FaqPage() {
 
                   <TableCell align="center">
                     <EditIcon
-                      onClick={() => navigate(`/faq/${item.id}`)}
+                      onClick={() => {
+                        setEditingCategory({
+                          id: item.id,
+                          name: item.name,
+                          description: item.description,
+                          departments: item.departments ?? [],
+                        });
+                        setIsEditModalOpen(true);
+                      }}
                       style={{ cursor: 'pointer', width: 20, height: 20 }}
-                    />
+                    />  
                   </TableCell>
                 </TableRow>
               );
@@ -205,6 +251,48 @@ export default function FaqPage() {
           )}
         </TableLayout>
       </Content>
+      <Popup
+            isOpen={isPopupOpen}
+            title="카테고리 삭제"
+            onClose={() => setIsPopupOpen(false)}
+            onDelete={() => {
+              setIsPopupOpen(false);
+              setIsSuccessPopupOpen(true);
+            }}
+            confirmText="삭제"
+            cancelText="취소"
+            warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
+          />
+          <Popup
+        isOpen={isSuccessPopupOpen}
+        isAlert
+        title="삭제 완료"
+        message="카테고리가 삭제되었습니다."  
+        alertButtonText="확인"
+        onClose={() => setIsSuccessPopupOpen(false)}
+      />
+      <FaqCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSubmit={handleRegisterCategory}
+        departments={mockDepartments}
+        existingCategoryNames={existingCategoryNames} 
+        />
+        {editingCategory && (
+      <FaqCategoryModalEdit
+      isOpen={isEditModalOpen}
+      onClose={() => setIsEditModalOpen(false)}
+      onSubmit={({ name, description }) => {
+        console.log('수정된 카테고리:', name, description);
+        setIsEditModalOpen(false);
+      }}
+      initialName={editingCategory.name}
+      initialDescription={editingCategory.description}
+      initialDepartments={editingCategory?.departments?.map((d) => d.departmentId) ?? []}
+      departments={mockDepartments}
+    />
+)}
+        
     </PageWrapper>
   );
 }
@@ -225,9 +313,16 @@ const SideBarWrapper = styled.div`
 `;
 
 const Content = styled.div`
-  margin-left: 280px;
+  margin-left: 280px; 
   padding: 40px;
   width: calc(100% - 280px);
+
+  @media (min-width: 1920px) {
+    width: auto;
+    max-width: 1360px; 
+    margin-left: auto;
+    margin-right: auto;
+  }
 `;
 
 const PageTitle = styled.h2`

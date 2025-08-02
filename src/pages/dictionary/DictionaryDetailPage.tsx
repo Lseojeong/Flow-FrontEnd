@@ -7,6 +7,7 @@ import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constant
 import { symbolTextLogo } from '@/assets/logo';
 import DownloadIcon from '@/assets/icons/common/download.svg?react';
 import EditIcon from '@/assets/icons/common/edit.svg?react';
+import { Button } from '@/components/common/button/Button';
 import DeleteIcon from '@/assets/icons/common/delete.svg?react';
 import { dictMockData } from '@/pages/mock/dictMock';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -14,6 +15,9 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
+import { Popup } from '@/components/common/popup/Popup';
+import DictUploadModal from '@/components/common/modal/DictUploadModal';
+import DictEditModal from '@/components/common/modal/DictEditModal';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -21,6 +25,15 @@ export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams();
   const [searchKeyword, setSearchKeyword] = useState('');
   const detailData = dictMockData.find((item) => item.id.toString() === dictionaryId);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [targetFileName, setTargetFileName] = useState<string>('');
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editTargetFile, setEditTargetFile] = useState<{
+  title: string;
+  version: string;
+} | null>(null);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
 
@@ -49,7 +62,7 @@ export default function DictionaryDetailPage() {
             <Title>{detailData.name}</Title>
             <SubTitle>{detailData.description}</SubTitle>
           </TitleGroup>
-          <RegisterButton>+ 데이터 등록</RegisterButton>
+          <Button onClick={() => setIsCsvModalOpen(true)}>+ 데이터 등록</Button>
         </Header>
         <Divider />
 
@@ -115,8 +128,17 @@ export default function DictionaryDetailPage() {
                         <DownloadIcon />
                       </DownloadIconWrapper>
                       <ActionIcons>
-                        <EditIcon />
-                        <DeleteIcon />
+                        <EditIcon
+                           onClick={() => {
+                             setEditTargetFile({
+                               title: file.name,
+                               version: file.version,
+                             });
+                             setIsEditModalOpen(true);
+                           }}
+                           style={{ cursor: 'pointer' }}
+                         />
+                        <DeleteIcon onClick={() => {setTargetFileName(file.name);setIsDeletePopupOpen(true);}} style={{ cursor: 'pointer' }}/>
                       </ActionIcons>
                     </FileDownloadWrapper>
                   </Td>
@@ -126,6 +148,50 @@ export default function DictionaryDetailPage() {
           </Table>
         </FileSection>
       </Content>
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="파일 삭제"
+        message={`${targetFileName} 파일을 삭제하시겠습니까?`}
+        warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={() => {
+         setIsDeletePopupOpen(false);
+        setIsSuccessPopupOpen(true);
+      }}
+     />
+
+      <Popup
+        isOpen={isSuccessPopupOpen}
+        isAlert
+        title="파일 삭제 완료"
+        message="삭제가 완료되었습니다."
+        alertButtonText="확인"
+        onClose={() => setIsSuccessPopupOpen(false)}
+      />
+      <DictUploadModal
+                      isOpen={isCsvModalOpen}
+                      onClose={() => setIsCsvModalOpen(false)}
+                      onSubmit={(data) => {
+                        console.log('업로드된 CSV:', data);
+                        setIsCsvModalOpen(false);
+                      }}
+                    />
+                    {editTargetFile && (
+                    <DictEditModal
+                      isOpen={isEditModalOpen}
+                      onClose={() => {
+                        setIsEditModalOpen(false);
+                        setEditTargetFile(null);
+                      }}
+                      onSubmit={(data) => {
+                        console.log('수정된 파일 데이터:', data);
+                        setIsEditModalOpen(false);
+                        setEditTargetFile(null);
+                      }}
+                      originalFileName={editTargetFile.title}
+                      originalVersion={editTargetFile.version}
+                    />
+                  )}
     </PageWrapper>
   );
 }
@@ -167,20 +233,6 @@ const SubTitle = styled.p`
   margin: 4px 0 0 0;
 `;
 
-const RegisterButton = styled.button`
-  background-color: #0e3a95;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.25s ease;
-
-  &:hover {
-    background-color: #07326d;
-  }
-`;
 
 const InfoBox = styled.div`
   padding: 20px 0;

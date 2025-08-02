@@ -1,3 +1,4 @@
+
 interface BasePopupProps {
   isOpen: boolean;
   title?: string;
