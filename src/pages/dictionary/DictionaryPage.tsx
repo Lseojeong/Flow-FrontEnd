@@ -16,8 +16,8 @@ import { DeleteIcon, EditIcon } from '@/assets/icons/common';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { Popup } from '@/components/common/popup/Popup';
-import CategoryModal from '@/components/common/modal/CategoryModal';
-import CategoryModalEdit from '@/components/common/modal/CategoryModalEdit';
+import DictCategoryModal from '@/components/common/modal/DictCategoryModal';
+import DictCategoryModalEdit from '@/components/common/modal/DictCategoryModalEdit';
 
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -37,6 +37,7 @@ export default function DictionaryPage() {
 
   
   
+  const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
 
@@ -78,8 +79,15 @@ export default function DictionaryPage() {
     setEndDate(end);
   };
 
-  const handleRegisterCategory = (newCategoryName: string) => {
-  console.log('등록된 카테고리:', newCategoryName);
+  const handleRegisterCategory = ({
+  name,
+  description,
+}: {
+  name: string;
+  description: string;
+}) => {
+  console.log('카테고리명:', name);
+  console.log('설명:', description);
 
 };
 
@@ -225,13 +233,14 @@ export default function DictionaryPage() {
        alertButtonText="확인"
        onClose={() => setIsSuccessPopupOpen(false)}
     />
-     <CategoryModal
+     <DictCategoryModal
       isOpen={isCategoryModalOpen}
       onClose={() => setIsCategoryModalOpen(false)}
       onSubmit={handleRegisterCategory}
+      existingCategoryNames={existingCategoryNames} 
      />
      {editingCategory && (
-      <CategoryModalEdit
+      <DictCategoryModalEdit
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
       onSubmit={({ name, description }) => {

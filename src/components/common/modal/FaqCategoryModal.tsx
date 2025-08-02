@@ -7,18 +7,29 @@ import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import { useEffect } from 'react';
 import Divider from '@/components/common/divider/FlatDivider';
+import { Department } from '@/components/common/department/Department.types';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
+
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: string) => void;
+  onSubmit: (_: {
+    name: string;
+    description: string;
+    departments: string[];
+  }) => void;
+  departments: Department[]; 
+  existingCategoryNames: string[]; 
 }
 
-const CategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
+const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,departments,existingCategoryNames, }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [error, setError] = useState('');
+  const [errorType, setErrorType] = useState<'' | 'empty' | 'duplicate'>('');
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+
 
   useEffect(() => {
   if (isOpen) {
@@ -36,22 +47,48 @@ const CategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
     const trimmedName = categoryName.trim();
 
     if (trimmedName === '') {
-      setError('카테고리를 입력해주세요.');
+      setErrorType('empty');
       return;
     }
 
-    onSubmit(trimmedName);
+    if (existingCategoryNames.includes(trimmedName)) {
+      setErrorType('duplicate');
+      return;
+    }
+
+    setErrorType('');
+
+    onSubmit({
+  name: trimmedName,
+  description,
+  departments: selectedDepartments,
+});
     setCategoryName('');
     setDescription('');
-    setError('');
+    setSelectedDepartments([]);
     onClose();
 
     setTimeout(() => {
       setIsSuccessPopupOpen(true);
     }, 100);
+    handleClose();
   };
 
   const isDisabled = categoryName.trim() === '';
+
+  const getErrorMessage = () => {
+    if (errorType === 'empty') return '카테고리를 입력해주세요.';
+    if (errorType === 'duplicate') return '중복된 카테고리입니다.';
+    return '';
+  };
+
+  const handleClose = () => {
+  setCategoryName('');
+  setDescription('');
+  setSelectedDepartments([]);
+  setErrorType('');
+  onClose();
+};
 
   return (
     <>
@@ -74,8 +111,14 @@ const CategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
               value={categoryName}
               onChange={setCategoryName}
               onBlur={() => {}}
-              error={error}
+              error={getErrorMessage()}
               showValidation
+            />
+            <DepartmentCheck
+              departments={departments} 
+              selectedDepartmentIds={selectedDepartments}
+              onChange={setSelectedDepartments}
+              
             />
             <DescriptionInput
               value={description}
@@ -98,7 +141,7 @@ const CategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
-export default CategoryModal;
+export default FaqCategoryModal;
 
 const Overlay = styled.div`
   position: fixed;

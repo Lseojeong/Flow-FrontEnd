@@ -15,12 +15,13 @@ interface Props {
   onSubmit: (_data: { title: string; description: string; version: string }) => void;
 }
 
-export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
+export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState('');
   const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [versionError, setVersionError] = useState(false);
 
     useEffect(() => {
     if (isOpen) {
@@ -35,29 +36,41 @@ export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
   }, [isOpen]);
 
   const handleConfirm = () => {
-    if (!file) {
-      setError('PDF 파일을 업로드해주세요.');
-      return;
-    }
+  let hasError = false;
 
-    const trimmedDesc = description.trim();
+  if (!file) {
+    setError('CSV 파일을 업로드해주세요.');
+    hasError = true;
+  }
 
-    onSubmit({
-      title: file.name,
-      description: trimmedDesc,
-      version,
-    });
+  if (!version) {
+    setVersionError(true);
+    hasError = true;
+  } else {
+    setVersionError(false);
+  }
 
-    setFile(null);
-    setDescription('');
-    setVersion('');
-    setError('');
-    onClose();
+  if (hasError) return;
 
-    setTimeout(() => {
-      setIsSuccessPopupOpen(true);
-    }, 100);
-  };
+  const trimmedDesc = description.trim();
+
+  onSubmit({
+    title: file!.name,
+    description: trimmedDesc,
+    version,
+  });
+
+  setFile(null);
+  setDescription('');
+  setVersion('');
+  setError('');
+  setVersionError(false);
+  onClose();
+
+  setTimeout(() => {
+    setIsSuccessPopupOpen(true);
+  }, 100);
+};
 
   const isDisabled = !file || version === '';
 
@@ -77,6 +90,12 @@ export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
           <ModalBox>
             <Title>용어사전 데이터 등록</Title>
             <Divider />
+            <DescriptionRow>
+              <span>양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+              <DownloadLink href="/assets/dict-template.csv" download>
+                양식 다운로드
+              </DownloadLink></span>
+            </DescriptionRow>  
 
             <UploadRow>
               <UploadInput
@@ -100,13 +119,23 @@ export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
             {error && <ErrorText>{error}</ErrorText>}
 
             <DescriptionInput
-                        label="히스토리 설명"
-                        placeholder="히스토리 설명을 작성해주세요."
-                        maxLength={30}
-                        errorMessage="히스토리 설명을 입력해주세요."
-                      />
+              label="히스토리 설명"
+              placeholder="히스토리 설명을 작성해주세요."
+              maxLength={30}
+              errorMessage="히스토리 설명을 입력해주세요."
+              />
+              <VersionWrapper>
+  <VersionSelector
+    onSelect={(ver: string) => {
+      setVersion(ver);
+      setVersionError(false);
+    }}
+    error={versionError}
+  />
+</VersionWrapper>
 
-            <VersionSelector onSelect={(ver: string) => setVersion(ver)} />
+
+
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -123,7 +152,7 @@ export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
   );
 };
 
-export default CsvUploadModal;
+export default DictUploadModal;
 
 const Overlay = styled.div`
   position: fixed;
@@ -180,4 +209,32 @@ const UploadButtonWrapper = styled.div`
     height : 48px;
     width: 120px;
   }
+`;
+
+const DescriptionRow = styled.div`
+  font-size: 14px;
+  color: ${colors.Black};
+  margin: 8px 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DownloadLink = styled.a`
+  color: ${colors.Normal}; 
+  text-decoration: underline;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: none;
+  }
+`;
+
+
+const VersionWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
 `;

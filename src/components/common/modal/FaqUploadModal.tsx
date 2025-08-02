@@ -78,7 +78,13 @@ export const FaqUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
         <Overlay>
           <ModalBox>
             <Title>FAQ 데이터 등록</Title>
-            <Divider />
+            <Divider />    
+            <DescriptionRow>
+              <span>양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+              <DownloadLink href="/assets/faq-template.csv" download>
+                양식 다운로드
+              </DownloadLink></span>
+            </DescriptionRow>         
 
             <UploadRow>
               <UploadInput
@@ -181,5 +187,25 @@ const UploadButtonWrapper = styled.div`
   button {
     height : 48px;
     width: 120px;
+  }
+`;
+
+const DescriptionRow = styled.div`
+  font-size: 14px;
+  color: ${colors.Black};
+  margin: 8px 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DownloadLink = styled.a`
+  color: ${colors.Normal}; 
+  text-decoration: underline;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: none;
   }
 `;

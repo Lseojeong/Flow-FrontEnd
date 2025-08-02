@@ -24,10 +24,12 @@ import Divider from '@/components/common/divider/Divider';
 import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { Popup } from '@/components/common/popup/Popup';
-import CategoryModal from '@/components/common/modal/CategoryModal';
-import CategoryModalEdit from '@/components/common/modal/CategoryModalEdit'; 
+import FaqCategoryModal from '@/components/common/modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/common/modal/FaqCategoryModalEdit'; 
+import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
+
 
 export default function FaqPage() {
   const [activeMenuId, setActiveMenuId] = useState('faq');
@@ -40,10 +42,16 @@ export default function FaqPage() {
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<{ 
+    id: number; 
+    name: string; 
+    description: string ;
+    departments: { departmentId: string; departmentName: string }[];
+  } | null>(null);
   const [searchValue, setSearchValue] = useState('');
-
   
+
+  const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -87,8 +95,18 @@ export default function FaqPage() {
     return matchesDepartment && matchesDate;
   });
 
-    const handleRegisterCategory = (newCategoryName: string) => {
-  console.log('등록된 카테고리:', newCategoryName);
+  const handleRegisterCategory = ({
+  name,
+  description,
+  departments,
+}: {
+  name: string;
+  description: string;
+  departments: string[];
+}) => {
+  console.log('카테고리명:', name);
+  console.log('설명:', description);
+  console.log('선택된 부서:', departments);
 
 };
 
@@ -216,6 +234,7 @@ export default function FaqPage() {
                           id: item.id,
                           name: item.name,
                           description: item.description,
+                          departments: item.departments ?? [],
                         });
                         setIsEditModalOpen(true);
                       }}
@@ -248,13 +267,15 @@ export default function FaqPage() {
         alertButtonText="확인"
         onClose={() => setIsSuccessPopupOpen(false)}
       />
-      <CategoryModal
+      <FaqCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
+        departments={mockDepartments}
+        existingCategoryNames={existingCategoryNames} 
         />
         {editingCategory && (
-      <CategoryModalEdit
+      <FaqCategoryModalEdit
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
       onSubmit={({ name, description }) => {
@@ -263,6 +284,8 @@ export default function FaqPage() {
       }}
       initialName={editingCategory.name}
       initialDescription={editingCategory.description}
+      initialDepartments={editingCategory?.departments?.map((d) => d.departmentId) ?? []}
+      departments={mockDepartments}
     />
 )}
         

@@ -9,7 +9,6 @@ import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { useEffect } from 'react';
 
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -22,9 +21,9 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
   const [version, setVersion] = useState('');
   const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [versionError, setVersionError] = useState(false);
 
-
-    useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -36,18 +35,27 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
     };
   }, [isOpen]);
 
-
-
   const handleConfirm = () => {
+    let hasError = false;
+
     if (!file) {
       setError('PDF 파일을 업로드해주세요.');
-      return;
+      hasError = true;
     }
+
+    if (!version.trim()) {
+      setVersionError(true);
+      hasError = true;
+    } else {
+      setVersionError(false);
+    }
+
+    if (hasError) return;
 
     const trimmedDesc = description.trim();
 
     onSubmit({
-      title: file.name,
+      title: file!.name,
       description: trimmedDesc,
       version,
     });
@@ -56,6 +64,7 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
     setDescription('');
     setVersion('');
     setError('');
+    setVersionError(false);
     onClose();
 
     setTimeout(() => {
@@ -81,6 +90,12 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
           <ModalBox>
             <Title>사내문서 데이터 등록</Title>
             <Divider />
+            <DescriptionRow>
+              <span>양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+              <DownloadLink href="/assets/faq-template.csv" download>
+                양식 다운로드
+              </DownloadLink></span>
+            </DescriptionRow>  
 
             <UploadRow>
               <UploadInput
@@ -91,26 +106,36 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
                 fileType="pdf"
               />
               <UploadButtonWrapper>
-              <Button
-                variant="primary"
-                size="medium"
-                onClick={handleConfirm}
-                disabled={isDisabled}
-              >
-                + 업로드
-              </Button>
-            </UploadButtonWrapper>
+                <Button
+                  variant="primary"
+                  size="medium"
+                  onClick={handleConfirm}
+                  disabled={isDisabled}
+                >
+                  + 업로드
+                </Button>
+              </UploadButtonWrapper>
             </UploadRow>
             {error && <ErrorText>{error}</ErrorText>}
 
             <DescriptionInput
-                        label="히스토리 설명"
-                        placeholder="히스토리 설명을 작성해주세요."
-                        maxLength={30}
-                        errorMessage="히스토리 설명을 입력해주세요."
-                      />
+              label="히스토리 설명"
+              placeholder="히스토리 설명을 작성해주세요."
+              maxLength={30}
+              value={description}
+              onChange={(value) => setDescription(value)}
+              errorMessage="히스토리 설명을 입력해주세요."
+            />
 
-            <VersionSelector onSelect={(ver: string) => setVersion(ver)} />
+            <VersionWrapper>
+              <VersionSelector
+                onSelect={(ver: string) => {
+                  setVersion(ver);
+                  setVersionError(false);
+                }}
+                error={versionError}
+              />
+            </VersionWrapper>
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -159,7 +184,6 @@ const Title = styled.h3`
   color: ${colors.Black};
 `;
 
-
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center; 
@@ -184,4 +208,32 @@ const UploadButtonWrapper = styled.div`
     height : 48px;
     width: 120px;
   }
+`;
+
+const DescriptionRow = styled.div`
+  font-size: 14px;
+  color: ${colors.Black};
+  margin: 8px 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DownloadLink = styled.a`
+  color: ${colors.Normal}; 
+  text-decoration: underline;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: none;
+  }
+`;
+
+
+
+const VersionWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
 `;

@@ -6,13 +6,21 @@ import { Button } from '../button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import Divider from '@/components/common/divider/FlatDivider';
+import { Department } from '@/components/common/department/Department.types';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string }) => void;
+  onSubmit: (_: {
+    name: string;
+    description: string;
+    departments: string[];
+  }) => void;
   initialName: string;
   initialDescription: string;
+  initialDepartments: string[]; 
+  departments: Department[];    
 }
 
 const CategoryModalEdit: React.FC<Props> = ({
@@ -21,16 +29,20 @@ const CategoryModalEdit: React.FC<Props> = ({
   onSubmit,
   initialName,
   initialDescription,
+  initialDepartments, 
+  departments,
 }) => {
   const [categoryName, setCategoryName] = useState('');
   const [error, setError] = useState('');
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
 useEffect(() => {
   if (isOpen) {
     setCategoryName(initialName ?? '');
     setDescription(initialDescription ?? '');
+    setSelectedDepartments(initialDepartments ?? []); 
     document.body.style.overflow = 'hidden';
   } else {
     document.body.style.overflow = 'unset'; 
@@ -39,7 +51,7 @@ useEffect(() => {
   return () => {
     document.body.style.overflow = 'unset';
   };
-}, [isOpen, initialName, initialDescription]);
+}, [isOpen, initialName, initialDescription, initialDepartments]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -50,9 +62,12 @@ useEffect(() => {
     }
 
     onSubmit({
-      name: trimmedName,
-      description: description.trim(),
-    });
+    name: trimmedName,
+    description: description.trim(),
+    departments: selectedDepartments, 
+  });
+  
+  setSelectedDepartments([]);
 
     setCategoryName('');
     setDescription('');
@@ -89,6 +104,11 @@ useEffect(() => {
               onBlur={() => {}}
               error={error}
               showValidation
+            />
+            <DepartmentCheck
+              departments={departments}
+              selectedDepartmentIds={selectedDepartments}
+              onChange={setSelectedDepartments}
             />
             <DescriptionInput
               value={description}

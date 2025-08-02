@@ -24,9 +24,9 @@ import Divider from '@/components/common/divider/Divider';
 import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { Popup } from '@/components/common/popup/Popup';
-import CategoryModal from '@/components/common/modal/CategoryModal';
-import CategoryModalEdit from '@/components/common/modal/CategoryModalEdit';
-
+import DocsCategoryModal from '@/components/common/modal/DocsCategoryModal';
+import DocsCategoryModalEdit from '@/components/common/modal/DocsCategoryModalEdit'; 
+import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -41,12 +41,15 @@ export default function DocsPage() {
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [editingCategory, setEditingCategory] = useState<{ 
+      id: number; 
+      name: string; 
+      description: string ;
+      departments: { departmentId: string; departmentName: string }[];
+    } | null>(null);
   const [searchValue, setSearchValue] = useState('');
 
-  
-
-
+    const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -91,8 +94,18 @@ export default function DocsPage() {
   setIsPopupOpen(true); 
 };
 
-  const handleRegisterCategory = (newCategoryName: string) => {
-  console.log('등록된 카테고리:', newCategoryName);
+  const handleRegisterCategory = ({
+  name,
+  description,
+  departments,
+}: {
+  name: string;
+  description: string;
+  departments: string[];
+}) => {
+  console.log('카테고리명:', name);
+  console.log('설명:', description);
+  console.log('선택된 부서:', departments);
 
 };
 
@@ -220,6 +233,7 @@ export default function DocsPage() {
                           id: item.id,
                           name: item.name,
                           description: item.description,
+                          departments: item.departments ?? []
                         });
                         setIsEditModalOpen(true);
                       }}
@@ -252,13 +266,15 @@ export default function DocsPage() {
         alertButtonText="확인"
         onClose={() => setIsSuccessPopupOpen(false)}
       />
-      <CategoryModal
+      <DocsCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
+        departments={mockDepartments}
+        existingCategoryNames={existingCategoryNames} 
         />
         {editingCategory && (
-      <CategoryModalEdit
+      <DocsCategoryModalEdit
       isOpen={isEditModalOpen}
       onClose={() => setIsEditModalOpen(false)}
       onSubmit={({ name, description }) => {
@@ -267,6 +283,8 @@ export default function DocsPage() {
       }}
       initialName={editingCategory.name}
       initialDescription={editingCategory.description}
+      initialDepartments={editingCategory?.departments?.map((d) => d.departmentId) ?? []}
+      departments={mockDepartments}
     />
 )}
     </PageWrapper>

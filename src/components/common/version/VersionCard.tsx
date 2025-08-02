@@ -24,9 +24,11 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) =>
     onSelect?.(versionOptions[versionType]);
   };
 
+  const showError = selectedVersionType === null;
+
   return (
     <VersionSelectorContainer>
-      <VersionTitle>Version</VersionTitle>
+      <VersionTitle>Version {showError && <RequiredText>*필수</RequiredText>}</VersionTitle>
       <VersionButtonContainer>
         <VersionButton
           $selected={selectedVersionType === 'patch'}
@@ -106,4 +108,9 @@ const CurrentVersionText = styled.span`
   font-size: 12px;
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
+`;
+
+const RequiredText = styled.span`
+  color: ${colors.MainRed};
+  margin-left: 4px;
 `;
