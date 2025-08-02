@@ -5,8 +5,8 @@ import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import { VersionSelector } from '@/components/common/version/VersionCard';
-import Divider from '@/components/common/divider/Divider';
-
+import Divider from '@/components/common/divider/FlatDivider';
+import { useEffect } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -27,8 +27,22 @@ export const DocsEditModal: React.FC<Props> = ({
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
+    const [isVersionSelected, setIsVersionSelected] = useState(false);
   const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+
+    useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
 
   const handleConfirm = () => {
     if (!file && !originalFileName) {
@@ -38,6 +52,10 @@ export const DocsEditModal: React.FC<Props> = ({
 
     if (description.trim() === '') {
       setError('히스토리 설명을 입력해주세요.');
+      return;
+    }
+    if (!isVersionSelected) {
+      setError('버전을 선택해주세요.');
       return;
     }
 
@@ -67,7 +85,7 @@ export const DocsEditModal: React.FC<Props> = ({
     setError('');
   };
 
-  const isDisabled = (!file && !originalFileName) || description.trim() === '';
+  const isDisabled = (!file && !originalFileName) || !isVersionSelected;
 
   return (
     <>
@@ -118,8 +136,10 @@ export const DocsEditModal: React.FC<Props> = ({
               errorMessage={error}
             />
 
-            <VersionSelector onSelect={(ver: string) => setVersion(ver)} />
-
+            <VersionSelector onSelect={(ver: string) => { setVersion(ver); setIsVersionSelected(true); setError(''); }}/>
+               {!isVersionSelected && error === '버전을 선택해주세요.' && (<ErrorText>버전을 선택해주세요.</ErrorText>)}
+            
+            
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
                 취소
@@ -199,10 +219,10 @@ const UploadButtonWrapper = styled.div`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center; 
   gap: 8px;
+  margin-top: 24px; 
 `;
-
 const ErrorText = styled.p`
   color: ${colors.MainRed};
   font-size: 12px;

@@ -42,6 +42,7 @@ export default function DocsPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [searchValue, setSearchValue] = useState('');
 
   
 
@@ -107,7 +108,7 @@ export default function DocsPage() {
       </SideBarWrapper>
       <Content>
         <PageTitle>사내 문서 관리</PageTitle>
-        <Description>사내 문서를 등록 및 관리하는 페이지입니다.</Description>
+        <Description>Flow에서 사용되는 사내문서 데이터를 관리하는 어드민입니다.</Description>
         <Divider />
 
         <TopBar>
@@ -130,7 +131,7 @@ export default function DocsPage() {
             }}
             onClick={handleDeleteSelected}
           />
-          <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
+          <CategorySearch value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
         </FilterBar>
@@ -233,6 +234,7 @@ export default function DocsPage() {
       </Content>
       <Popup
             isOpen={isPopupOpen}
+            title="카테고리 삭제"
             onClose={() => setIsPopupOpen(false)}
             onDelete={() => {
               setIsPopupOpen(false);

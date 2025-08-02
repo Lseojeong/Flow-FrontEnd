@@ -41,6 +41,7 @@ export default function FaqPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [searchValue, setSearchValue] = useState('');
 
   
 
@@ -126,7 +127,7 @@ export default function FaqPage() {
             }}
             onClick={handleDeleteSelected}
           />
-          <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
+          <CategorySearch value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
         </FilterBar>
@@ -229,6 +230,7 @@ export default function FaqPage() {
       </Content>
       <Popup
             isOpen={isPopupOpen}
+            title="카테고리 삭제"
             onClose={() => setIsPopupOpen(false)}
             onDelete={() => {
               setIsPopupOpen(false);

@@ -152,7 +152,8 @@ export default function DocsDetailPage() {
       <Popup
           isOpen={isDeletePopupOpen} 
           title="파일 삭제"
-          message={`${targetFileName} 파일을 삭제하시겠습니까?\n삭제한 파일은 복구할 수 없습니다.`}
+          message={`${targetFileName} 파일을 삭제하시겠습니까?`}
+          warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
           onClose={() => setIsDeletePopupOpen(false)}
           onDelete={() => {
             setIsDeletePopupOpen(false);

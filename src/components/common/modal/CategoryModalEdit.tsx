@@ -5,6 +5,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '../button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
+import Divider from '@/components/common/divider/FlatDivider';
 
 interface Props {
   isOpen: boolean;
@@ -26,12 +27,19 @@ const CategoryModalEdit: React.FC<Props> = ({
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setCategoryName(initialName ?? '');
-      setDescription(initialDescription ?? '');
-    }
-  }, [isOpen, initialName, initialDescription]);
+useEffect(() => {
+  if (isOpen) {
+    setCategoryName(initialName ?? '');
+    setDescription(initialDescription ?? '');
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'unset'; 
+  }
+
+  return () => {
+    document.body.style.overflow = 'unset';
+  };
+}, [isOpen, initialName, initialDescription]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -73,6 +81,7 @@ const CategoryModalEdit: React.FC<Props> = ({
         <Overlay>
           <ModalBox>
             <Title>카테고리 수정</Title>
+            <Divider/>
 
             <CategoryInput
               value={categoryName}
@@ -125,17 +134,19 @@ const ModalBox = styled.div`
   width: 720px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 `;
 
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Black};
+  margin-bottom: 1px;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center; 
   gap: 8px;
+  margin-top: 24px; 
 `;

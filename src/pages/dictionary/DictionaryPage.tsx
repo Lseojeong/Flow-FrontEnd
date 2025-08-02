@@ -33,6 +33,7 @@ export default function DictionaryPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [searchValue, setSearchValue] = useState('');
 
   
   
@@ -124,7 +125,7 @@ export default function DictionaryPage() {
             onClick={handleDeleteSelected}
           />
 
-          <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
+          <CategorySearch value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
 
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
         </FilterBar>
@@ -206,6 +207,7 @@ export default function DictionaryPage() {
       </Content>
       <Popup
       isOpen={isPopupOpen}
+      title="카테고리 삭제"
       onClose={() => setIsPopupOpen(false)}
       onDelete={() => {
         setIsPopupOpen(false);

@@ -6,7 +6,8 @@ import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import { VersionSelector } from '@/components/common/version/VersionCard';
 import { UploadInput } from '@/components/common/file-upload/FileUpload';
-import Divider from '@/components/common/divider/Divider';
+import Divider from '@/components/common/divider/FlatDivider';
+import { useEffect } from 'react';
 
 interface Props {
   isOpen: boolean;
@@ -20,6 +21,18 @@ export const CsvUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) =
   const [version, setVersion] = useState('');
   const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+
+    useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleConfirm = () => {
     if (!file) {
@@ -145,8 +158,9 @@ const Title = styled.h3`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center; 
   gap: 8px;
+  margin-top: 24px; 
 `;
 
 const ErrorText = styled.p`

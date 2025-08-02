@@ -15,7 +15,7 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
-import CategorySearch from '@/components/common/category-search/CategorySearch';
+import FileSearch from '@/components/common/file-search/FileSearch';
 import { Popup } from '@/components/common/popup/Popup';
 import FaqUploadModal from '@/components/common/modal/FaqUploadModal';
 import FaqEditModal from '@/components/common/modal/FaqEditModal';
@@ -93,10 +93,9 @@ export default function FaqDetailPage() {
         <FileSection>
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
-            <CategorySearch
+            <FileSearch
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="파일 검색"
             />
           </FileSectionHeader>
 
@@ -150,7 +149,8 @@ export default function FaqDetailPage() {
       <Popup
         isOpen={isDeletePopupOpen}
         title="파일 삭제"
-        message={`${targetFileName} 파일을 삭제하시겠습니까?\n삭제한 파일은 복구할 수 없습니다.`}
+        message={`${targetFileName} 파일을 삭제하시겠습니까?`}
+        warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={() => {
           setIsDeletePopupOpen(false);
