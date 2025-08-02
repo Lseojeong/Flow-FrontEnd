@@ -56,6 +56,7 @@ export default function DashBoardPage() {
               setEndDate(end || '');
             }}
           />
+          {/*TODO: API 데이터 연동 시 value 값 변경*/}
           <StatusCardSection>
             <StatusCard
               title="FLOW 상태"
