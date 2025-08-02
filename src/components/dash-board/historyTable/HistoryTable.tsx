@@ -73,7 +73,10 @@ export const HistoryTable: React.FC = () => {
 
   const renderEmptyState = () => (
     <TableRow>
-      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '80px', border: 'none' }}>
+      <td
+        colSpan={columns.length}
+        style={{ textAlign: 'center', padding: '80px', border: 'none', color: colors.BoxText }}
+      >
         원하는 필터 옵션을 선택해주세요.
       </td>
     </TableRow>
