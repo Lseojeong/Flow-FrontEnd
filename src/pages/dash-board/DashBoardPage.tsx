@@ -9,7 +9,6 @@ import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { StatusCard } from '@/components/dash-board/status-card/StatusCard';
 import { Chart } from '@/components/dash-board/chart/Chart';
 import { HistoryTable } from '@/components/dash-board/historyTable/HistoryTable';
-
 import {
   BadIcon,
   CompletedIcon,
@@ -21,14 +20,93 @@ import {
   SmallTalkIcon,
   TermsIcon,
 } from '@/assets/icons/dash-board/index';
-import { chartData } from '@/pages/mock/dictMock';
+import { chartData, mockApiResponse } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DashBoardPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('dashboard');
-  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState<string>(getTodayDate());
+  const [endDate, setEndDate] = useState<string>(getTodayDate());
+
+  const handleDateChange = (start: string | null, end: string | null) => {
+    setStartDate(start || '');
+    setEndDate(end || '');
+  };
+
+  const getStatusCardData = () => [
+    {
+      title: 'FLOW 상태',
+      count: `${mockApiResponse.status.total}건`,
+      items: [
+        {
+          label: 'Completed',
+          value: `${mockApiResponse.status.completed}건`,
+          icon: <CompletedIcon />,
+        },
+        {
+          label: 'Processing',
+          value: `${mockApiResponse.status.processing}건`,
+          icon: <ProcessingIcon />,
+        },
+        { label: 'Fail', value: `${mockApiResponse.status.fail}건`, icon: <FailIcon /> },
+      ],
+    },
+    {
+      title: '평균 응답시간',
+      count: `${mockApiResponse.responseTime.average}${mockApiResponse.responseTime.unit}`,
+      items: [
+        {
+          label: '가장 빠른 응답 시간',
+          value: `${mockApiResponse.responseTime.fastest}${mockApiResponse.responseTime.unit}`,
+          icon: <BadIcon />,
+        },
+        {
+          label: '가장 오래 걸린 응답 시간',
+          value: `${mockApiResponse.responseTime.slowest}${mockApiResponse.responseTime.unit}`,
+          icon: <GoodIcon />,
+        },
+      ],
+    },
+    {
+      title: '작업 히스토리',
+      count: `${mockApiResponse.contentBreakdown.total}건`,
+      items: [
+        {
+          label: '용어 사전',
+          value: `${mockApiResponse.contentBreakdown.dictionary}건`,
+          icon: <TermsIcon />,
+        },
+        {
+          label: '사내 문서',
+          value: `${mockApiResponse.contentBreakdown.documentary}건`,
+          icon: <DocsIcon />,
+        },
+        { label: 'FAQ', value: `${mockApiResponse.contentBreakdown.faq}건`, icon: <FaqIcon /> },
+      ],
+    },
+    {
+      title: '질문',
+      count: `${mockApiResponse.queryBreakdown.total}건`,
+      items: [
+        {
+          label: '스몰톡',
+          value: `${mockApiResponse.queryBreakdown.smallTalk}건`,
+          icon: <SmallTalkIcon />,
+        },
+        { label: 'RAG', value: `${mockApiResponse.queryBreakdown.rag}건`, icon: <DocsIcon /> },
+      ],
+    },
+  ];
+
+  const renderStatusCards = () => (
+    <StatusCardSection>
+      {getStatusCardData().map((card, index) => (
+        <StatusCard key={index} title={card.title} count={card.count} items={card.items} />
+      ))}
+    </StatusCardSection>
+  );
+
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -48,51 +126,8 @@ export default function DashBoardPage() {
             </DescriptionRow>
           </HeaderSection>
           <Divider />
-          <DateFilter
-            startDate={startDate}
-            endDate={endDate}
-            onDateChange={(start, end) => {
-              setStartDate(start || '');
-              setEndDate(end || '');
-            }}
-          />
-          {/*TODO: API 데이터 연동 시 value 값 변경*/}
-          <StatusCardSection>
-            <StatusCard
-              title="FLOW 상태"
-              count="9건"
-              items={[
-                { label: 'Completed', value: '2건', icon: <CompletedIcon /> },
-                { label: 'Processing', value: '3건', icon: <ProcessingIcon /> },
-                { label: 'Fail', value: '4건', icon: <FailIcon /> },
-              ]}
-            />
-            <StatusCard
-              title="평균 응답시간"
-              count="0.8s"
-              items={[
-                { label: '가장 빠른 응답 시간', value: '0.2s', icon: <BadIcon /> },
-                { label: '가장 오래 걸린 응답 시간', value: '1m', icon: <GoodIcon /> },
-              ]}
-            />
-            <StatusCard
-              title="작업 히스토리"
-              count="50건"
-              items={[
-                { label: '용어 사전', value: '27건', icon: <TermsIcon /> },
-                { label: '사내 문서', value: '23건', icon: <DocsIcon /> },
-                { label: 'FAQ', value: '23건', icon: <FaqIcon /> },
-              ]}
-            />
-            <StatusCard
-              title="질문"
-              count="50건"
-              items={[
-                { label: '스몰톡', value: '27건', icon: <SmallTalkIcon /> },
-                { label: 'RAG', value: '23건', icon: <DocsIcon /> },
-              ]}
-            />
-          </StatusCardSection>
+          <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
+          {renderStatusCards()}
           <Chart data={chartData} />
           <HistoryTableSection>
             <HistoryTable />
@@ -102,6 +137,10 @@ export default function DashBoardPage() {
       </Content>
     </PageWrapper>
   );
+}
+
+function getTodayDate(): string {
+  return new Date().toISOString().split('T')[0];
 }
 
 const PageWrapper = styled.div`

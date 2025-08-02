@@ -141,3 +141,29 @@ export const chartData = [
   { date: '2025-01-09', count: 900 },
   { date: '2025-01-10', count: 1000 },
 ];
+
+export const mockApiResponse = {
+  status: {
+    total: 9,
+    completed: 2,
+    processing: 3,
+    fail: 4,
+  },
+  responseTime: {
+    unit: 'seconds',
+    average: 0.8,
+    fastest: 0.3,
+    slowest: 1.0,
+  },
+  contentBreakdown: {
+    total: 73,
+    dictionary: 27,
+    documentary: 23,
+    faq: 23,
+  },
+  queryBreakdown: {
+    total: 50,
+    smallTalk: 27,
+    rag: 23,
+  },
+};
