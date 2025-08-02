@@ -34,6 +34,7 @@ export default function DocsPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+  const [searchValue, setSearchValue] = useState('');
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -110,7 +111,7 @@ export default function DocsPage() {
             }}
             onClick={handleDeleteSelected}
           />
-          <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
+          <CategorySearch value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
         </FilterBar>
