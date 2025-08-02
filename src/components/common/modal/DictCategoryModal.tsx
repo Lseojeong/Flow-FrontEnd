@@ -36,6 +36,18 @@ const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existing
   };
 }, [isOpen]);
 
+  useEffect(() => {
+  const trimmed = categoryName.trim();
+
+  if (trimmed === '') {
+    setErrorType('empty');
+  } else if (existingCategoryNames.includes(trimmed)) {
+    setErrorType('duplicate');
+  } else {
+    setErrorType('');
+  }
+}, [categoryName, existingCategoryNames]);
+
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
 
@@ -66,7 +78,9 @@ const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existing
     }, 100);
   };
 
-  const isDisabled = categoryName.trim() === '';
+  const trimmedName = categoryName.trim();
+  const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
+
 
   const getErrorMessage = () => {
     if (errorType === 'empty') return '카테고리를 입력해주세요.';

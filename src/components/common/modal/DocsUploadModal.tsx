@@ -109,8 +109,9 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
                 <Button
                   variant="primary"
                   size="medium"
-                  onClick={handleConfirm}
-                  disabled={isDisabled}
+                  onClick={() => {document.getElementById('hidden-input')?.click(); 
+
+                }}
                 >
                   + 업로드
                 </Button>
