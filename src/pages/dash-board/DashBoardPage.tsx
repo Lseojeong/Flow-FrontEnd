@@ -206,7 +206,7 @@ const StatusCardSection = styled.section`
 `;
 
 const HistoryTableSection = styled.section`
-  margin-top: 24px;
+  margin-top: 60px;
 `;
 
 const Footer = styled.footer`
