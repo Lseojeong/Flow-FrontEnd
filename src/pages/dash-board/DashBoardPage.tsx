@@ -8,6 +8,7 @@ import Divider from '@/components/common/divider/Divider';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { StatusCard } from '@/components/dash-board/status-card/StatusCard';
 import { Chart } from '@/components/dash-board/chart/Chart';
+import { HistoryTable } from '@/components/dash-board/historyTable/HistoryTable';
 
 import {
   BadIcon,
@@ -104,6 +105,10 @@ export default function DashBoardPage() {
             />
           </StatusCardSection>
           <Chart data={chartData} />
+          <HistoryTableSection>
+            <HistoryTable />
+          </HistoryTableSection>
+          <Footer />
         </ContentWrapper>
       </Content>
     </PageWrapper>
@@ -169,4 +174,12 @@ const StatusCardSection = styled.section`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 44px;
+`;
+
+const HistoryTableSection = styled.section`
+  margin-top: 24px;
+`;
+
+const Footer = styled.footer`
+  height: 40px;
 `;

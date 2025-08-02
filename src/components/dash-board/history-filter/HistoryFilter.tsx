@@ -5,13 +5,16 @@ import { ResetIcon } from '@/assets/icons/common/index';
 import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { HistoryFilterProps, HistoryMenu, Category } from './HistoryFilter.types';
-import { MOCK_MENU_LIST, MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
+import { MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
+import { historyFilterMockData } from '@/pages/mock/dictMock';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+  const menuList = historyFilterMockData;
 
   const handleMenuSelect = (menu: string) => {
     setSelectedMenu(menu);
@@ -50,7 +53,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
     setIsOpen(false);
   };
 
-  const selectedMenuObj = MOCK_MENU_LIST.find((m) => m.menu === selectedMenu);
+  const selectedMenuObj = menuList.find((m) => m.menu === selectedMenu);
   const selectedCategoryObj = selectedMenuObj?.categoryList.find(
     (c: Category) => c.category === selectedCategory
   );
@@ -100,7 +103,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
               <MenuColumn>
                 <ColumnTitle>메뉴</ColumnTitle>
                 <ItemList>
-                  {MOCK_MENU_LIST.map((item: HistoryMenu) => (
+                  {menuList.map((item: HistoryMenu) => (
                     <FilterItemWrapper key={item.menu}>
                       <CheckBox
                         id={`menu-${item.menu}`}
@@ -174,7 +177,7 @@ const DropdownContainer = styled.div`
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: 500;
   margin-top: 4px;
 `;
 
@@ -242,11 +245,14 @@ const FilterItemWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
+  padding: 4px 1px;
+  min-height: 24px;
+  position: relative;
+  overflow: visible;
 `;
 
 const GuideText = styled.span`
-  color: #c1c1c1;
+  color: ${colors.BoxText};
   font-size: 12px;
 `;
 
