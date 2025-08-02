@@ -97,7 +97,7 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
         </ErrorMessages>
       )}
       <Label $hasError={hasError} $hasFile={hasFile}>
-        <HiddenInput type="file" accept={currentConfig.accept} onChange={handleFileChange} />
+        <HiddenInput id="hidden-input"  type="file" accept={currentConfig.accept} onChange={handleFileChange} />
         <Text $hasFile={hasFile}>{displayText}</Text>
         {hasError && (
           <ErrorWrapper>

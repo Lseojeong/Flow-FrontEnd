@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+    import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
@@ -20,6 +20,10 @@ import { dictMockData } from '@/pages/mock/dictMock';
 import { DeleteIcon, EditIcon } from '@/assets/icons/common';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
+import { Popup } from '@/components/common/popup/Popup';
+import DictCategoryModal from '@/components/common/modal/DictCategoryModal';
+import DictCategoryModalEdit from '@/components/common/modal/DictCategoryModalEdit';
+
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -29,6 +33,16 @@ export default function DictionaryPage() {
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; description: string } | null>(null);
+  const [searchValue, setSearchValue] = useState('');
+
+  
+  
+  const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
 
@@ -52,19 +66,40 @@ export default function DictionaryPage() {
     }));
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedCount === 0) return;
-    alert(`삭제 요청: ${selectedCount}개 항목`);
-  };
 
   const handleEdit = (id: number) => {
-    alert(`수정 요청: 카테고리 ID ${id}`);
-  };
+  const category = categories.find((cat) => cat.id === id);
+  if (category) {
+    setEditingCategory({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+    });
+    setIsEditModalOpen(true);
+  }
+};
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
   };
+
+  const handleRegisterCategory = ({
+  name,
+  description,
+}: {
+  name: string;
+  description: string;
+}) => {
+  console.log('카테고리명:', name);
+  console.log('설명:', description);
+
+};
+
+  const handleDeleteSelected = () => {
+  if (selectedCount === 0) return;
+  setIsPopupOpen(true); 
+};
 
   return (
     <PageWrapper>
@@ -84,7 +119,9 @@ export default function DictionaryPage() {
 
         <TopBar>
           <ButtonWrapper>
-            <Button size="small">+ 카테고리 등록</Button>
+            <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
+               + 카테고리 등록
+            </Button>
           </ButtonWrapper>
         </TopBar>
 
@@ -181,6 +218,45 @@ export default function DictionaryPage() {
           )}
         </TableLayout>
       </Content>
+      <Popup
+      isOpen={isPopupOpen}
+      title="카테고리 삭제"
+      onClose={() => setIsPopupOpen(false)}
+      onDelete={() => {
+        setIsPopupOpen(false);
+        setIsSuccessPopupOpen(true);
+      }}
+      confirmText="삭제"
+      cancelText="취소"
+      warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
+    />
+    <Popup
+      isOpen={isSuccessPopupOpen}
+       isAlert
+       title="삭제 완료"
+       message="카테고리가 삭제되었습니다."  
+       alertButtonText="확인"
+       onClose={() => setIsSuccessPopupOpen(false)}
+    />
+     <DictCategoryModal
+      isOpen={isCategoryModalOpen}
+      onClose={() => setIsCategoryModalOpen(false)}
+      onSubmit={handleRegisterCategory}
+      existingCategoryNames={existingCategoryNames} 
+     />
+     {editingCategory && (
+      <DictCategoryModalEdit
+      isOpen={isEditModalOpen}
+      onClose={() => setIsEditModalOpen(false)}
+      onSubmit={({ name, description }) => {
+        console.log('수정된 카테고리:', name, description);
+        setIsEditModalOpen(false);
+      }}
+      initialName={editingCategory.name}
+      initialDescription={editingCategory.description}
+    />
+)}
+
     </PageWrapper>
   );
 }
@@ -191,12 +267,13 @@ const PageWrapper = styled.div`
 
 const Content = styled.div`
   margin-left: 280px; /* 사이드바 너비 확보 */
+
   padding: 40px;
   width: calc(100% - 280px);
 
   @media (min-width: 1920px) {
     width: auto;
-    max-width: 1360px; /* 컨텐츠 최대 너비 */
+    max-width: 1360px; 
     margin-left: auto;
     margin-right: auto;
   }
