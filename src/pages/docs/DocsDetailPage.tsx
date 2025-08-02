@@ -1,5 +1,7 @@
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+
 import SideBar from '@/components/common/layout/SideBar';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { symbolTextLogo } from '@/assets/logo';
@@ -12,11 +14,13 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import Divider from '@/components/common/divider/Divider';
+import FileSearch from '@/components/common/file-search/FileSearch';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DocsDetailPage() {
   const { docId } = useParams();
+  const [searchKeyword, setSearchKeyword] = useState('');
   const detailData = dictMockData.find((item) => item.id.toString() === docId);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
@@ -26,6 +30,10 @@ export default function DocsDetailPage() {
     { type: 'Processing', count: detailData.status.yellow },
     { type: 'Fail', count: detailData.status.red },
   ];
+
+  const filteredFiles = detailData.files.filter((file) =>
+    file.name.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
 
   return (
     <PageWrapper>
@@ -44,7 +52,9 @@ export default function DocsDetailPage() {
           </TitleGroup>
           <RegisterButton>+ 데이터 등록</RegisterButton>
         </Header>
+
         <Divider />
+
         <InfoBox>
           <InfoItemColumn>
             <Label>상태:</Label>
@@ -67,8 +77,16 @@ export default function DocsDetailPage() {
             <Value><DepartmentTagList departments={detailData.departments} /></Value>
           </InfoItemColumn>
         </InfoBox>
+
         <FileSection>
-          <SectionTitle>파일 관리</SectionTitle>
+          <FileSectionHeader>
+            <SectionTitle>파일 관리</SectionTitle>
+            <FileSearch
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
+          </FileSectionHeader>
+
           <Table>
             <thead>
               <tr>
@@ -82,13 +100,11 @@ export default function DocsDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {detailData.files.map((file, index) => (
+              {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td style={{ textAlign: 'center' }}>{index + 1}</Td>
                   <Td>{file.name}</Td>
-                  <Td>
-                    <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                  </Td>
+                  <Td><StatusBadge status={file.status}>{file.status}</StatusBadge></Td>
                   <Td>{file.manager}</Td>
                   <Td>{file.registeredAt}</Td>
                   <Td>{file.updatedAt}</Td>
@@ -111,7 +127,6 @@ export default function DocsDetailPage() {
   );
 }
 
-// 스타일 컴포넌트
 const PageWrapper = styled.div` display: flex; `;
 const Content = styled.div`
   flex: 1;
@@ -178,12 +193,17 @@ const Label = styled.div`
   color: #444;
 `;
 const Value = styled.div` color: #666; `;
-
 const FileSection = styled.div``;
+const FileSectionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+`;
 const SectionTitle = styled.h3`
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 16px;
+  color: #0e3a95;
 `;
 const Table = styled.table`
   width: 100%;

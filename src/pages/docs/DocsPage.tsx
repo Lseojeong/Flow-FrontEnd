@@ -34,6 +34,7 @@ export default function DocsPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+  const [searchValue, setSearchValue] = useState('');
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -89,7 +90,7 @@ export default function DocsPage() {
       </SideBarWrapper>
       <Content>
         <PageTitle>사내 문서 관리</PageTitle>
-        <Description>사내 문서를 등록 및 관리하는 페이지입니다.</Description>
+        <Description>Flow에서 사용되는 사내문서 데이터를 관리하는 어드민입니다.</Description>
         <Divider />
 
         <TopBar>
@@ -110,7 +111,7 @@ export default function DocsPage() {
             }}
             onClick={handleDeleteSelected}
           />
-          <CategorySearch placeholder="카테고리 검색" value="" onChange={() => {}} />
+          <CategorySearch value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
         </FilterBar>
