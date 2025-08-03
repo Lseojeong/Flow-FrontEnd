@@ -65,13 +65,13 @@ export default function DictionaryPage() {
           label=""
         />
       ),
-      width: '80px',
+      width: '48px',
       align: 'center' as const,
     },
-    { label: '카테고리', width: '300px', align: 'left' as const },
+    { label: '카테고리', width: '600px', align: 'left' as const },
     { label: '상태', width: '120px', align: 'left' as const },
-    { label: '문서 수', width: '100px', align: 'center' as const },
-    { label: '최종 수정일', width: '120px', align: 'left' as const },
+    { label: '문서 수', width: '80px', align: 'center' as const },
+    { label: '최종 수정일', width: '160px', align: 'left' as const },
     { label: '', width: '40px', align: 'center' as const },
   ];
 
@@ -173,7 +173,7 @@ export default function DictionaryPage() {
                 const isChecked = !!checkedItems[category.id];
                 return (
                   <TableRow key={category.id}>
-                    <td style={{ width: '80px', textAlign: 'center' }}>
+                    <td style={{ width: '48px', textAlign: 'center' }}>
                       <CheckBox
                         size="medium"
                         id={`check-${category.id}`}
@@ -182,7 +182,7 @@ export default function DictionaryPage() {
                         label=""
                       />
                     </td>
-                    <td style={{ width: '300px', textAlign: 'left' }}>
+                    <td style={{ width: '600px', textAlign: 'left' }}>
                       <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
                     </td>
                     <td style={{ width: '120px', textAlign: 'left' }}>
@@ -196,17 +196,14 @@ export default function DictionaryPage() {
                         />
                       </StatusWrapper>
                     </td>
-                    <td style={{ width: '100px', textAlign: 'center' }}>
-                      {category.documentCount}
-                    </td>
-                    <td style={{ width: '120px', textAlign: 'left' }}>
+                    <td style={{ width: '80px', textAlign: 'center' }}>{category.documentCount}</td>
+                    <td style={{ width: '160px', textAlign: 'left' }}>
                       {category.lastModifiedDate}
                     </td>
                     <td style={{ width: '40px', textAlign: 'center' }}>
-                      <EditIcon
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleEdit(category.id)}
-                      />
+                      <EditIconWrapper>
+                        <EditIcon onClick={() => handleEdit(category.id)} />
+                      </EditIconWrapper>
                     </td>
                   </TableRow>
                 );
@@ -345,6 +342,19 @@ const StatusWrapper = styled.div`
   gap: 8px;
   justify-content: flex-start;
   height: 100%;
+`;
+
+const EditIconWrapper = styled.div`
+  cursor: pointer;
+
+  svg {
+    color: ${colors.BoxText};
+    transition: color 0.2s;
+  }
+
+  &:hover svg {
+    color: ${colors.Normal};
+  }
 `;
 
 const StyledLink = styled(Link)`
