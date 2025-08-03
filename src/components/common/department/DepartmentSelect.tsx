@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { colors } from '@/styles/index';
 import {
@@ -9,18 +10,7 @@ import {
 import { ArrowIcon } from '@/assets/icons/common/index';
 import { DepartmentSelectProps, DropdownStateProps, Department } from './Department.types';
 import DepartmentSelectItem from './DepartmentSelectItem';
-
-//더미 데이터
-const MOCK_DEPARTMENTS: Department[] = [
-  {
-    departmentId: 'a1b2c3d4-e5f6-7890-abcd-1234567890ab',
-    departmentName: '고객지원팀',
-  },
-  {
-    departmentId: 'b2c3d4e5-f6a1-8901-bcda-2345678901bc',
-    departmentName: '기술지원팀',
-  },
-];
+import { MOCK_DEPARTMENTS } from '@/pages/mock/dictMock';
 
 // 프론트엔드에서만 "전체" 옵션 추가
 const ALL_OPTION: Department = {
@@ -32,8 +22,11 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   options = MOCK_DEPARTMENTS,
   value = null,
   onChange,
+  showAllOption = true,
+  placeholder = '부서',
 }) => {
   const [open, setOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,36 +39,65 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
 
-  const allOptions = [ALL_OPTION, ...options];
+  const handleDropdownToggle = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    setOpen((prev) => !prev);
+  };
+
+  const allOptions = showAllOption ? [ALL_OPTION, ...options] : options;
   const selectedDepartment = allOptions.find((dept) => dept.departmentId === value);
+
+  const displayText =
+    value === null
+      ? showAllOption
+        ? '전체'
+        : placeholder
+      : selectedDepartment?.departmentName || placeholder;
 
   return (
     <DropdownContainer ref={ref}>
-      <DropdownButton onClick={() => setOpen((prev) => !prev)} $open={open}>
-        {value === null ? '전체' : selectedDepartment?.departmentName || '전체'}
+      <DropdownButton onClick={handleDropdownToggle} $open={open}>
+        <span className={value === null && !showAllOption ? 'placeholder' : ''}>{displayText}</span>
         <Arrow $open={open}>
           <ArrowIcon />
         </Arrow>
       </DropdownButton>
-      {open && (
-        <DropdownList>
-          {allOptions.map((option) => (
-            <DepartmentSelectItem
-              key={option.departmentId}
-              option={option}
-              selected={
-                option.departmentId === 'all' ? value === null : option.departmentId === value
-              }
-              onClick={() => {
-                // "전체" 선택 시 null, 그 외에는 departmentId 전달
-                const selectedValue = option.departmentId === 'all' ? null : option.departmentId;
-                onChange(selectedValue);
-                setOpen(false);
-              }}
-            />
-          ))}
-        </DropdownList>
-      )}
+      {open &&
+        createPortal(
+          <DropdownList
+            style={{
+              position: 'fixed',
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            {allOptions.map((option) => (
+              <DepartmentSelectItem
+                key={option.departmentId}
+                option={option}
+                selected={
+                  option.departmentId === 'all' ? value === null : option.departmentId === value
+                }
+                onClick={() => {
+                  // "전체" 선택 시 null, 그 외에는 departmentId 전달
+                  const selectedValue = option.departmentId === 'all' ? null : option.departmentId;
+                  onChange(selectedValue);
+                  setOpen(false);
+                }}
+              />
+            ))}
+          </DropdownList>,
+          document.body
+        )}
     </DropdownContainer>
   );
 };
@@ -83,6 +105,7 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
 const DropdownContainer = styled.div`
   height: ${INPUT_HEIGHT};
   width: 152px;
+  position: relative;
 `;
 
 const DropdownButton = styled.button<DropdownStateProps>`
@@ -127,14 +150,16 @@ const Arrow = styled.span<DropdownStateProps>`
 `;
 
 const DropdownList = styled.ul`
-  width: 152px;
-  position: absolute;
   background: ${colors.White};
   border: 1px solid ${colors.BoxStroke};
   border-radius: 4px;
-  z-index: 10;
+  z-index: 9999;
   margin: 0;
   list-style: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  position: fixed;
 `;
 
 export default DepartmentSelect;

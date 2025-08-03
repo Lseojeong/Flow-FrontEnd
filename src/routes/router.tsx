@@ -13,8 +13,9 @@ import FaqDetailPage from '@/pages/faq/FaqDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import DocsDetailPage from '@/pages/docs/DocsDetailPage';
 import FlowSettingPage from '@/pages/settings/FlowSettingPage';
+import UserSettingPage from '@/pages/settings/UserSettingPage';
 import DashBoardPage from '@/pages/dash-board/DashBoardPage';
-
+import DepartmentSettingPage from '@/pages/settings/DepartmentSettingPage';
 
 const routes: RouteObject[] = [
   {
@@ -71,6 +72,14 @@ const routes: RouteObject[] = [
   {
     path: '/settings/flow',
     element: <FlowSettingPage />,
+  },
+  {
+    path: '/settings/user',
+    element: <UserSettingPage />,
+  },
+  {
+    path: '/settings/department',
+    element: <DepartmentSettingPage />,
   },
 ];
 

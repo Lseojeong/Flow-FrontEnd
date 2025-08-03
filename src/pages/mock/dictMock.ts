@@ -1,8 +1,8 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
-
-
+import { User } from '@/types/userSetting';
+import { DepartmentSetting } from '@/types/departmentSetting';
 
 export const dictMockData = [
   {
@@ -37,7 +37,7 @@ export const dictMockData = [
         manager: 'Milo',
         registeredAt: '2025.07.01',
         updatedAt: '2025.07.05',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       {
         id: 2,
@@ -46,7 +46,7 @@ export const dictMockData = [
         manager: 'Jane',
         registeredAt: '2025.07.02',
         updatedAt: '2025.07.04',
-        version: '1.0.0'
+        version: '1.0.0',
       },
     ],
   },
@@ -95,10 +95,9 @@ const baseData: HistoryData[] = [
   },
 ];
 
-
 export const historyMockData: HistoryData[] = Array(40)
   .fill(null)
-  .flatMap(() => baseData); 
+  .flatMap(() => baseData);
 
 export const historyFilterMockData: HistoryFilterData[] = [
   {
@@ -184,20 +183,19 @@ export const mockData = [
   { spaceId: 265265, spaceName: '마케팅팀' },
 ];
 
-
 export const getPaginatedHistoryData = (page: number = 1, size: number = 15) => {
   const total = 100;
   const start = (page - 1) * size;
   const end = start + size;
 
-  const workOptions = ['등록', '수정']; 
+  const workOptions = ['등록', '수정'];
 
   const mockScrollHistoryData: HistoryData[] = Array.from({ length: total }, (_, i) => ({
     version: `v1.${Math.floor(i / 10)}.${i % 10}`,
     fileName: i % 2 === 0 ? '카카오워크_기능_정의서.pdf' : '카카오워크_API_명세서.pdf',
     modifier: i % 3 === 0 ? 'Milo' : 'Jane',
     timeStamp: `2025.07.${String((i % 28) + 1).padStart(2, '0')} ${String(9 + (i % 10)).padStart(2, '0')}:00`,
-    work: workOptions[i % 2], 
+    work: workOptions[i % 2],
     description: workOptions[i % 2] === '등록' ? '신규 문서 업로드' : '내용 수정 반영',
   }));
 
@@ -220,8 +218,6 @@ export const getPaginatedHistoryData = (page: number = 1, size: number = 15) => 
   };
 };
 
-
-
 export interface DictFile {
   id: number;
   name: string;
@@ -231,3 +227,60 @@ export interface DictFile {
   updatedAt: string;
   version: string;
 }
+
+export const MOCK_DEPARTMENTS: Department[] = [
+  {
+    departmentId: 'a1b2c3d4-e5f6-7890-abcd-1234567890ab',
+    departmentName: '고객지원팀',
+  },
+  {
+    departmentId: 'b2c3d4e5-f6a1-8901-bcda-2345678901bc',
+    departmentName: '기술지원팀',
+  },
+  {
+    departmentId: 'c3d4e5f6-a1b2-9012-cdab-3456789012cd',
+    departmentName: '마케팅팀',
+  },
+  {
+    departmentId: 'd4e5f6a1-b2c3-0123-abcd-4567890123de',
+    departmentName: '인사팀',
+  },
+  {
+    departmentId: 'e5f6a1b2-c3d4-1234-bcda-5678901234ef',
+    departmentName: '재무팀',
+  },
+  {
+    departmentId: 'f6a1b2c3-d4e5-2345-abcd-6789012345fg',
+    departmentName: '회계팀',
+  },
+];
+
+export const mockUsers: User[] = [
+  {
+    id: 'kodari385',
+    nickname: 'Milo',
+    departmentName: '재무팀',
+    createdAt: '2025.07.05 16:30',
+  },
+  {
+    id: 'kodar385',
+    nickname: 'Milo',
+    departmentName: '회계팀',
+    createdAt: '2025.07.05 16:30',
+  },
+];
+
+export const mockDepartments: DepartmentSetting[] = [
+  {
+    id: '1',
+    name: '기술전략실',
+    managerCount: 3,
+    categoryCount: 10,
+  },
+  {
+    id: '2',
+    name: '마케팅팀',
+    managerCount: 2,
+    categoryCount: 1,
+  },
+];

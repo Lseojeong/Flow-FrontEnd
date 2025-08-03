@@ -1,4 +1,3 @@
-
 interface BasePopupProps {
   isOpen: boolean;
   title?: string;
@@ -17,6 +16,7 @@ interface ConfirmPopupProps extends BasePopupProps {
   cancelText?: string;
   confirmText?: string;
   onDelete: () => void;
+  disabled?: boolean;
 }
 
 export type PopupProps = AlertPopupProps | ConfirmPopupProps;

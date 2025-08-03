@@ -58,7 +58,12 @@ export const Popup: React.FC<Props> = (props) => {
                 <Button variant="dark" size="medium" onClick={onClose}>
                   {props.cancelText || '취소'}
                 </Button>
-                <Button variant="primary" size="medium" onClick={props.onDelete}>
+                <Button
+                  variant="primary"
+                  size="medium"
+                  onClick={props.onDelete}
+                  disabled={props.disabled}
+                >
                   {props.confirmText || '삭제'}
                 </Button>
               </>
