@@ -14,7 +14,13 @@ export const settingsMenuItems = [
     label: '설정',
     subMenuItems: [
       { id: 'flow-settings', icon: SettingsIcon, label: 'FLOW 설정', path: '/settings/flow' },
-      { id: 'user-settings', icon: SettingsIcon, label: '사용자 설정', path: '/settings/user' },
+      { id: 'user-settings', icon: SettingsIcon, label: '부서 설정', path: '/settings/department' },
+      {
+        id: 'department-settings',
+        icon: SettingsIcon,
+        label: '관리자 설정',
+        path: '/settings/user',
+      },
     ],
   },
 ];
