@@ -2,6 +2,7 @@ import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
 import { User } from '@/types/userSetting';
+import { DepartmentSetting } from '@/types/departmentSetting';
 
 export const dictMockData = [
   {
@@ -262,9 +263,24 @@ export const mockUsers: User[] = [
     createdAt: '2025.07.05 16:30',
   },
   {
-    id: 'kodari385',
+    id: 'kodar385',
     nickname: 'Milo',
     departmentName: '회계팀',
     createdAt: '2025.07.05 16:30',
+  },
+];
+
+export const mockDepartments: DepartmentSetting[] = [
+  {
+    id: '1',
+    name: '기술전략실',
+    managerCount: 3,
+    categoryCount: 10,
+  },
+  {
+    id: '2',
+    name: '마케팅팀',
+    managerCount: 2,
+    categoryCount: 1,
   },
 ];
