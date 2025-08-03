@@ -5,11 +5,53 @@ import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
+import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
+import { EditIcon, DeleteIcon, ArrowIcon } from '@/assets/icons/common';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
+// 사용자 데이터 타입
+interface User {
+  id: string;
+  nickname: string;
+  department: string;
+  joinDate: string;
+}
+
+// 목업 데이터
+const mockUsers: User[] = [
+  {
+    id: 'kodari385',
+    nickname: 'Milo',
+    department: '재무팀',
+    joinDate: '2025.07.05 16:30',
+  },
+  {
+    id: 'kodari385',
+    nickname: 'Milo',
+    department: '회계팀',
+    joinDate: '2025.07.05 16:30',
+  },
+];
+
+// 테이블 컬럼 정의
+const columns = [
+  { label: '아이디(닉네임)', width: '300px', align: 'center' as const },
+  { label: '부서', width: '200px', align: 'center' as const },
+  { label: '가입 일시', width: '200px', align: 'center' as const },
+  { label: '', width: '100px', align: 'center' as const }, // 액션 버튼용
+];
+
 export default function UserSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('user-settings');
+
+  const handleEdit = (userId: string) => {
+    console.log('Edit user:', userId);
+  };
+
+  const handleDelete = (userId: string) => {
+    console.log('Delete user:', userId);
+  };
 
   return (
     <PageWrapper>
@@ -30,6 +72,39 @@ export default function UserSettingPage() {
             </DescriptionRow>
           </HeaderSection>
           <Divider />
+          <TableSection>
+            <TableLayout maxHeight="500px">
+              <TableHeader columns={columns} />
+              <tbody>
+                {mockUsers.map((user, index) => (
+                  <TableRow key={index}>
+                    <td style={{ width: '300px', textAlign: 'center', padding: '16px 24px' }}>
+                      {user.id}({user.nickname})
+                    </td>
+                    <td style={{ width: '200px', textAlign: 'center', padding: '16px 24px' }}>
+                      <DepartmentCell>
+                        {user.department}
+                        {index === 0 && <ArrowIcon />}
+                      </DepartmentCell>
+                    </td>
+                    <td style={{ width: '200px', textAlign: 'center', padding: '16px 24px' }}>
+                      {user.joinDate}
+                    </td>
+                    <td style={{ width: '100px', textAlign: 'center', padding: '16px 24px' }}>
+                      <ActionButtons>
+                        <ActionButton onClick={() => handleEdit(user.id)}>
+                          <EditIcon />
+                        </ActionButton>
+                        <ActionButton onClick={() => handleDelete(user.id)}>
+                          <DeleteIcon />
+                        </ActionButton>
+                      </ActionButtons>
+                    </td>
+                  </TableRow>
+                ))}
+              </tbody>
+            </TableLayout>
+          </TableSection>
         </ContentWrapper>
       </Content>
     </PageWrapper>
@@ -88,4 +163,46 @@ const Description = styled.p`
   font-size: 16px;
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
+`;
+
+const TableSection = styled.div`
+  margin-top: 24px;
+`;
+
+const DepartmentCell = styled.div`
+  gap: 8px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: ${colors.BoxText};
+  }
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  svg {
+    color: ${colors.BoxText};
+    transition: color 0.2s;
+  }
+
+  &:hover svg {
+    color: ${colors.Normal};
+  }
 `;
