@@ -124,6 +124,8 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: calc(100vh - 160px); 
+  overflow-y: auto;
 `;
 
 
@@ -143,6 +145,9 @@ const Table = styled.table`
     color: white;
     font-weight: 600;
     text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 
   td {
@@ -156,6 +161,7 @@ const Table = styled.table`
     text-align: center;
   }
 `;
+
 
 const Th = styled.th``;
 const Td = styled.td``;
