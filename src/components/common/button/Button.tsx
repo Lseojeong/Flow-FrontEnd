@@ -141,7 +141,7 @@ const StyledButton = styled.button<{
   $size: ButtonSize;
 }>`
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   font-weight: ${fontWeight.Medium};
   display: inline-flex;
   align-items: center;
