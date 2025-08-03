@@ -10,6 +10,7 @@ import { EditIcon, DeleteIcon, ArrowIcon } from '@/assets/icons/common';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
 import { Button } from '@/components/common/button/Button';
 import UserModal from '@/components/user-settiing/user-modal/UserModal';
+import { Popup } from '@/components/common/popup/Popup';
 import { MOCK_DEPARTMENTS, mockUsers } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -27,6 +28,10 @@ export default function UserSettingPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingDepartment, setEditingDepartment] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [categoryResolved, setCategoryResolved] = useState(false);
+  const [userResolved, setUserResolved] = useState(false);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -53,7 +58,41 @@ export default function UserSettingPage() {
   };
 
   const handleDelete = (userId: string) => {
-    console.log('Delete user:', userId);
+    setUserToDelete(userId);
+    setCategoryResolved(false);
+    setUserResolved(false);
+    setIsDeletePopupOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (userToDelete) {
+      setUsers(users.filter((user) => user.id !== userToDelete));
+      setUserToDelete(null);
+    }
+    setIsDeletePopupOpen(false);
+  };
+
+  const handleCancelDelete = () => {
+    setUserToDelete(null);
+    setCategoryResolved(false);
+    setUserResolved(false);
+    setIsDeletePopupOpen(false);
+  };
+
+  const getWarningMessages = () => {
+    const messages = [];
+    if (!categoryResolved) {
+      messages.push('연결된 카테고리를 수정하거나 삭제하세요');
+      return messages;
+    }
+    if (!userResolved) {
+      messages.push('연결된 사용자를 수정하거나 삭제하세요');
+    }
+    return messages;
+  };
+
+  const hasWarnings = () => {
+    return !categoryResolved || !userResolved;
   };
 
   const handleInviteClick = () => {
@@ -79,9 +118,9 @@ export default function UserSettingPage() {
       <Content>
         <ContentWrapper>
           <HeaderSection>
-            <PageTitle>사용자 설정</PageTitle>
+            <PageTitle>관리자 설정</PageTitle>
             <DescriptionRow>
-              <Description>Flow의 사용자를 설정할 수 있는 어드민입니다.</Description>
+              <Description>Flow의 관리자를 설정할 수 있는 어드민입니다.</Description>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
@@ -145,6 +184,18 @@ export default function UserSettingPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
+      />
+
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="관리자 부서 삭제"
+        message="정말로 관리자 부서를 삭제하겠습니까?"
+        warningMessages={getWarningMessages()}
+        onClose={handleCancelDelete}
+        onDelete={handleConfirmDelete}
+        cancelText="취소"
+        confirmText="삭제"
+        disabled={hasWarnings()}
       />
     </PageWrapper>
   );
