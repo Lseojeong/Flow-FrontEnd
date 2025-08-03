@@ -1,6 +1,7 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
+import { User } from '@/types/userSetting';
 
 export const dictMockData = [
   {
@@ -234,5 +235,36 @@ export const MOCK_DEPARTMENTS: Department[] = [
   {
     departmentId: 'b2c3d4e5-f6a1-8901-bcda-2345678901bc',
     departmentName: '기술지원팀',
+  },
+  {
+    departmentId: 'c3d4e5f6-a1b2-9012-cdab-3456789012cd',
+    departmentName: '마케팅팀',
+  },
+  {
+    departmentId: 'd4e5f6a1-b2c3-0123-abcd-4567890123de',
+    departmentName: '인사팀',
+  },
+  {
+    departmentId: 'e5f6a1b2-c3d4-1234-bcda-5678901234ef',
+    departmentName: '재무팀',
+  },
+  {
+    departmentId: 'f6a1b2c3-d4e5-2345-abcd-6789012345fg',
+    departmentName: '회계팀',
+  },
+];
+
+export const mockUsers: User[] = [
+  {
+    id: 'kodari385',
+    nickname: 'Milo',
+    departmentName: '재무팀',
+    createdAt: '2025.07.05 16:30',
+  },
+  {
+    id: 'kodari385',
+    nickname: 'Milo',
+    departmentName: '회계팀',
+    createdAt: '2025.07.05 16:30',
   },
 ];

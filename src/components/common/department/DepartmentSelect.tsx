@@ -22,8 +22,8 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   options = MOCK_DEPARTMENTS,
   value = null,
   onChange,
-  showAllOption = true, // "전체" 옵션 표시 여부 (기본값: true)
-  placeholder = '부서', // placeholder 텍스트 (기본값: '부서')
+  showAllOption = true,
+  placeholder = '부서',
 }) => {
   const [open, setOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -43,19 +43,17 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        top: rect.bottom,
+        left: rect.left,
         width: rect.width,
       });
     }
     setOpen((prev) => !prev);
   };
 
-  // showAllOption이 true일 때만 "전체" 옵션 추가
   const allOptions = showAllOption ? [ALL_OPTION, ...options] : options;
   const selectedDepartment = allOptions.find((dept) => dept.departmentId === value);
 
-  // 표시할 텍스트 결정
   const displayText =
     value === null
       ? showAllOption
@@ -75,11 +73,12 @@ const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
         createPortal(
           <DropdownList
             style={{
-              position: 'absolute',
+              position: 'fixed',
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
             }}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             {allOptions.map((option) => (
               <DepartmentSelectItem
@@ -154,10 +153,13 @@ const DropdownList = styled.ul`
   background: ${colors.White};
   border: 1px solid ${colors.BoxStroke};
   border-radius: 4px;
-  z-index: 3000;
+  z-index: 9999;
   margin: 0;
   list-style: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  position: fixed;
 `;
 
 export default DepartmentSelect;

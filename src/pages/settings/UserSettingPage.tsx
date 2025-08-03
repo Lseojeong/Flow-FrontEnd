@@ -8,41 +8,11 @@ import Divider from '@/components/common/divider/Divider';
 import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { EditIcon, DeleteIcon, ArrowIcon } from '@/assets/icons/common';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
-import { Department } from '@/components/common/department/Department.types';
 import { Button } from '@/components/common/button/Button';
+import UserModal from '@/components/user-settiing/user-modal/UserModal';
+import { MOCK_DEPARTMENTS, mockUsers } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
-
-interface User {
-  id: string;
-  nickname: string;
-  department: string;
-  joinDate: string;
-}
-
-const mockUsers: User[] = [
-  {
-    id: 'kodari385',
-    nickname: 'Milo',
-    department: '재무팀',
-    joinDate: '2025.07.05 16:30',
-  },
-  {
-    id: 'kodari385',
-    nickname: 'Milo',
-    department: '회계팀',
-    joinDate: '2025.07.05 16:30',
-  },
-];
-
-const departmentOptions: Department[] = [
-  { departmentId: 'finance', departmentName: '재무팀' },
-  { departmentId: 'accounting', departmentName: '회계팀' },
-  { departmentId: 'development', departmentName: '개발팀' },
-  { departmentId: 'marketing', departmentName: '마케팅팀' },
-  { departmentId: 'hr', departmentName: '인사팀' },
-  { departmentId: 'planning', departmentName: '기획팀' },
-];
 
 const columns = [
   { label: '아이디(닉네임)', width: '300px', align: 'center' as const },
@@ -56,20 +26,21 @@ export default function UserSettingPage() {
   const [users, setUsers] = useState(mockUsers);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingDepartment, setEditingDepartment] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
-    const currentDept = users[index].department;
-    const deptOption = departmentOptions.find((dept) => dept.departmentName === currentDept);
+    const currentDept = users[index].departmentName;
+    const deptOption = MOCK_DEPARTMENTS.find((dept) => dept.departmentName === currentDept);
     setEditingDepartment(deptOption?.departmentId || '');
   };
 
   const handleSave = (index: number) => {
     const updatedUsers = [...users];
-    const selectedDept = departmentOptions.find((dept) => dept.departmentId === editingDepartment);
+    const selectedDept = MOCK_DEPARTMENTS.find((dept) => dept.departmentId === editingDepartment);
     updatedUsers[index] = {
       ...updatedUsers[index],
-      department: selectedDept?.departmentName || users[index].department,
+      departmentName: selectedDept?.departmentName || users[index].departmentName,
     };
     setUsers(updatedUsers);
     setEditingIndex(null);
@@ -83,6 +54,16 @@ export default function UserSettingPage() {
 
   const handleDelete = (userId: string) => {
     console.log('Delete user:', userId);
+  };
+
+  const handleInviteClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = (emails: string[], department: string) => {
+    console.log('초대할 이메일:', emails);
+    console.log('부서:', department);
+    // TODO: 실제 초대 로직 구현
   };
 
   return (
@@ -105,7 +86,9 @@ export default function UserSettingPage() {
           </HeaderSection>
           <Divider />
           <ButtonSection>
-            <Button size="medium">초대하기</Button>
+            <Button size="medium" onClick={handleInviteClick}>
+              초대하기
+            </Button>
           </ButtonSection>
           <TableSection>
             <TableLayout maxHeight="500px">
@@ -121,7 +104,7 @@ export default function UserSettingPage() {
                         <DepartmentEditCell>
                           <StyledDepartmentSelect>
                             <DepartmentSelect
-                              options={departmentOptions}
+                              options={MOCK_DEPARTMENTS}
                               value={editingDepartment}
                               onChange={(value) => setEditingDepartment(value || '')}
                               showAllOption={false}
@@ -134,12 +117,12 @@ export default function UserSettingPage() {
                         </DepartmentEditCell>
                       ) : (
                         <DepartmentCell onClick={() => handleEdit(index)}>
-                          {user.department}
+                          {user.departmentName}
                           <ArrowIcon />
                         </DepartmentCell>
                       )}
                     </td>
-                    <td style={{ width: '200px', textAlign: 'center' }}>{user.joinDate}</td>
+                    <td style={{ width: '200px', textAlign: 'center' }}>{user.createdAt}</td>
                     <td style={{ width: '100px', textAlign: 'center' }}>
                       <ActionButtons>
                         <ActionButton onClick={() => handleEdit(index)}>
@@ -157,6 +140,12 @@ export default function UserSettingPage() {
           </TableSection>
         </ContentWrapper>
       </Content>
+
+      <UserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleModalSubmit}
+      />
     </PageWrapper>
   );
 }
