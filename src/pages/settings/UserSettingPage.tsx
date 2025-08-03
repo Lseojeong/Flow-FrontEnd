@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -7,10 +7,12 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { EditIcon, DeleteIcon, ArrowIcon } from '@/assets/icons/common';
+import DepartmentSelect from '@/components/common/department/DepartmentSelect';
+import { Department } from '@/components/common/department/Department.types';
+import { Button } from '@/components/common/button/Button';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
-// 사용자 데이터 타입
 interface User {
   id: string;
   nickname: string;
@@ -18,7 +20,6 @@ interface User {
   joinDate: string;
 }
 
-// 목업 데이터
 const mockUsers: User[] = [
   {
     id: 'kodari385',
@@ -34,19 +35,50 @@ const mockUsers: User[] = [
   },
 ];
 
-// 테이블 컬럼 정의
+const departmentOptions: Department[] = [
+  { departmentId: 'finance', departmentName: '재무팀' },
+  { departmentId: 'accounting', departmentName: '회계팀' },
+  { departmentId: 'development', departmentName: '개발팀' },
+  { departmentId: 'marketing', departmentName: '마케팅팀' },
+  { departmentId: 'hr', departmentName: '인사팀' },
+  { departmentId: 'planning', departmentName: '기획팀' },
+];
+
 const columns = [
   { label: '아이디(닉네임)', width: '300px', align: 'center' as const },
-  { label: '부서', width: '200px', align: 'center' as const },
-  { label: '가입 일시', width: '200px', align: 'center' as const },
-  { label: '', width: '100px', align: 'center' as const }, // 액션 버튼용
+  { label: '부서', width: '300px', align: 'center' as const },
+  { label: '가입 일시', width: '300px', align: 'center' as const },
+  { label: '', width: '100px', align: 'center' as const },
 ];
 
 export default function UserSettingPage() {
-  const [activeMenuId, setActiveMenuId] = useState<string>('user-settings');
+  const [activeMenuId, setActiveMenuId] = useState('user-settings');
+  const [users, setUsers] = useState(mockUsers);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingDepartment, setEditingDepartment] = useState('');
 
-  const handleEdit = (userId: string) => {
-    console.log('Edit user:', userId);
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    const currentDept = users[index].department;
+    const deptOption = departmentOptions.find((dept) => dept.departmentName === currentDept);
+    setEditingDepartment(deptOption?.departmentId || '');
+  };
+
+  const handleSave = (index: number) => {
+    const updatedUsers = [...users];
+    const selectedDept = departmentOptions.find((dept) => dept.departmentId === editingDepartment);
+    updatedUsers[index] = {
+      ...updatedUsers[index],
+      department: selectedDept?.departmentName || users[index].department,
+    };
+    setUsers(updatedUsers);
+    setEditingIndex(null);
+    setEditingDepartment('');
+  };
+
+  const handleCancel = () => {
+    setEditingIndex(null);
+    setEditingDepartment('');
   };
 
   const handleDelete = (userId: string) => {
@@ -68,31 +100,49 @@ export default function UserSettingPage() {
           <HeaderSection>
             <PageTitle>사용자 설정</PageTitle>
             <DescriptionRow>
-              <Description>Flow의 사용자를 설정할 수 있는 어드민 입니다.</Description>
+              <Description>Flow의 사용자를 설정할 수 있는 어드민입니다.</Description>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
+          <ButtonSection>
+            <Button size="medium">초대하기</Button>
+          </ButtonSection>
           <TableSection>
             <TableLayout maxHeight="500px">
               <TableHeader columns={columns} />
               <tbody>
-                {mockUsers.map((user, index) => (
+                {users.map((user, index) => (
                   <TableRow key={index}>
-                    <td style={{ width: '300px', textAlign: 'center', padding: '16px 24px' }}>
+                    <td style={{ width: '200px', textAlign: 'center' }}>
                       {user.id}({user.nickname})
                     </td>
-                    <td style={{ width: '200px', textAlign: 'center', padding: '16px 24px' }}>
-                      <DepartmentCell>
-                        {user.department}
-                        {index === 0 && <ArrowIcon />}
-                      </DepartmentCell>
+                    <td style={{ width: '300px', textAlign: 'center' }}>
+                      {editingIndex === index ? (
+                        <DepartmentEditCell>
+                          <StyledDepartmentSelect>
+                            <DepartmentSelect
+                              options={departmentOptions}
+                              value={editingDepartment}
+                              onChange={(value) => setEditingDepartment(value || '')}
+                              showAllOption={false}
+                            />
+                          </StyledDepartmentSelect>
+                          <EditButtons>
+                            <SaveButton onClick={() => handleSave(index)}>저장</SaveButton>
+                            <CancelButton onClick={handleCancel}>취소</CancelButton>
+                          </EditButtons>
+                        </DepartmentEditCell>
+                      ) : (
+                        <DepartmentCell onClick={() => handleEdit(index)}>
+                          {user.department}
+                          <ArrowIcon />
+                        </DepartmentCell>
+                      )}
                     </td>
-                    <td style={{ width: '200px', textAlign: 'center', padding: '16px 24px' }}>
-                      {user.joinDate}
-                    </td>
-                    <td style={{ width: '100px', textAlign: 'center', padding: '16px 24px' }}>
+                    <td style={{ width: '200px', textAlign: 'center' }}>{user.joinDate}</td>
+                    <td style={{ width: '100px', textAlign: 'center' }}>
                       <ActionButtons>
-                        <ActionButton onClick={() => handleEdit(user.id)}>
+                        <ActionButton onClick={() => handleEdit(index)}>
                           <EditIcon />
                         </ActionButton>
                         <ActionButton onClick={() => handleDelete(user.id)}>
@@ -148,7 +198,6 @@ const PageTitle = styled.h1`
 const HeaderSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0;
   margin-bottom: 16px;
 `;
 
@@ -165,18 +214,14 @@ const Description = styled.p`
   color: ${colors.BoxText};
 `;
 
-const TableSection = styled.div`
-  margin-top: 24px;
+const ButtonSection = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
 `;
 
-const DepartmentCell = styled.div`
-  gap: 8px;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    color: ${colors.BoxText};
-  }
+const TableSection = styled.div`
+  margin-top: 24px;
 `;
 
 const ActionButtons = styled.div`
@@ -204,5 +249,72 @@ const ActionButton = styled.button`
 
   &:hover svg {
     color: ${colors.Normal};
+  }
+`;
+
+const DepartmentEditCell = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const StyledDepartmentSelect = styled.div`
+  width: 148px;
+  position: relative;
+`;
+
+const EditButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+`;
+
+const SaveButton = styled.button`
+  padding: 8px 12px;
+  background-color: ${colors.Normal};
+  color: ${colors.White};
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: ${fontWeight.Medium};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${colors.Normal_active};
+  }
+`;
+
+const CancelButton = styled.button`
+  padding: 8px 12px;
+  background-color: ${colors.Dark_active};
+  color: ${colors.White};
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: ${fontWeight.SemiBold};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${colors.Black};
+  }
+`;
+
+const DepartmentCell = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+
+  svg {
+    color: ${colors.BoxText};
   }
 `;
