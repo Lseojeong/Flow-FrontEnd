@@ -10,6 +10,7 @@ export interface Column {
 
 export interface TableLayoutProps {
   children: React.ReactNode;
+  maxHeight?: string;
 }
 
 export interface TableHeaderProps {
