@@ -40,9 +40,10 @@ const StyledInput = styled.input<{ hasError: boolean }>`
   padding: 0 12px;
   border: 1px solid ${(props) => (props.hasError ? colors.MainRed : colors.BoxStroke)};
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 12px;
   outline: none;
   transition: border-color 0.2s;
+  text-align: center;
 
   &:focus {
     border-color: ${(props) => (props.hasError ? colors.MainRed : colors.Normal)};
