@@ -8,7 +8,7 @@ import Divider from '@/components/common/divider/Divider';
 import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { Button } from '@/components/common/button/Button';
-import UserModal from '@/components/user-settiing/user-modal/UserModal';
+import DepartmentSettingModal from '@/components/department-setting/department-modal/DepartmentModal';
 import { Popup } from '@/components/common/popup/Popup';
 import { mockDepartments } from '@/pages/mock/dictMock';
 
@@ -96,10 +96,9 @@ export default function DepartmentPage() {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (emails: string[], department: string) => {
-    console.log('초대할 이메일:', emails);
-    console.log('부서:', department);
-    // TODO: 실제 초대 로직 구현
+  const handleModalSubmit = (departments: string[]) => {
+    console.log('설정할 부서들:', departments);
+    // TODO: 실제 부서 설정 로직 구현
   };
 
   return (
@@ -177,7 +176,7 @@ export default function DepartmentPage() {
         </ContentWrapper>
       </Content>
 
-      <UserModal
+      <DepartmentSettingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
