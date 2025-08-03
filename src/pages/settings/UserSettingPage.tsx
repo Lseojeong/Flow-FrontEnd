@@ -233,11 +233,10 @@ const Description = styled.p`
 const ButtonSection = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 24px;
 `;
 
 const TableSection = styled.div`
-  margin-top: 24px;
+  margin-top: 12px;
 `;
 
 const ActionButtons = styled.div`
