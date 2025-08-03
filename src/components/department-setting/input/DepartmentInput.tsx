@@ -4,6 +4,8 @@ import { colors, fontWeight } from '@/styles/index';
 import { DepartmentInputProps } from './DepartmentInput.types';
 
 const DepartmentInput: React.FC<DepartmentInputProps> = ({ value, onChange, onKeyDown, error }) => {
+  const [isComposing, setIsComposing] = React.useState(false);
+
   return (
     <InputContainer>
       <Label>부서</Label>
@@ -12,7 +14,13 @@ const DepartmentInput: React.FC<DepartmentInputProps> = ({ value, onChange, onKe
         placeholder="부서를 입력해주세요.(최대 10자)"
         value={value}
         onChange={onChange}
-        onKeyDown={onKeyDown}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !isComposing) {
+            onKeyDown(e);
+          }
+        }}
+        onCompositionStart={() => setIsComposing(true)}
+        onCompositionEnd={() => setIsComposing(false)}
         maxLength={10}
         hasError={!!error}
       />
