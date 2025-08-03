@@ -18,8 +18,9 @@ import Divider from '@/components/common/divider/Divider';
 import { Popup } from '@/components/common/popup/Popup';
 import DocsUploadModal from '@/components/common/modal/DocsUploadModal';
 import  DocsEditModal from '@/components/common/modal/DocsEditModal';
-
 import FileSearch from '@/components/common/file-search/FileSearch';
+import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
+import { DictFile } from '@/pages/mock/dictMock';
 
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -38,7 +39,7 @@ export default function DocsDetailPage() {
     version: string;
   } | null>(null);
   
-  
+  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null); 
   
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
@@ -121,7 +122,9 @@ export default function DocsDetailPage() {
               {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td style={{ textAlign: 'center' }}>{index + 1}</Td>
-                  <Td>{file.name}</Td>
+                  <HoverTd 
+                  onClick={() => setSelectedFile(file)}>
+                  {file.name}</HoverTd>
                   <Td><StatusBadge status={file.status}>{file.status}</StatusBadge></Td>
                   <Td>{file.manager}</Td>
                   <Td>{file.registeredAt}</Td>
@@ -194,6 +197,12 @@ export default function DocsDetailPage() {
                   originalVersion={editTargetFile.version}
                 />
               )}
+              {selectedFile && (
+  <FileDetailPanel
+    file={selectedFile}
+    onClose={() => setSelectedFile(null)}
+  />
+)}
     </PageWrapper>
   );
 }
@@ -314,4 +323,16 @@ const NoData = styled.div`
   padding: 40px;
   font-size: 18px;
   color: #999;
+`;
+
+const HoverTd = styled.td`
+  padding-left: 8px;
+  vertical-align: middle;
+  cursor: default;
+
+  &:hover {
+    cursor: pointer;
+    color: #0e3a95;
+    font-weight: 600;
+  }
 `;
