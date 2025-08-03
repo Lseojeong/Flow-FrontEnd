@@ -30,8 +30,6 @@ export default function UserSettingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const [categoryResolved, setCategoryResolved] = useState(false);
-  const [userResolved, setUserResolved] = useState(false);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -59,8 +57,6 @@ export default function UserSettingPage() {
 
   const handleDelete = (userId: string) => {
     setUserToDelete(userId);
-    setCategoryResolved(false);
-    setUserResolved(false);
     setIsDeletePopupOpen(true);
   };
 
@@ -74,25 +70,7 @@ export default function UserSettingPage() {
 
   const handleCancelDelete = () => {
     setUserToDelete(null);
-    setCategoryResolved(false);
-    setUserResolved(false);
     setIsDeletePopupOpen(false);
-  };
-
-  const getWarningMessages = () => {
-    const messages = [];
-    if (!categoryResolved) {
-      messages.push('연결된 카테고리를 수정하거나 삭제하세요');
-      return messages;
-    }
-    if (!userResolved) {
-      messages.push('연결된 사용자를 수정하거나 삭제하세요');
-    }
-    return messages;
-  };
-
-  const hasWarnings = () => {
-    return !categoryResolved || !userResolved;
   };
 
   const handleInviteClick = () => {
@@ -188,14 +166,12 @@ export default function UserSettingPage() {
 
       <Popup
         isOpen={isDeletePopupOpen}
-        title="관리자 부서 삭제"
-        message="정말로 관리자 부서를 삭제하겠습니까?"
-        warningMessages={getWarningMessages()}
+        title="사용자 탈퇴"
+        message="정말로 관리자를 탈퇴시키겠습니까?"
         onClose={handleCancelDelete}
         onDelete={handleConfirmDelete}
         cancelText="취소"
-        confirmText="삭제"
-        disabled={hasWarnings()}
+        confirmText="탈퇴"
       />
     </PageWrapper>
   );
