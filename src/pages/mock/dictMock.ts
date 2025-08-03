@@ -2,6 +2,8 @@ import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
 
+
+
 export const dictMockData = [
   {
     id: 1,
@@ -50,7 +52,7 @@ export const dictMockData = [
   },
 ];
 
-export const historyMockData: HistoryData[] = [
+const baseData: HistoryData[] = [
   {
     version: 'v2.0.1',
     fileName: '채팅방1',
@@ -92,6 +94,11 @@ export const historyMockData: HistoryData[] = [
     description: '새로운 API 엔드포인트 추가',
   },
 ];
+
+
+export const historyMockData: HistoryData[] = Array(40)
+  .fill(null)
+  .flatMap(() => baseData); 
 
 export const historyFilterMockData: HistoryFilterData[] = [
   {
@@ -176,3 +183,51 @@ export const mockData = [
   { spaceId: 265264, spaceName: 'QA팀' },
   { spaceId: 265265, spaceName: '마케팅팀' },
 ];
+
+
+export const getPaginatedHistoryData = (page: number = 1, size: number = 15) => {
+  const total = 100;
+  const start = (page - 1) * size;
+  const end = start + size;
+
+  const workOptions = ['등록', '수정']; 
+
+  const mockScrollHistoryData: HistoryData[] = Array.from({ length: total }, (_, i) => ({
+    version: `v1.${Math.floor(i / 10)}.${i % 10}`,
+    fileName: i % 2 === 0 ? '카카오워크_기능_정의서.pdf' : '카카오워크_API_명세서.pdf',
+    modifier: i % 3 === 0 ? 'Milo' : 'Jane',
+    timeStamp: `2025.07.${String((i % 28) + 1).padStart(2, '0')} ${String(9 + (i % 10)).padStart(2, '0')}:00`,
+    work: workOptions[i % 2], 
+    description: workOptions[i % 2] === '등록' ? '신규 문서 업로드' : '내용 수정 반영',
+  }));
+
+  const sliced = mockScrollHistoryData.slice(start, end);
+  const totalPage = Math.ceil(total / size);
+
+  return {
+    code: '200',
+    message: '히스토리 조회 성공',
+    result: {
+      historyList: sliced,
+      pagination: {
+        last: end >= total,
+        page,
+        size,
+        totalElement: total,
+        totalPage,
+      },
+    },
+  };
+};
+
+
+
+export interface DictFile {
+  id: number;
+  name: string;
+  status: string;
+  manager: string;
+  registeredAt: string;
+  updatedAt: string;
+  version: string;
+}

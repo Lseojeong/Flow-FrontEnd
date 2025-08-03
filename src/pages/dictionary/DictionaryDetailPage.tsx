@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams} from 'react-router-dom';
 import styled from 'styled-components';
 
 import SideBar from '@/components/common/layout/SideBar';
@@ -18,8 +18,13 @@ import FileSearch from '@/components/common/file-search/FileSearch';
 import { Popup } from '@/components/common/popup/Popup';
 import DictUploadModal from '@/components/common/modal/DictUploadModal';
 import DictEditModal from '@/components/common/modal/DictEditModal';
+import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
+import { DictFile } from '@/pages/mock/dictMock';
+
+
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
+
 
 export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams();
@@ -34,6 +39,9 @@ export default function DictionaryDetailPage() {
   title: string;
   version: string;
 } | null>(null);
+
+
+const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
 
@@ -115,7 +123,9 @@ export default function DictionaryDetailPage() {
               {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td>{index + 1}</Td>
-                  <Td>{file.name}</Td>
+                  <HoverTd 
+                  onClick={() => setSelectedFile(file)}>
+                  {file.name}</HoverTd>
                   <Td>
                     <StatusBadge status={file.status}>{file.status}</StatusBadge>
                   </Td>
@@ -192,6 +202,12 @@ export default function DictionaryDetailPage() {
                       originalVersion={editTargetFile.version}
                     />
                   )}
+                  {selectedFile && (
+                <FileDetailPanel
+                file={selectedFile}
+                onClose={() => setSelectedFile(null)}
+                />
+                )}
     </PageWrapper>
   );
 }
@@ -342,4 +358,16 @@ const NoData = styled.div`
   padding: 40px;
   font-size: 18px;
   color: #999;
+`;
+
+const HoverTd = styled.td`
+  padding-left: 8px;
+  vertical-align: middle;
+  cursor: default;
+
+  &:hover {
+    cursor: pointer;
+    color: #0e3a95;
+    font-weight: 600;
+  }
 `;

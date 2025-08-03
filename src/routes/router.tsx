@@ -15,6 +15,7 @@ import DocsDetailPage from '@/pages/docs/DocsDetailPage';
 import FlowSettingPage from '@/pages/settings/FlowSettingPage';
 import DashBoardPage from '@/pages/dash-board/DashBoardPage';
 
+
 const routes: RouteObject[] = [
   {
     path: '/',
