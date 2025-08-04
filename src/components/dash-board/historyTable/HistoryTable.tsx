@@ -54,13 +54,13 @@ export const HistoryTable: React.FC = () => {
 
   const renderTableRow = (row: HistoryData, index: number) => (
     <TableRow key={index}>
-      <td style={{ width: '80px', textAlign: 'center', padding: '16px 24px' }}>{row.version}</td>
+      <td style={{ width: '80px', textAlign: 'center' }}>{row.version}</td>
       <ScrollableCell maxWidth="160px" align="left">
         {row.fileName}
       </ScrollableCell>
-      <td style={{ width: '160px', textAlign: 'left', padding: '16px 24px' }}>{row.modifier}</td>
-      <td style={{ width: '160px', textAlign: 'left', padding: '16px 24px' }}>{row.timeStamp}</td>
-      <td style={{ width: '100px', textAlign: 'center', padding: '16px 24px' }}>
+      <td style={{ width: '160px', textAlign: 'left' }}>{row.modifier}</td>
+      <td style={{ width: '160px', textAlign: 'left' }}>{row.timeStamp}</td>
+      <td style={{ width: '100px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <OperationBadge operation={row.work}>{row.work}</OperationBadge>
         </div>

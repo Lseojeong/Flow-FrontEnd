@@ -132,7 +132,7 @@ const InputWrapper = styled.div`
 
 const Input = styled.input<{ $hasError: boolean; $hasValue: boolean }>`
   width: 660px;
-  height: 48px;
+  height: 38px;
   padding: 0 12px;
   font-size: 12px;
   font-weight: ${fontWeight.Regular};

@@ -97,7 +97,12 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
         </ErrorMessages>
       )}
       <Label $hasError={hasError} $hasFile={hasFile}>
-        <HiddenInput id="hidden-input"  type="file" accept={currentConfig.accept} onChange={handleFileChange} />
+        <HiddenInput
+          id="hidden-input"
+          type="file"
+          accept={currentConfig.accept}
+          onChange={handleFileChange}
+        />
         <Text $hasFile={hasFile}>{displayText}</Text>
         {hasError && (
           <ErrorWrapper>
@@ -124,7 +129,7 @@ const Label = styled.label<{ $hasError: boolean; $hasFile: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
+  height: 38px;
   border: 1px solid
     ${({ $hasError, $hasFile }) => {
       if ($hasError) return colors.MainRed;

@@ -11,42 +11,44 @@ import Divider from '@/components/common/divider/FlatDivider';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-   onSubmit: (_: {
-    name: string;
-    description: string;
-  }) => void;
+  onSubmit: (_: { name: string; description: string }) => void;
   existingCategoryNames: string[];
 }
 
-const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existingCategoryNames }) => {
+const DictCategoryModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  existingCategoryNames,
+}) => {
   const [categoryName, setCategoryName] = useState('');
   const [errorType, setErrorType] = useState<'' | 'empty' | 'duplicate'>('');
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
 
   useEffect(() => {
-  if (isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'unset';
-  }
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  return () => {
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen]);
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
-  const trimmed = categoryName.trim();
+    const trimmed = categoryName.trim();
 
-  if (trimmed === '') {
-    setErrorType('empty');
-  } else if (existingCategoryNames.includes(trimmed)) {
-    setErrorType('duplicate');
-  } else {
-    setErrorType('');
-  }
-}, [categoryName, existingCategoryNames]);
+    if (trimmed === '') {
+      setErrorType('empty');
+    } else if (existingCategoryNames.includes(trimmed)) {
+      setErrorType('duplicate');
+    } else {
+      setErrorType('');
+    }
+  }, [categoryName, existingCategoryNames]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -63,12 +65,10 @@ const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existing
 
     setErrorType('');
 
-    onSubmit(
-      {
-        name: trimmedName,
-        description,
-      }
-    );
+    onSubmit({
+      name: trimmedName,
+      description,
+    });
     setCategoryName('');
     setDescription('');
     handleClose();
@@ -80,20 +80,17 @@ const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existing
 
   const trimmedName = categoryName.trim();
   const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
-
-
   const getErrorMessage = () => {
-    if (errorType === 'empty') return '카테고리를 입력해주세요.';
     if (errorType === 'duplicate') return '중복된 카테고리입니다.';
     return '';
   };
 
   const handleClose = () => {
-  setCategoryName('');
-  setDescription('');
-  setErrorType('');
-  onClose();
-};
+    setCategoryName('');
+    setDescription('');
+    setErrorType('');
+    onClose();
+  };
 
   return (
     <>
@@ -115,15 +112,9 @@ const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,existing
             <CategoryInput
               value={categoryName}
               onChange={setCategoryName}
-              onBlur={() => {}}
               error={getErrorMessage()}
-              showValidation
             />
-            <DescriptionInput
-              value={description}
-              onChange={setDescription}
-              onBlur={() => {}}
-            />
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" onClick={handleClose}>
@@ -175,7 +166,7 @@ const Title = styled.h3`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;

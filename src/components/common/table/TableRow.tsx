@@ -12,8 +12,12 @@ export const TableRow: React.FC<TableRowProps> = ({ children, onClick, style }) 
 };
 
 const StyledTableRow = styled.tr`
+  &:hover {
+    background-color: #f4f8ff;
+  }
+
   td {
-    padding: 12px 24px;
+    padding: 15px 24px;
     color: ${colors.Black};
     font-weight: ${fontWeight.Regular};
     font-size: 14px;

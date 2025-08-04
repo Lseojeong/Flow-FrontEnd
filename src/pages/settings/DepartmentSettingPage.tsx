@@ -126,7 +126,7 @@ export default function DepartmentPage() {
             </Button>
           </ButtonSection>
           <TableSection>
-            <TableLayout maxHeight="500px">
+            <TableLayout>
               <TableHeader columns={columns} />
               <tbody>
                 {departments.map((department, index) => (

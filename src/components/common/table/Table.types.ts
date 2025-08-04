@@ -3,7 +3,7 @@ import React from 'react';
 export type AlignType = 'left' | 'center' | 'right';
 
 export interface Column {
-  label: string;
+  label: string | React.ReactNode;
   width?: string;
   align?: AlignType;
 }
