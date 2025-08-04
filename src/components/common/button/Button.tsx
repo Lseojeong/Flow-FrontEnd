@@ -30,9 +30,9 @@ const BUTTON_SIZES = {
     padding: '0 12px',
   },
   medium: {
-    height: '32px',
+    height: '38px',
     fontSize: '14px',
-    padding: '0 18px',
+    padding: '0 20px',
   },
   large: {
     height: '52px',
@@ -141,7 +141,7 @@ const StyledButton = styled.button<{
   $size: ButtonSize;
 }>`
   border: none;
-  border-radius: 2px;
+  border-radius: 4px;
   font-weight: ${fontWeight.Medium};
   display: inline-flex;
   align-items: center;
@@ -149,7 +149,7 @@ const StyledButton = styled.button<{
   gap: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative; /* LoadingOverlay를 위해 필요 */
+  position: relative;
 
   ${({ $variant }) => getVariantStyles($variant)}
   ${({ $size }) => getSizeStyles($size)}

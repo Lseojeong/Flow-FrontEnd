@@ -8,7 +8,6 @@ import { VersionSelector } from '@/components/common/version/VersionCard';
 import Divider from '@/components/common/divider/FlatDivider';
 import { useEffect } from 'react';
 
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -28,38 +27,21 @@ export const DictEditModal: React.FC<Props> = ({
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
-  const [isVersionSelected, setIsVersionSelected] = useState(false);
-  const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
 
   useEffect(() => {
-  if (isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'unset';
-  }
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  return () => {
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen]);
-
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleConfirm = () => {
-    if (!file && !originalFileName) {
-      setError('PDF 파일을 업로드해주세요.');
-      return;
-    }
-
-    if (description.trim() === '') {
-      setError('히스토리 설명을 입력해주세요.');
-      return;
-    }
-    if (!isVersionSelected) {
-      setError('버전을 선택해주세요.');
-      return;
-    }
-
     onSubmit({
       title: file?.name || originalFileName,
       description: description.trim(),
@@ -69,7 +51,6 @@ export const DictEditModal: React.FC<Props> = ({
     setFile(null);
     setDescription('');
     setVersion('');
-    setError('');
     onClose();
 
     setTimeout(() => {
@@ -81,12 +62,10 @@ export const DictEditModal: React.FC<Props> = ({
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-
     setFile(selectedFile);
-    setError('');
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected;
+  const isDisabled = false;
 
   return (
     <>
@@ -106,27 +85,17 @@ export const DictEditModal: React.FC<Props> = ({
             <Divider />
 
             <UploadRow>
-              <ReadOnlyInput
-                value={file?.name || originalFileName}
-                readOnly
+              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
+              <HiddenFileInput
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileChange}
               />
-              <UploadButtonWrapper>
-                <HiddenFileInput
-                  type="file"
-                  accept=".csv"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
-                <Button
-                  variant="primary"
-                  size="medium"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  + 업로드
-                </Button>
-              </UploadButtonWrapper>
+              <Button variant="primary" size="medium" onClick={() => fileInputRef.current?.click()}>
+                + 업로드
+              </Button>
             </UploadRow>
-            {error && <ErrorText>{error}</ErrorText>}
 
             <DescriptionInput
               label="히스토리 설명"
@@ -134,11 +103,13 @@ export const DictEditModal: React.FC<Props> = ({
               maxLength={30}
               value={description}
               onChange={setDescription}
-              errorMessage={error}
             />
 
-            <VersionSelector onSelect={(ver: string) => { setVersion(ver); setIsVersionSelected(true); setError(''); }}/>
-            {!isVersionSelected && error === '버전을 선택해주세요.' && (<ErrorText>버전을 선택해주세요.</ErrorText>)}
+            <VersionSelector
+              onSelect={(ver: string) => {
+                setVersion(ver);
+              }}
+            />
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
                 취소
@@ -156,14 +127,13 @@ export const DictEditModal: React.FC<Props> = ({
 
 export default DictEditModal;
 
-
 const Overlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -184,7 +154,7 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
 `;
 
 const UploadRow = styled.div`
@@ -195,35 +165,22 @@ const UploadRow = styled.div`
 
 const ReadOnlyInput = styled.input`
   flex: 1;
-  height: 48px;
+  height: 38px;
   padding: 0 12px;
-  border: 1px solid #ccc;
+  border: 1px solid ${colors.BoxStroke};
   border-radius: 6px;
-  font-size: 14px;
-  background-color: #f5f5f5;
-  color: #666;
+  font-size: 12px;
+  background-color: ${colors.GridLine};
+  color: ${colors.BoxText};
 `;
 
 const HiddenFileInput = styled.input`
   display: none;
 `;
 
-const UploadButtonWrapper = styled.div`
-  button {
-    height: 48px;
-    width: 120px;
-  }
-`;
-
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
-`;
-
-const ErrorText = styled.p`
-  color: ${colors.MainRed};
-  font-size: 12px;
-  margin: -8px 0 0 4px;
+  margin-top: 24px;
 `;

@@ -19,58 +19,38 @@ export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState('');
-  const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
-  const [versionError, setVersionError] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-  
+
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
   const handleConfirm = () => {
-  let hasError = false;
+    const trimmedDesc = description.trim();
 
-  if (!file) {
-    setError('CSV 파일을 업로드해주세요.');
-    hasError = true;
-  }
+    onSubmit({
+      title: file!.name,
+      description: trimmedDesc,
+      version,
+    });
 
-  if (!version) {
-    setVersionError(true);
-    hasError = true;
-  } else {
-    setVersionError(false);
-  }
+    setFile(null);
+    setDescription('');
+    setVersion('');
+    onClose();
 
-  if (hasError) return;
-
-  const trimmedDesc = description.trim();
-
-  onSubmit({
-    title: file!.name,
-    description: trimmedDesc,
-    version,
-  });
-
-  setFile(null);
-  setDescription('');
-  setVersion('');
-  setError('');
-  setVersionError(false);
-  onClose();
-
-  setTimeout(() => {
-    setIsSuccessPopupOpen(true);
-  }, 100);
-};
+    setTimeout(() => {
+      setIsSuccessPopupOpen(true);
+    }, 100);
+  };
 
   const isDisabled = !file || version === '';
 
@@ -91,52 +71,46 @@ export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
             <Title>용어사전 데이터 등록</Title>
             <Divider />
             <DescriptionRow>
-              <span>양식을 다운로드하여 내용을 채우고 업로드 해주세요.
-              <DownloadLink href="/assets/dict-template.csv" download>
-                양식 다운로드
-              </DownloadLink></span>
-            </DescriptionRow>  
+              <span>
+                양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+                <DownloadLink href="/assets/dict-template.csv" download>
+                  양식 다운로드
+                </DownloadLink>
+              </span>
+            </DescriptionRow>
 
             <UploadRow>
               <UploadInput
                 onFileSelect={(selectedFile) => {
                   setFile(selectedFile);
-                  setError('');
                 }}
                 fileType="csv"
               />
-              <UploadButtonWrapper>
+
               <Button
                 variant="primary"
                 size="medium"
-                onClick={() => {document.getElementById('hidden-input')?.click(); 
-
+                onClick={() => {
+                  document.getElementById('hidden-input')?.click();
                 }}
               >
                 + 업로드
               </Button>
-            </UploadButtonWrapper>
             </UploadRow>
-            {error && <ErrorText>{error}</ErrorText>}
 
             <DescriptionInput
               label="히스토리 설명"
               placeholder="히스토리 설명을 작성해주세요."
               maxLength={30}
               errorMessage="히스토리 설명을 입력해주세요."
+            />
+            <VersionWrapper>
+              <VersionSelector
+                onSelect={(ver: string) => {
+                  setVersion(ver);
+                }}
               />
-              <VersionWrapper>
-  <VersionSelector
-    onSelect={(ver: string) => {
-      setVersion(ver);
-      setVersionError(false);
-    }}
-    error={versionError}
-  />
-</VersionWrapper>
-
-
-
+            </VersionWrapper>
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -161,7 +135,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -171,45 +145,31 @@ const Overlay = styled.div`
 const ModalBox = styled.div`
   background: ${colors.White};
   padding: 32px;
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
+  width: 724px;
   display: flex;
   flex-direction: column;
-  gap : 8px;
+  gap: 8px;
 `;
 
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
 `;
-
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
-`;
-
-const ErrorText = styled.p`
-  color: ${colors.MainRed};
-  font-size: 12px;
-  margin: -8px 0 0 4px;
+  margin-top: 24px;
 `;
 
 const UploadRow = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-`;
-
-const UploadButtonWrapper = styled.div`
-  button {
-    height : 48px;
-    width: 120px;
-  }
 `;
 
 const DescriptionRow = styled.div`
@@ -222,16 +182,16 @@ const DescriptionRow = styled.div`
 `;
 
 const DownloadLink = styled.a`
-  color: ${colors.Normal}; 
+  color: ${colors.Normal};
   text-decoration: underline;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;
+  margin-left: 8px;
 
   &:hover {
-    text-decoration: none;
+    color: rgb(255, 184, 77);
   }
 `;
-
 
 const VersionWrapper = styled.div`
   display: flex;

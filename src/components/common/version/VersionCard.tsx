@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { VersionSelectorProps, VersionType } from './VersionCard.types';
 
-//TODO: 모달창에서 등록 버튼을 눌렀을 때 *필수 에러처리 추가해야함
 export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) => {
   const [selectedVersionType, setSelectedVersionType] = useState<VersionType | null>(null);
 
@@ -24,11 +23,9 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) =>
     onSelect?.(versionOptions[versionType]);
   };
 
-  const showError = selectedVersionType === null;
-
   return (
     <VersionSelectorContainer>
-      <VersionTitle>Version {showError && <RequiredText>*필수</RequiredText>}</VersionTitle>
+      <VersionTitle>Version</VersionTitle>
       <VersionButtonContainer>
         <VersionButton
           $selected={selectedVersionType === 'patch'}
@@ -108,9 +105,4 @@ const CurrentVersionText = styled.span`
   font-size: 12px;
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
-`;
-
-const RequiredText = styled.span`
-  color: ${colors.MainRed};
-  margin-left: 4px;
 `;
