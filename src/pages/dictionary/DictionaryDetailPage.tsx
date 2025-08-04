@@ -3,15 +3,7 @@ import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import SideBar from '@/components/common/layout/SideBar';
-import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
-import { symbolTextLogo } from '@/assets/logo';
-import DownloadIcon from '@/assets/icons/common/download.svg?react';
-import EditIcon from '@/assets/icons/common/edit.svg?react';
-import { Button } from '@/components/common/button/Button';
-import DeleteIcon from '@/assets/icons/common/delete.svg?react';
-import { dictMockData } from '@/pages/mock/dictMock';
 import StatusSummary from '@/components/common/status/StatusSummary';
-import { StatusItemData } from '@/components/common/status/Status.types';
 import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
@@ -19,27 +11,40 @@ import { Popup } from '@/components/common/popup/Popup';
 import DictUploadModal from '@/components/common/modal/DictUploadModal';
 import DictEditModal from '@/components/common/modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
-import { DictFile } from '@/pages/mock/dictMock';
+import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
+
+import { symbolTextLogo } from '@/assets/logo';
+import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
+import { colors, fontWeight } from '@/styles/index';
+import { StatusItemData } from '@/components/common/status/Status.types';
+import { dictMockData, DictFile } from '@/pages/mock/dictMock';
+import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
+import { Button } from '@/components/common/button/Button';
+
+interface EditTargetFile {
+  title: string;
+  version: string;
+}
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams();
+
   const [searchKeyword, setSearchKeyword] = useState('');
-  const detailData = dictMockData.find((item) => item.id.toString() === dictionaryId);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editTargetFile, setEditTargetFile] = useState<{
-    title: string;
-    version: string;
-  } | null>(null);
-
+  const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
-  if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
+  const detailData = dictMockData.find((item) => item.id.toString() === dictionaryId);
+
+  if (!detailData) {
+    return <NoData>데이터가 없습니다.</NoData>;
+  }
 
   const statusItems: StatusItemData[] = [
     { type: 'Completed', count: detailData.status.green },
@@ -51,120 +56,179 @@ export default function DictionaryDetailPage() {
     file.name.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
+  const columns = [
+    { label: '번호', width: '48px', align: 'left' as const },
+    { label: '파일명', width: '320px', align: 'left' as const },
+    { label: '상태', width: '120px', align: 'center' as const },
+    { label: '관리자', width: '160px', align: 'left' as const },
+    { label: '등록일', width: '140px', align: 'left' as const },
+    { label: '수정일', width: '140px', align: 'left' as const },
+    { label: '파일 다운로드', width: '120px', align: 'left' as const },
+    { label: ' ', width: '100px', align: 'left' as const },
+  ];
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+  };
+
+  const handleFileClick = (file: DictFile) => {
+    setSelectedFile(file);
+  };
+
+  const handleEditFile = (file: DictFile) => {
+    setEditTargetFile({
+      title: file.name,
+      version: file.version,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteFile = (fileName: string) => {
+    setTargetFileName(fileName);
+    setIsDeletePopupOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setIsDeletePopupOpen(false);
+    setIsSuccessPopupOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setEditTargetFile(null);
+  };
+
+  const handleEditModalSubmit = (_data: {
+    title: string;
+    description: string;
+    version: string;
+  }) => {
+    console.log('수정된 파일 데이터:', _data);
+    setIsEditModalOpen(false);
+    setEditTargetFile(null);
+  };
+
+  const handleUploadModalSubmit = (_data: {
+    title: string;
+    description: string;
+    version: string;
+  }) => {
+    console.log('업로드된 CSV:', _data);
+    setIsCsvModalOpen(false);
+  };
+
+  const handleFileDetailClose = () => {
+    setSelectedFile(null);
+  };
+
   return (
     <PageWrapper>
-      <SideBar
-        logoSymbol={symbolTextLogo}
-        menuItems={menuItems}
-        activeMenuId="dictionary"
-        onMenuClick={() => {}}
-      />
+      <SideBarWrapper>
+        <SideBar
+          logoSymbol={symbolTextLogo}
+          menuItems={menuItems}
+          activeMenuId="dictionary"
+          onMenuClick={() => {}}
+        />
+      </SideBarWrapper>
 
       <Content>
-        <Header>
-          <TitleGroup>
-            <Title>{detailData.name}</Title>
-            <SubTitle>{detailData.description}</SubTitle>
-          </TitleGroup>
-          <Button onClick={() => setIsCsvModalOpen(true)}>+ 데이터 등록</Button>
-        </Header>
-        <Divider />
+        <ContentWrapper>
+          <HeaderSection>
+            <PageTitle>{detailData.name}</PageTitle>
+            <DescriptionRow>
+              <Description>{detailData.description}</Description>
+              <Button onClick={() => setIsCsvModalOpen(true)} size="small" variant="primary">
+                + 데이터 등록
+              </Button>
+            </DescriptionRow>
+          </HeaderSection>
+          <Divider />
 
-        <InfoBox>
-          <InfoItemColumn>
-            <Label>상태:</Label>
-            <Value>
-              <StatusSummary items={statusItems} />
-            </Value>
-          </InfoItemColumn>
+          <InfoBox>
+            <InfoItemColumn>
+              <Label>상태:</Label>
+              <Value>
+                <StatusSummary items={statusItems} />
+              </Value>
+            </InfoItemColumn>
 
-          <InfoItemColumn>
-            <Label>등록일:</Label>
-            <Value>{detailData.registeredDate}</Value>
-          </InfoItemColumn>
+            <InfoItemColumn>
+              <Label>등록일:</Label>
+              <Value>{detailData.registeredDate}</Value>
+            </InfoItemColumn>
 
-          <InfoItemColumn>
-            <Label>최종 수정일:</Label>
-            <Value>{detailData.lastModified}</Value>
-          </InfoItemColumn>
+            <InfoItemColumn>
+              <Label>최종 수정일:</Label>
+              <Value>{detailData.lastModified}</Value>
+            </InfoItemColumn>
 
-          <InfoItemColumn>
-            <Label>최종 수정자:</Label>
-            <Value>{detailData.lastEditor}</Value>
-          </InfoItemColumn>
-        </InfoBox>
+            <InfoItemColumn>
+              <Label>최종 수정자:</Label>
+              <Value>{detailData.lastEditor}</Value>
+            </InfoItemColumn>
+          </InfoBox>
 
-        <FileSection>
-          <FileSectionHeader>
-            <SectionTitle>파일 관리</SectionTitle>
-            <FileSearch value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
-          </FileSectionHeader>
+          <FileSection>
+            <FileSectionHeader>
+              <SectionTitle>파일 관리</SectionTitle>
+              <FileSearch value={searchKeyword} onChange={handleSearchChange} />
+            </FileSectionHeader>
 
-          <Table>
-            <thead>
-              <tr>
-                <Th style={{ width: '50px' }}>번호</Th>
-                <Th>파일명</Th>
-                <Th style={{ width: '100px' }}>상태</Th>
-                <Th style={{ width: '160px' }}>관리자</Th>
-                <Th style={{ width: '150px' }}>등록일</Th>
-                <Th style={{ width: '150px' }}>수정일</Th>
-                <Th style={{ width: '160px' }}>파일 다운로드</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredFiles.map((file, index) => (
-                <tr key={file.id}>
-                  <Td>{index + 1}</Td>
-                  <HoverTd onClick={() => setSelectedFile(file)}>{file.name}</HoverTd>
-                  <Td>
-                    <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                  </Td>
-                  <Td>{file.manager}</Td>
-                  <Td>{file.registeredAt}</Td>
-                  <Td>{file.updatedAt}</Td>
-                  <Td>
-                    <FileDownloadWrapper>
+            <TableLayout>
+              <TableHeader columns={columns} />
+
+              {filteredFiles.length === 0 ? (
+                <EmptyRow>
+                  <EmptyCell colSpan={7}>
+                    <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+                  </EmptyCell>
+                </EmptyRow>
+              ) : (
+                filteredFiles.map((file, index) => (
+                  <TableRow key={file.id}>
+                    <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
+                    <td style={{ width: '320px', textAlign: 'left' }}>
+                      <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+                    </td>
+                    <td style={{ width: '120px', textAlign: 'center' }}>
+                      <StatusWrapper>
+                        <StatusBadge status={file.status}>{file.status}</StatusBadge>
+                      </StatusWrapper>
+                    </td>
+                    <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
+                    <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
+                    <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
+                    <td style={{ width: '120px', textAlign: 'center' }}>
                       <DownloadIconWrapper>
                         <DownloadIcon />
                       </DownloadIconWrapper>
+                    </td>
+                    <td style={{ width: '100px', textAlign: 'left' }}>
                       <ActionIcons>
-                        <EditIcon
-                          onClick={() => {
-                            setEditTargetFile({
-                              title: file.name,
-                              version: file.version,
-                            });
-                            setIsEditModalOpen(true);
-                          }}
-                          style={{ cursor: 'pointer' }}
-                        />
-                        <DeleteIcon
-                          onClick={() => {
-                            setTargetFileName(file.name);
-                            setIsDeletePopupOpen(true);
-                          }}
-                          style={{ cursor: 'pointer' }}
-                        />
+                        <EditIconWrapper>
+                          <EditIcon onClick={() => handleEditFile(file)} />
+                        </EditIconWrapper>
+                        <DeleteIconWrapper>
+                          <DeleteIcon onClick={() => handleDeleteFile(file.name)} />
+                        </DeleteIconWrapper>
                       </ActionIcons>
-                    </FileDownloadWrapper>
-                  </Td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </FileSection>
+                    </td>
+                  </TableRow>
+                ))
+              )}
+            </TableLayout>
+          </FileSection>
+        </ContentWrapper>
       </Content>
+
       <Popup
         isOpen={isDeletePopupOpen}
         title="파일 삭제"
         message={`${targetFileName} 파일을 삭제하시겠습니까?`}
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
-        onDelete={() => {
-          setIsDeletePopupOpen(false);
-          setIsSuccessPopupOpen(true);
-        }}
+        onDelete={handleDeleteConfirm}
       />
 
       <Popup
@@ -175,76 +239,84 @@ export default function DictionaryDetailPage() {
         alertButtonText="확인"
         onClose={() => setIsSuccessPopupOpen(false)}
       />
+
       <DictUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSubmit={(data) => {
-          console.log('업로드된 CSV:', data);
-          setIsCsvModalOpen(false);
-        }}
+        onSubmit={handleUploadModalSubmit}
       />
+
       {editTargetFile && (
         <DictEditModal
           isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditTargetFile(null);
-          }}
-          onSubmit={(data) => {
-            console.log('수정된 파일 데이터:', data);
-            setIsEditModalOpen(false);
-            setEditTargetFile(null);
-          }}
+          onClose={handleEditModalClose}
+          onSubmit={handleEditModalSubmit}
           originalFileName={editTargetFile.title}
           originalVersion={editTargetFile.version}
         />
       )}
-      {selectedFile && (
-        <FileDetailPanel file={selectedFile} onClose={() => setSelectedFile(null)} />
-      )}
+
+      {selectedFile && <FileDetailPanel file={selectedFile} onClose={handleFileDetailClose} />}
     </PageWrapper>
   );
 }
 
 const PageWrapper = styled.div`
   display: flex;
+  min-height: 100vh;
+  min-width: 1000px;
+  overflow-x: auto;
+`;
+
+const SideBarWrapper = styled.div`
+  flex-shrink: 0;
+  width: 280px;
+  min-height: 100vh;
 `;
 
 const Content = styled.div`
   flex: 1;
-  padding: 40px;
-  width: calc(100% - 280px);
-  max-width: 1200px;
-  margin-left: 280px;
+  min-width: 1230px;
+  padding: 0 36px;
+  background-color: ${colors.background};
 `;
 
-const Header = styled.div`
+const ContentWrapper = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+`;
+
+const PageTitle = styled.h1`
+  font-size: 40px;
+  font-weight: ${fontWeight.SemiBold};
+  color: ${colors.Normal};
+  margin-bottom: 12px;
+  margin-top: 80px;
+`;
+
+const HeaderSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+`;
+
+const DescriptionRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  width: 100%;
 `;
 
-const TitleGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Title = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  color: #0e3a95;
-  margin: 0;
-`;
-
-const SubTitle = styled.p`
-  font-size: 14px;
-  color: #888;
-  margin: 4px 0 0 0;
+const Description = styled.p`
+  font-size: 16px;
+  font-weight: ${fontWeight.Regular};
+  color: ${colors.BoxText};
 `;
 
 const InfoBox = styled.div`
-  padding: 20px 0;
+  padding: 12px 24px;
   margin-bottom: 30px;
   display: flex;
   justify-content: space-between;
@@ -255,10 +327,9 @@ const InfoBox = styled.div`
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
   white-space: nowrap;
+  gap: 24px;
   flex: 1 1 0;
-  min-width: 160px;
 `;
 
 const InfoItemColumn = styled(InfoItem)`
@@ -268,12 +339,16 @@ const InfoItemColumn = styled(InfoItem)`
 `;
 
 const Label = styled.div`
-  font-weight: 600;
-  color: #444;
+  font-weight: ${fontWeight.Medium};
+  font-size: 16px;
+  color: ${colors.Black};
+  margin-bottom: 16px;
 `;
 
 const Value = styled.div`
-  color: #666;
+  font-size: 14px;
+  font-weight: ${fontWeight.Medium};
+  color: ${colors.Normal};
 `;
 
 const FileSection = styled.div``;
@@ -286,64 +361,26 @@ const FileSectionHeader = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 700;
-  color: #0e3a95;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-
-  th,
-  td {
-    font-size: 14px;
-    border-bottom: 1px solid #ddd;
-    padding: 14px 8px;
-  }
-
-  th {
-    background-color: #0e3a95;
-    color: white;
-    font-weight: 700;
-  }
-`;
-
-const Th = styled.th`
-  text-align: left;
-  padding-left: 8px;
-`;
-
-const Td = styled.td`
-  text-align: left;
-  padding-left: 8px;
-  vertical-align: middle;
-`;
-
-const FileDownloadWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  font-size: 24px;
+  font-weight: ${fontWeight.SemiBold};
+  color: ${colors.Normal};
+  margin-top: 16px;
 `;
 
 const DownloadIconWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  height: 100%;
-  margin-left: 25px;
+  color: ${colors.BoxText};
+
+  &:hover {
+    svg {
+      color: ${colors.Normal};
+    }
+  }
 `;
 
 const ActionIcons = styled.div`
   display: flex;
-  gap: 16px;
-
-  svg {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    color: #999;
-  }
+  gap: 20px;
+  color: ${colors.BoxText};
 `;
 
 const NoData = styled.div`
@@ -353,14 +390,52 @@ const NoData = styled.div`
   color: #999;
 `;
 
-const HoverTd = styled.td`
-  padding-left: 8px;
+const EmptyRow = styled.tr`
+  height: 200px;
+`;
+
+const EmptyCell = styled.td<{ colSpan: number }>`
+  text-align: center;
   vertical-align: middle;
-  cursor: default;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  padding: 80px 0;
+`;
+
+const EmptyMessage = styled.div`
+  display: inline-block;
+`;
+
+const StatusWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  height: 100%;
+`;
+
+const StyledLink = styled.div`
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 
   &:hover {
-    cursor: pointer;
-    color: #0e3a95;
-    font-weight: 600;
+    color: ${colors.Normal};
+  }
+`;
+
+const DeleteIconWrapper = styled.div`
+  &:hover {
+    svg {
+      color: ${colors.Normal};
+    }
+  }
+`;
+
+const EditIconWrapper = styled.div`
+  &:hover {
+    svg {
+      color: ${colors.Normal};
+    }
   }
 `;

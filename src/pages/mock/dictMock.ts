@@ -8,7 +8,8 @@ export const dictMockData = [
   {
     id: 1,
     name: '카카오워크 용어사전',
-    description: '카카오워크 관련 FAQ입니다.',
+    description:
+      '카카오워크는 익숙하면서도 안전하게, 온라인과 오프라인의 구분 없이 어디서나 빠른 협업을 할 수 있도록 최신 기술과 AI 기술을 활용',
     status: {
       green: 2,
       yellow: 3,
