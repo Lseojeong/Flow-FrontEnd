@@ -35,6 +35,7 @@ export default function DictionaryPage() {
     name: string;
     description: string;
   } | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
@@ -109,6 +110,10 @@ export default function DictionaryPage() {
     setIsPopupOpen(true);
   };
 
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
+
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -149,27 +154,23 @@ export default function DictionaryPage() {
             />
 
             <CategorySearch
-              placeholder="카테고리 검색"
-              value=""
-              onChange={() => {
-                // TODO: 검색 로직 구현
-              }}
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
             />
-
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           </FilterBar>
 
           <TableLayout>
             <TableHeader columns={columns} />
 
-            {categories.length === 0 ? (
+            {filteredCategories.length === 0 ? (
               <EmptyRow>
                 <EmptyCell colSpan={6}>
                   <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
                 </EmptyCell>
               </EmptyRow>
             ) : (
-              categories.map((category) => {
+              filteredCategories.map((category) => {
                 const isChecked = !!checkedItems[category.id];
                 return (
                   <TableRow key={category.id}>
