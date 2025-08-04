@@ -11,6 +11,7 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
   children,
   align = 'left',
   maxWidth = '200px',
+  width,
 }) => {
   const handleWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
@@ -21,8 +22,10 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
     e.stopPropagation();
   };
 
+  const finalWidth = width || maxWidth;
+
   return (
-    <CellContainer $align={align} $maxWidth={maxWidth}>
+    <CellContainer $align={align} $width={finalWidth}>
       <ScrollableContent $align={align} onWheel={handleWheel} onMouseDown={handleMouseDown}>
         {children}
       </ScrollableContent>
@@ -30,8 +33,9 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
   );
 };
 
-const CellContainer = styled.td<{ $align: string; $maxWidth: string }>`
-  max-width: ${({ $maxWidth }) => $maxWidth};
+const CellContainer = styled.td<{ $align: string; $width: string }>`
+  width: ${({ $width }) => $width};
+  max-width: ${({ $width }) => $width};
   text-align: ${({ $align }) => $align};
   padding: 16px 24px;
   color: ${colors.Black};

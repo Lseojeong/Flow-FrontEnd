@@ -27,6 +27,7 @@ export interface ScrollableCellProps {
   children: React.ReactNode;
   align?: AlignType;
   maxWidth?: string;
+  width?: string;
 }
 
 export interface TableCellProps {

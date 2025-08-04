@@ -20,6 +20,8 @@ export const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
 const StyledThead = styled.thead`
   background-color: ${colors.Normal};
   color: white;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
 
   th {
     padding: 16px 24px;
@@ -27,5 +29,13 @@ const StyledThead = styled.thead`
     font-weight: ${fontWeight.Medium};
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  th:first-child {
+    border-top-left-radius: 4px;
+  }
+
+  th:last-child {
+    border-top-right-radius: 4px;
   }
 `;

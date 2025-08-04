@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
+import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -26,6 +26,7 @@ export default function DictionaryPage() {
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -184,7 +185,9 @@ export default function DictionaryPage() {
                       />
                     </td>
                     <td style={{ width: '600px', textAlign: 'left' }}>
-                      <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
+                      <ScrollableCell>
+                        <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
+                      </ScrollableCell>
                     </td>
                     <td style={{ width: '120px', textAlign: 'left' }}>
                       <StatusWrapper>
@@ -319,7 +322,7 @@ const FilterBar = styled.div`
   align-items: center;
   gap: 12px;
   margin-left: 20px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 `;
 const EmptyRow = styled.tr`
   height: 200px;
@@ -359,7 +362,7 @@ const EditIconWrapper = styled.div`
 `;
 
 const StyledLink = styled(Link)`
-  color: inherit;
+  color: ${colors.Black};
   text-decoration: none;
   cursor: pointer;
 

@@ -51,7 +51,7 @@ const routes: RouteObject[] = [
         element: <FaqPage />,
       },
       {
-        path: ':categoryId',
+        path: ':faqId',
         element: <FaqDetailPage />,
       },
     ],

@@ -30,7 +30,7 @@ export const dictMockData = [
     files: [
       {
         id: 1,
-        name: '카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf',
+        name: '카카오워크_기능_정의서.pdf',
         status: 'Completed',
         manager: 'kodari385(Milo)',
         registeredAt: '2025.07.05 16:30',
