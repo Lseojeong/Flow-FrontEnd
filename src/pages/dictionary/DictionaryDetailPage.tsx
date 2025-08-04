@@ -11,7 +11,7 @@ import { Popup } from '@/components/common/popup/Popup';
 import DictUploadModal from '@/components/common/modal/DictUploadModal';
 import DictEditModal from '@/components/common/modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
-import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
+import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
@@ -46,9 +46,9 @@ export default function DictionaryDetailPage() {
   }
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: detailData.status.green },
-    { type: 'Processing', count: detailData.status.yellow },
-    { type: 'Fail', count: detailData.status.red },
+    { type: 'Completed', count: detailData.status.completed },
+    { type: 'Processing', count: detailData.status.processing },
+    { type: 'Fail', count: detailData.status.fail },
   ];
 
   const filteredFiles = detailData.files.filter((file) =>
@@ -60,10 +60,10 @@ export default function DictionaryDetailPage() {
     { label: '파일명', width: '320px', align: 'left' as const },
     { label: '상태', width: '120px', align: 'center' as const },
     { label: '관리자', width: '160px', align: 'left' as const },
-    { label: '등록일', width: '140px', align: 'left' as const },
-    { label: '수정일', width: '140px', align: 'left' as const },
+    { label: '등록일', width: '150px', align: 'left' as const },
+    { label: '수정일', width: '150px', align: 'left' as const },
     { label: '파일 다운로드', width: '120px', align: 'left' as const },
-    { label: ' ', width: '100px', align: 'left' as const },
+    { label: ' ', width: '80px', align: 'left' as const },
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,56 +172,54 @@ export default function DictionaryDetailPage() {
             </InfoItemColumn>
           </InfoBox>
 
-          <FileSection>
-            <FileSectionHeader>
-              <SectionTitle>파일 관리</SectionTitle>
-              <FileSearch value={searchKeyword} onChange={handleSearchChange} />
-            </FileSectionHeader>
+          <FileSectionHeader>
+            <SectionTitle>파일 관리</SectionTitle>
+            <FileSearch value={searchKeyword} onChange={handleSearchChange} />
+          </FileSectionHeader>
 
-            <TableLayout>
-              <TableHeader columns={columns} />
+          <TableLayout>
+            <TableHeader columns={columns} />
 
-              {filteredFiles.length === 0 ? (
-                <EmptyRow>
-                  <EmptyCell colSpan={7}>
-                    <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-                  </EmptyCell>
-                </EmptyRow>
-              ) : (
-                filteredFiles.map((file, index) => (
-                  <TableRow key={file.id}>
-                    <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
-                    <td style={{ width: '320px', textAlign: 'left' }}>
-                      <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
-                    </td>
-                    <td style={{ width: '120px', textAlign: 'center' }}>
-                      <StatusWrapper>
-                        <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                      </StatusWrapper>
-                    </td>
-                    <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
-                    <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
-                    <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
-                    <td style={{ width: '120px', textAlign: 'center' }}>
-                      <DownloadIconWrapper>
-                        <DownloadIcon />
-                      </DownloadIconWrapper>
-                    </td>
-                    <td style={{ width: '100px', textAlign: 'left' }}>
-                      <ActionIcons>
-                        <EditIconWrapper>
-                          <EditIcon onClick={() => handleEditFile(file)} />
-                        </EditIconWrapper>
-                        <DeleteIconWrapper>
-                          <DeleteIcon onClick={() => handleDeleteFile(file.name)} />
-                        </DeleteIconWrapper>
-                      </ActionIcons>
-                    </td>
-                  </TableRow>
-                ))
-              )}
-            </TableLayout>
-          </FileSection>
+            {filteredFiles.length === 0 ? (
+              <EmptyRow>
+                <EmptyCell colSpan={7}>
+                  <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+                </EmptyCell>
+              </EmptyRow>
+            ) : (
+              filteredFiles.map((file, index) => (
+                <TableRow key={file.id}>
+                  <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
+                  <ScrollableCell maxWidth="320px" align="left">
+                    <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+                  </ScrollableCell>
+                  <td style={{ width: '120px', textAlign: 'center' }}>
+                    <StatusWrapper>
+                      <StatusBadge status={file.status}>{file.status}</StatusBadge>
+                    </StatusWrapper>
+                  </td>
+                  <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
+                  <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
+                  <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
+                  <td style={{ width: '120px', textAlign: 'center' }}>
+                    <DownloadIconWrapper>
+                      <DownloadIcon />
+                    </DownloadIconWrapper>
+                  </td>
+                  <td style={{ width: '100px', textAlign: 'left' }}>
+                    <ActionIcons>
+                      <EditIconWrapper>
+                        <EditIcon onClick={() => handleEditFile(file)} />
+                      </EditIconWrapper>
+                      <DeleteIconWrapper>
+                        <DeleteIcon onClick={() => handleDeleteFile(file.name)} />
+                      </DeleteIconWrapper>
+                    </ActionIcons>
+                  </td>
+                </TableRow>
+              ))
+            )}
+          </TableLayout>
         </ContentWrapper>
       </Content>
 
@@ -316,6 +314,7 @@ const InfoBox = styled.div`
   justify-content: space-between;
   flex-wrap: wrap;
   align-items: center;
+  margin-bottom: 40px;
 `;
 
 const InfoItem = styled.div`
@@ -345,8 +344,6 @@ const Value = styled.div`
   color: ${colors.Normal};
 `;
 
-const FileSection = styled.div``;
-
 const FileSectionHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -358,7 +355,6 @@ const SectionTitle = styled.h3`
   font-size: 24px;
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Normal};
-  margin-top: 16px;
 `;
 
 const DownloadIconWrapper = styled.div`
