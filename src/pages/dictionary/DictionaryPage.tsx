@@ -364,6 +364,5 @@ const StyledLink = styled(Link)`
 
   &:hover {
     color: ${colors.Normal};
-    text-decoration: underline;
   }
 `;

@@ -108,7 +108,7 @@ export default function UserSettingPage() {
             </Button>
           </ButtonSection>
           <TableSection>
-            <TableLayout maxHeight="500px">
+            <TableLayout>
               <TableHeader columns={columns} />
               <tbody>
                 {users.map((user, index) => (
@@ -327,7 +327,6 @@ const DepartmentCell = styled.div`
   gap: 8px;
   cursor: pointer;
   width: 100%;
-  height: 100%;
 
   svg {
     color: ${colors.BoxText};

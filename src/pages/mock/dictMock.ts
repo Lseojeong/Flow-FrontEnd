@@ -1,8 +1,8 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
-import { User } from '@/types/userSetting';
-import { DepartmentSetting } from '@/types/departmentSetting';
+import { User } from '@/types/userSetting.types';
+import { DepartmentSetting } from '@/types/departmentSetting.types';
 
 export const dictMockData = [
   {
