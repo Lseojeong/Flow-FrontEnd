@@ -23,7 +23,7 @@ const COLOR_THRESHOLDS = {
 const COUNTER_COLORS = {
   NORMAL: colors.BoxText,
   WARNING: '#FFB560',
-  CRITICAL: '#FF8902',
+  CRITICAL: colors.MainRed,
 } as const;
 
 const getCounterColor = (currentLength: number, maxLength: number): string => {
