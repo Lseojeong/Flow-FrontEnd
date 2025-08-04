@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
+import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -183,9 +183,9 @@ export default function DictionaryPage() {
                         label=""
                       />
                     </td>
-                    <ScrollableCell maxWidth="600px" align="left">
+                    <td style={{ width: '600px', textAlign: 'left' }}>
                       <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
-                    </ScrollableCell>
+                    </td>
                     <td style={{ width: '120px', textAlign: 'left' }}>
                       <StatusWrapper>
                         <StatusSummary

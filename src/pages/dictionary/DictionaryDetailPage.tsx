@@ -57,12 +57,12 @@ export default function DictionaryDetailPage() {
 
   const columns = [
     { label: '번호', width: '48px', align: 'left' as const },
-    { label: '파일명', width: '320px', align: 'left' as const },
-    { label: '상태', width: '120px', align: 'center' as const },
-    { label: '관리자', width: '160px', align: 'left' as const },
-    { label: '등록일', width: '150px', align: 'left' as const },
-    { label: '수정일', width: '150px', align: 'left' as const },
-    { label: '파일 다운로드', width: '120px', align: 'left' as const },
+    { label: '파일명', width: '280px', align: 'left' as const },
+    { label: '상태', width: '110px', align: 'left' as const },
+    { label: '관리자', width: '140px', align: 'left' as const },
+    { label: '등록일', width: '140px', align: 'left' as const },
+    { label: '수정일', width: '140px', align: 'left' as const },
+    { label: '파일 다운로드', width: '100px', align: 'left' as const },
     { label: ' ', width: '80px', align: 'left' as const },
   ];
 
@@ -190,10 +190,10 @@ export default function DictionaryDetailPage() {
               filteredFiles.map((file, index) => (
                 <TableRow key={file.id}>
                   <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
-                  <ScrollableCell maxWidth="320px" align="left">
+                  <ScrollableCell maxWidth="280px" align="left">
                     <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
                   </ScrollableCell>
-                  <td style={{ width: '120px', textAlign: 'center' }}>
+                  <td style={{ width: '110px', textAlign: 'left' }}>
                     <StatusWrapper>
                       <StatusBadge status={file.status}>{file.status}</StatusBadge>
                     </StatusWrapper>
@@ -201,20 +201,20 @@ export default function DictionaryDetailPage() {
                   <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
                   <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
                   <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
-                  <td style={{ width: '120px', textAlign: 'center' }}>
+                  <td style={{ width: '100px', textAlign: 'center' }}>
                     <DownloadIconWrapper>
                       <DownloadIcon />
                     </DownloadIconWrapper>
                   </td>
-                  <td style={{ width: '100px', textAlign: 'left' }}>
-                    <ActionIcons>
-                      <EditIconWrapper>
-                        <EditIcon onClick={() => handleEditFile(file)} />
-                      </EditIconWrapper>
-                      <DeleteIconWrapper>
-                        <DeleteIcon onClick={() => handleDeleteFile(file.name)} />
-                      </DeleteIconWrapper>
-                    </ActionIcons>
+                  <td style={{ width: '80px', textAlign: 'center' }}>
+                    <ActionButtons>
+                      <ActionButton onClick={() => handleEditFile(file)}>
+                        <EditIcon />
+                      </ActionButton>
+                      <ActionButton onClick={() => handleDeleteFile(file.name)}>
+                        <DeleteIcon />
+                      </ActionButton>
+                    </ActionButtons>
                   </td>
                 </TableRow>
               ))
@@ -367,10 +367,32 @@ const DownloadIconWrapper = styled.div`
   }
 `;
 
-const ActionIcons = styled.div`
+const ActionButtons = styled.div`
   display: flex;
-  gap: 20px;
-  color: ${colors.BoxText};
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  svg {
+    color: ${colors.BoxText};
+    transition: color 0.2s;
+  }
+
+  &:hover svg {
+    color: ${colors.Normal};
+  }
 `;
 
 const NoData = styled.div`
@@ -411,21 +433,5 @@ const StyledLink = styled.div`
 
   &:hover {
     color: ${colors.Normal};
-  }
-`;
-
-const DeleteIconWrapper = styled.div`
-  &:hover {
-    svg {
-      color: ${colors.Normal};
-    }
-  }
-`;
-
-const EditIconWrapper = styled.div`
-  &:hover {
-    svg {
-      color: ${colors.Normal};
-    }
   }
 `;

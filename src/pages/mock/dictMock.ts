@@ -11,9 +11,6 @@ export const dictMockData = [
     description:
       '카카오워크는 익숙하면서도 안전하게, 온라인과 오프라인의 구분 없이 어디서나 빠른 협업을 할 수 있도록 최신 기술과 AI 기술을 활용',
     status: {
-      green: 2,
-      yellow: 3,
-      red: 4,
       total: 9,
       completed: 2,
       processing: 3,
@@ -33,11 +30,11 @@ export const dictMockData = [
     files: [
       {
         id: 1,
-        name: '카카오워크_기능_정의서.pdf',
+        name: '카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf',
         status: 'Completed',
-        manager: 'Milo',
-        registeredAt: '2025.07.01',
-        updatedAt: '2025.07.05',
+        manager: 'kodari385(Milo)',
+        registeredAt: '2025.07.05 16:30',
+        updatedAt: '2025.07.05 16:30',
         version: '1.0.0',
       },
       {
@@ -45,8 +42,8 @@ export const dictMockData = [
         name: '카카오워크_API_명세서.pdf',
         status: 'Processing',
         manager: 'Jane',
-        registeredAt: '2025.07.02',
-        updatedAt: '2025.07.04',
+        registeredAt: '2025.07.05 16:30',
+        updatedAt: '2025.07.05 16:30',
         version: '1.0.0',
       },
     ],
