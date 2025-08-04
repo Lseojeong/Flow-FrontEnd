@@ -55,7 +55,7 @@ const Message = styled.p`
   color: ${colors.White};
   font-size: 18px;
   margin-bottom: 50px;
-  font-weight: ${fontWeight.Regular}
+  font-weight: ${fontWeight.Medium}
   fonr-size : 24px
 `;
 
@@ -71,6 +71,6 @@ const BackButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-  background: ${colors.background};
+  background: ${colors.Light};
   }
 `;
