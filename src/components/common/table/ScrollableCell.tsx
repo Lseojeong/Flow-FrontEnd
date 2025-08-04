@@ -46,19 +46,20 @@ const ScrollableContent = styled.div<{ $align: string }>`
   position: relative;
   text-align: ${({ $align }) => $align};
   padding-right: 8px;
-  padding-bottom: 8px;
   min-width: 0;
+  padding-bottom: 8px;
+  margin-top: 8px;
 
   scrollbar-width: thin;
   scrollbar-color: ${colors.Light_active} transparent;
 
   &::-webkit-scrollbar {
-    height: 4px;
+    height: 2px;
   }
 
   &::-webkit-scrollbar-track {
     background: transparent;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     border: none;
   }
 
