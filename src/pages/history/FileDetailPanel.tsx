@@ -21,7 +21,6 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
     setEndDate(end);
   };
 
-
   const { data: historyList, observerRef } = useInfiniteScroll<HistoryData, HTMLTableRowElement>({
     fetchFn: getPaginatedHistoryData,
   });
@@ -117,17 +116,14 @@ const Title = styled.h2`
   margin: 0;
 `;
 
-
-
 const Content = styled.div`
   margin-top: 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: calc(100vh - 160px); 
+  max-height: calc(100vh - 105px);
   overflow-y: auto;
 `;
-
 
 const Table = styled.table`
   width: 100%;
@@ -162,10 +158,8 @@ const Table = styled.table`
   }
 `;
 
-
 const Th = styled.th``;
 const Td = styled.td``;
-
 
 const SideCloseButton = styled.button`
   position: fixed;

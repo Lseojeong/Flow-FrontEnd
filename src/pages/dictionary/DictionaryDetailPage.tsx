@@ -33,7 +33,6 @@ export default function DictionaryDetailPage() {
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -90,7 +89,11 @@ export default function DictionaryDetailPage() {
 
   const handleDeleteConfirm = () => {
     setIsDeletePopupOpen(false);
-    setIsSuccessPopupOpen(true);
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!(
+        `${targetFileName} 파일이 삭제되었습니다.`
+      );
+    }
   };
 
   const handleEditModalClose = () => {
@@ -229,15 +232,6 @@ export default function DictionaryDetailPage() {
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={handleDeleteConfirm}
-      />
-
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="파일 삭제 완료"
-        message="삭제가 완료되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
       />
 
       <DictUploadModal
