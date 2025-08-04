@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams} from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import SideBar from '@/components/common/layout/SideBar';
@@ -21,10 +21,7 @@ import DictEditModal from '@/components/common/modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { DictFile } from '@/pages/mock/dictMock';
 
-
-
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
-
 
 export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams();
@@ -36,12 +33,11 @@ export default function DictionaryDetailPage() {
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<{
-  title: string;
-  version: string;
-} | null>(null);
+    title: string;
+    version: string;
+  } | null>(null);
 
-
-const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
 
@@ -101,10 +97,7 @@ const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
         <FileSection>
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
-            <FileSearch
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-            />
+            <FileSearch value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
           </FileSectionHeader>
 
           <Table>
@@ -123,9 +116,7 @@ const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
               {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td>{index + 1}</Td>
-                  <HoverTd 
-                  onClick={() => setSelectedFile(file)}>
-                  {file.name}</HoverTd>
+                  <HoverTd onClick={() => setSelectedFile(file)}>{file.name}</HoverTd>
                   <Td>
                     <StatusBadge status={file.status}>{file.status}</StatusBadge>
                   </Td>
@@ -139,16 +130,22 @@ const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
                       </DownloadIconWrapper>
                       <ActionIcons>
                         <EditIcon
-                           onClick={() => {
-                             setEditTargetFile({
-                               title: file.name,
-                               version: file.version,
-                             });
-                             setIsEditModalOpen(true);
-                           }}
-                           style={{ cursor: 'pointer' }}
-                         />
-                        <DeleteIcon onClick={() => {setTargetFileName(file.name);setIsDeletePopupOpen(true);}} style={{ cursor: 'pointer' }}/>
+                          onClick={() => {
+                            setEditTargetFile({
+                              title: file.name,
+                              version: file.version,
+                            });
+                            setIsEditModalOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <DeleteIcon
+                          onClick={() => {
+                            setTargetFileName(file.name);
+                            setIsDeletePopupOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
                       </ActionIcons>
                     </FileDownloadWrapper>
                   </Td>
@@ -165,10 +162,10 @@ const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={() => {
-         setIsDeletePopupOpen(false);
-        setIsSuccessPopupOpen(true);
-      }}
-     />
+          setIsDeletePopupOpen(false);
+          setIsSuccessPopupOpen(true);
+        }}
+      />
 
       <Popup
         isOpen={isSuccessPopupOpen}
@@ -179,35 +176,32 @@ const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
         onClose={() => setIsSuccessPopupOpen(false)}
       />
       <DictUploadModal
-                      isOpen={isCsvModalOpen}
-                      onClose={() => setIsCsvModalOpen(false)}
-                      onSubmit={(data) => {
-                        console.log('업로드된 CSV:', data);
-                        setIsCsvModalOpen(false);
-                      }}
-                    />
-                    {editTargetFile && (
-                    <DictEditModal
-                      isOpen={isEditModalOpen}
-                      onClose={() => {
-                        setIsEditModalOpen(false);
-                        setEditTargetFile(null);
-                      }}
-                      onSubmit={(data) => {
-                        console.log('수정된 파일 데이터:', data);
-                        setIsEditModalOpen(false);
-                        setEditTargetFile(null);
-                      }}
-                      originalFileName={editTargetFile.title}
-                      originalVersion={editTargetFile.version}
-                    />
-                  )}
-                  {selectedFile && (
-                <FileDetailPanel
-                file={selectedFile}
-                onClose={() => setSelectedFile(null)}
-                />
-                )}
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSubmit={(data) => {
+          console.log('업로드된 CSV:', data);
+          setIsCsvModalOpen(false);
+        }}
+      />
+      {editTargetFile && (
+        <DictEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditTargetFile(null);
+          }}
+          onSubmit={(data) => {
+            console.log('수정된 파일 데이터:', data);
+            setIsEditModalOpen(false);
+            setEditTargetFile(null);
+          }}
+          originalFileName={editTargetFile.title}
+          originalVersion={editTargetFile.version}
+        />
+      )}
+      {selectedFile && (
+        <FileDetailPanel file={selectedFile} onClose={() => setSelectedFile(null)} />
+      )}
     </PageWrapper>
   );
 }
@@ -248,7 +242,6 @@ const SubTitle = styled.p`
   color: #888;
   margin: 4px 0 0 0;
 `;
-
 
 const InfoBox = styled.div`
   padding: 20px 0;
