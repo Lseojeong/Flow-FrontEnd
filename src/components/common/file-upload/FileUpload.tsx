@@ -116,6 +116,10 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
 
 const Wrapper = styled.div`
   width: 556px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 48px;
 `;
 
 const ErrorMessages = styled.div`
@@ -123,6 +127,9 @@ const ErrorMessages = styled.div`
   font-size: 10px;
   margin-bottom: 8px;
   text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  visibility: ${({ children }) => (children ? 'visible' : 'hidden')};
 `;
 
 const Label = styled.label<{ $hasError: boolean; $hasFile: boolean }>`

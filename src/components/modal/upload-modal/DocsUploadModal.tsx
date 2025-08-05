@@ -15,7 +15,6 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
       onSubmit={onSubmit}
       title="사내문서 데이터 등록"
       fileType="pdf"
-      downloadLink="/assets/docs-template.pdf"
     />
   );
 };

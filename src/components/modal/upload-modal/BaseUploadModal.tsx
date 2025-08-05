@@ -14,7 +14,7 @@ interface BaseUploadModalProps {
   onSubmit: (_data: { title: string; description: string; version: string }) => void;
   title: string;
   fileType: 'csv' | 'pdf';
-  downloadLink: string;
+  downloadLink?: string;
   children?: React.ReactNode;
 }
 
@@ -81,14 +81,16 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
             <Title>{title}</Title>
             <Divider />
 
-            <DescriptionRow>
-              <span>
-                양식을 다운로드하여 내용을 채우고 업로드 해주세요.
-                <DownloadLink href={downloadLink} download>
-                  양식 다운로드
-                </DownloadLink>
-              </span>
-            </DescriptionRow>
+            {downloadLink && (
+              <DescriptionRow>
+                <span>
+                  양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+                  <DownloadLink href={downloadLink} download>
+                    양식 다운로드
+                  </DownloadLink>
+                </span>
+              </DescriptionRow>
+            )}
 
             <UploadRow>
               <UploadInput onFileSelect={handleFileSelect} fileType={fileType} />
@@ -155,7 +157,7 @@ const ModalBox = styled.div`
   width: 724px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 `;
 
 const Title = styled.h3`
@@ -173,19 +175,20 @@ const ButtonRow = styled.div`
 
 const UploadRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
+  height: 60px;
 `;
 
 const UploadButtonWrapper = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
 `;
 
 const DescriptionRow = styled.div`
   font-size: 14px;
   color: ${colors.Black};
-  margin: 8px 0 16px;
+  margin: 8px 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
