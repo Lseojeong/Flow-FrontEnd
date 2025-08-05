@@ -8,8 +8,8 @@ import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
 import { Popup } from '@/components/common/popup/Popup';
-import DocsUploadModal from '@/components/common/modal/DictUploadModal';
-import DocsEditModal from '@/components/common/modal/DictEditModal';
+import DocsUploadModal from '@/components/common/modal/DocsUploadModal';
+import DocsEditModal from '@/components/common/modal/DocsEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 
