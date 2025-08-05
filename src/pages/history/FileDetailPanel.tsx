@@ -6,7 +6,7 @@ import DownloadIcon from '@/assets/icons/common/download.svg?react';
 import ArrowIcon from '@/assets/icons/common/arrow.svg?react';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { TableLayout, TableHeader, ScrollableCell } from '@/components/common/table';
+import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { colors, fontWeight } from '@/styles';
 
 interface Props {
@@ -15,12 +15,12 @@ interface Props {
 }
 
 const columns = [
-  { label: '버전', width: '80px', align: 'left' as const },
-  { label: '파일명', width: '160px', align: 'left' as const },
-  { label: '관리자', width: '110px', align: 'left' as const },
-  { label: '일시', width: '150px', align: 'left' as const },
+  { label: '버전', width: '90px', align: 'left' as const },
+  { label: '파일명', width: '145px', align: 'left' as const },
+  { label: '관리자', width: '90x', align: 'left' as const },
+  { label: '일시', width: '190px', align: 'left' as const },
   { label: '작업', width: '80px', align: 'left' as const },
-  { label: '설명', width: '180px', align: 'left' as const },
+  { label: '설명', width: '160px', align: 'left' as const },
   { label: ' ', width: '80px', align: 'left' as const },
 ];
 
@@ -59,21 +59,21 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
               {historyList.map((item, index) => {
                 const isLast = index === historyList.length - 1;
                 return (
-                  <tr key={index} ref={isLast ? observerRef : null}>
+                  <TableRow key={index} ref={isLast ? observerRef : undefined}>
                     <td>{item.version}</td>
-                    <ScrollableCell maxWidth="160px" align="left">
+                    <ScrollableCell maxWidth="140px" align="left">
                       {item.fileName}
                     </ScrollableCell>
-                    <td style={{ width: '110px', textAlign: 'center' }}>{item.modifier}</td>
-                    <td style={{ width: '150px', textAlign: 'center' }}>{item.timeStamp}</td>
-                    <td style={{ width: '80px', textAlign: 'center' }}>{item.work}</td>
-                    <ScrollableCell maxWidth="180px" align="left">
+                    <td>{item.modifier}</td>
+                    <td>{item.timeStamp}</td>
+                    <td>{item.work}</td>
+                    <ScrollableCell maxWidth="160px" align="left">
                       {item.description}
                     </ScrollableCell>
                     <td style={{ textAlign: 'center' }}>
                       <DownloadIcon />
                     </td>
-                  </tr>
+                  </TableRow>
                 );
               })}
               {historyList.length === 0 && (
@@ -133,7 +133,7 @@ const TableHeaderSection = styled.div`
 
 const TableBodySection = styled.div`
   flex: 1;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
   overflow-x: hidden;
 `;

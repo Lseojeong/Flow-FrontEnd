@@ -17,7 +17,7 @@ export interface TableHeaderProps {
   columns: Column[];
 }
 
-export interface TableRowProps {
+export interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   children: React.ReactNode;
   onClick?: () => void;
   style?: React.CSSProperties;

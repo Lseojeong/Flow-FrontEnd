@@ -35,7 +35,7 @@ export const DepartmentTagList: React.FC<DepartmentTagListProps> = ({
 const TagListContainer = styled.div`
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
 `;
 

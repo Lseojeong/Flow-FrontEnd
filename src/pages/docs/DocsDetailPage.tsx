@@ -20,6 +20,9 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { Button } from '@/components/common/button/Button';
+import DepartmentTagList from '@/components/common/department/DepartmentTagList';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { getPaginatedFilesData } from '@/pages/mock/dictMock';
 
 interface EditTargetFile {
   title: string;
@@ -30,6 +33,11 @@ const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DocsDetailPage() {
   const { docId } = useParams();
+
+  const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
+    fetchFn: (page, size) => getPaginatedFilesData(page, size),
+    pageSize: 5,
+  });
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
@@ -58,10 +66,10 @@ export default function DocsDetailPage() {
   const columns = [
     { label: '번호', width: '48px', align: 'left' as const },
     { label: '파일명', width: '280px', align: 'left' as const },
-    { label: '상태', width: '110px', align: 'left' as const },
-    { label: '관리자', width: '140px', align: 'left' as const },
-    { label: '등록일', width: '140px', align: 'left' as const },
-    { label: '수정일', width: '140px', align: 'left' as const },
+    { label: '상태', width: '120px', align: 'left' as const },
+    { label: '관리자', width: '148px', align: 'left' as const },
+    { label: '등록일', width: '157px', align: 'left' as const },
+    { label: '수정일', width: '159px', align: 'left' as const },
     { label: '파일 다운로드', width: '100px', align: 'left' as const },
     { label: ' ', width: '80px', align: 'left' as const },
   ];
@@ -170,6 +178,12 @@ export default function DocsDetailPage() {
               <Label>최종 수정자:</Label>
               <Value>{detailData.lastEditor}</Value>
             </InfoItemColumn>
+            <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
+              <Label>포함 부서:</Label>
+              <Value>
+                <DepartmentTagList departments={detailData.departments} />
+              </Value>
+            </InfoItemColumn>
           </InfoBox>
 
           <FileSectionHeader>
@@ -177,49 +191,92 @@ export default function DocsDetailPage() {
             <FileSearch value={searchKeyword} onChange={handleSearchChange} />
           </FileSectionHeader>
 
-          <TableLayout>
-            <TableHeader columns={columns} />
-
-            {filteredFiles.length === 0 ? (
-              <EmptyRow>
-                <EmptyCell colSpan={7}>
-                  <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-                </EmptyCell>
-              </EmptyRow>
-            ) : (
-              filteredFiles.map((file, index) => (
-                <TableRow key={file.id}>
-                  <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
-                  <ScrollableCell maxWidth="280px" align="left">
-                    <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
-                  </ScrollableCell>
-                  <td style={{ width: '110px', textAlign: 'left' }}>
-                    <StatusWrapper>
-                      <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                    </StatusWrapper>
-                  </td>
-                  <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
-                  <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
-                  <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
-                  <td style={{ width: '100px', textAlign: 'center' }}>
-                    <DownloadIconWrapper>
-                      <DownloadIcon />
-                    </DownloadIconWrapper>
-                  </td>
-                  <td style={{ width: '80px', textAlign: 'center' }}>
-                    <ActionButtons>
-                      <ActionButton onClick={() => handleEditFile(file)}>
-                        <EditIcon />
-                      </ActionButton>
-                      <ActionButton onClick={() => handleDeleteFile(file.name)}>
-                        <DeleteIcon />
-                      </ActionButton>
-                    </ActionButtons>
-                  </td>
-                </TableRow>
-              ))
-            )}
-          </TableLayout>
+          <TableWrapper>
+            <TableHeaderSection>
+              <TableLayout>
+                <thead>
+                  <TableHeader columns={columns} />
+                </thead>
+              </TableLayout>
+            </TableHeaderSection>
+            <TableScrollWrapper>
+              <TableLayout>
+                {filteredFiles.length === 0 ? (
+                  <EmptyRow>
+                    <EmptyCell colSpan={7}>
+                      <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+                    </EmptyCell>
+                  </EmptyRow>
+                ) : (
+                  filteredFiles.map((file, index) => (
+                    <TableRow key={file.id}>
+                      <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
+                      <ScrollableCell maxWidth="280px" align="left">
+                        <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+                      </ScrollableCell>
+                      <td style={{ width: '110px', textAlign: 'left' }}>
+                        <StatusWrapper>
+                          <StatusBadge status={file.status}>{file.status}</StatusBadge>
+                        </StatusWrapper>
+                      </td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
+                      <td style={{ width: '100px', textAlign: 'center' }}>
+                        <DownloadIconWrapper>
+                          <DownloadIcon />
+                        </DownloadIconWrapper>
+                      </td>
+                      <td style={{ width: '80px', textAlign: 'center' }}>
+                        <ActionButtons>
+                          <ActionButton onClick={() => handleEditFile(file)}>
+                            <EditIcon />
+                          </ActionButton>
+                          <ActionButton onClick={() => handleDeleteFile(file.name)}>
+                            <DeleteIcon />
+                          </ActionButton>
+                        </ActionButtons>
+                      </td>
+                    </TableRow>
+                  ))
+                )}
+                {paginatedFiles.map((file, index) => {
+                  const isLast = index === paginatedFiles.length - 1;
+                  return (
+                    <TableRow key={`scroll-${file.id}`} ref={isLast ? observerRef : undefined}>
+                      <td style={{ width: '48px', textAlign: 'center' }}>{index + 1}</td>
+                      <ScrollableCell maxWidth="280px" align="left">
+                        <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+                      </ScrollableCell>
+                      <td style={{ width: '110px', textAlign: 'left' }}>
+                        <StatusWrapper>
+                          <StatusBadge status={file.status}>{file.status}</StatusBadge>
+                        </StatusWrapper>
+                      </td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.manager}</td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
+                      <td style={{ width: '140px', textAlign: 'left' }}>{file.updatedAt}</td>
+                      <td style={{ width: '100px', textAlign: 'center' }}>
+                        <DownloadIconWrapper>
+                          <DownloadIcon />
+                        </DownloadIconWrapper>
+                      </td>
+                      <td style={{ width: '80px', textAlign: 'center' }}>
+                        <ActionButtons>
+                          <ActionButton onClick={() => handleEditFile(file)}>
+                            <EditIcon />
+                          </ActionButton>
+                          <ActionButton onClick={() => handleDeleteFile(file.name)}>
+                            <DeleteIcon />
+                          </ActionButton>
+                        </ActionButtons>
+                      </td>
+                    </TableRow>
+                  );
+                })}
+              </TableLayout>
+            </TableScrollWrapper>
+          </TableWrapper>
         </ContentWrapper>
       </Content>
 
@@ -434,4 +491,33 @@ const StyledLink = styled.div`
   &:hover {
     color: ${colors.Normal};
   }
+`;
+
+const TableScrollWrapper = styled.div`
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 8px;
+  background: ${colors.White};
+`;
+
+const TableHeaderSection = styled.div`
+  background-color: ${colors.Normal};
+  color: white;
+
+  thead {
+    tr {
+      th {
+        position: sticky;
+        top: 0;
+        background-color: ${colors.Normal};
+        z-index: 2;
+      }
+    }
+  }
+`;
+
+const TableWrapper = styled.div`
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
 `;

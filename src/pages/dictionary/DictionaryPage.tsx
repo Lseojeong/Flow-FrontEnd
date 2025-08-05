@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
+import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -17,12 +17,22 @@ import Divider from '@/components/common/divider/Divider';
 import { Popup } from '@/components/common/popup/Popup';
 import DictCategoryModal from '@/components/common/modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/common/modal/DictCategoryModalEdit';
-
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
+import { useMemo } from 'react';
+import type { DictCategory } from '@/pages/mock/dictMock';
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DictionaryPage() {
   const [activeMenuId, setActiveMenuId] = useState('dictionary');
-  const [categories] = useState(dictMockData);
+
+  const {
+    data: categories,
+    observerRef,
+    isLoading,
+  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
+    fetchFn: getPaginatedCategoriesData,
+  });
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -70,8 +80,8 @@ export default function DictionaryPage() {
       width: '48px',
       align: 'center' as const,
     },
-    { label: '카테고리', width: '600px', align: 'left' as const },
-    { label: '상태', width: '120px', align: 'left' as const },
+    { label: '카테고리', width: '595px', align: 'left' as const },
+    { label: '상태', width: '180px', align: 'left' as const },
     { label: '문서 수', width: '80px', align: 'center' as const },
     { label: '최종 수정일', width: '160px', align: 'left' as const },
     { label: '', width: '40px', align: 'center' as const },
@@ -111,9 +121,11 @@ export default function DictionaryPage() {
     setIsPopupOpen(true);
   };
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchKeyword.toLowerCase())
-  );
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
+  }, [categories, searchKeyword]);
 
   return (
     <PageWrapper>
@@ -160,60 +172,81 @@ export default function DictionaryPage() {
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           </FilterBar>
+          <TableWrapper>
+            <TableHeaderSection>
+              <TableLayout>
+                <thead>
+                  <TableHeader columns={columns} />
+                </thead>
+              </TableLayout>
+            </TableHeaderSection>
+            <TableScrollWrapper>
+              <TableLayout>
+                <tbody>
+                  {filteredCategories.length === 0 ? (
+                    <EmptyRow>
+                      <EmptyCell colSpan={columns.length}>
+                        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+                      </EmptyCell>
+                    </EmptyRow>
+                  ) : (
+                    filteredCategories.map((category, index) => {
+                      const isChecked = !!checkedItems[category.id];
+                      const isLast = index === filteredCategories.length - 1;
 
-          <TableLayout>
-            <TableHeader columns={columns} />
-
-            {filteredCategories.length === 0 ? (
-              <EmptyRow>
-                <EmptyCell colSpan={6}>
-                  <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
-                </EmptyCell>
-              </EmptyRow>
-            ) : (
-              filteredCategories.map((category) => {
-                const isChecked = !!checkedItems[category.id];
-                return (
-                  <TableRow key={category.id}>
-                    <td style={{ width: '48px', textAlign: 'center' }}>
-                      <CheckBox
-                        size="medium"
-                        id={`check-${category.id}`}
-                        checked={isChecked}
-                        onChange={() => toggleCheckItem(category.id)}
-                        label=""
-                      />
+                      return (
+                        <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
+                          <td style={{ width: '48px', textAlign: 'center' }}>
+                            <CheckBox
+                              size="medium"
+                              id={`check-${category.id}`}
+                              checked={isChecked}
+                              onChange={() => toggleCheckItem(category.id)}
+                              label=""
+                            />
+                          </td>
+                          <td style={{ width: '590px', textAlign: 'left' }}>
+                            <StyledLink to={`/dictionary/${category.id}`}>
+                              {category.name}
+                            </StyledLink>
+                          </td>
+                          <td style={{ width: '120px', textAlign: 'left' }}>
+                            <StatusWrapper>
+                              <StatusSummary
+                                items={[
+                                  { type: 'Completed', count: category.status.completed },
+                                  { type: 'Processing', count: category.status.processing },
+                                  { type: 'Fail', count: category.status.fail },
+                                ]}
+                              />
+                            </StatusWrapper>
+                          </td>
+                          <td style={{ width: '85px', textAlign: 'center' }}>
+                            {category.documentCount}
+                          </td>
+                          <td style={{ width: '160px', textAlign: 'left' }}>
+                            {category.lastModifiedDate}
+                          </td>
+                          <td style={{ width: '40px', textAlign: 'center' }}>
+                            <EditIconWrapper>
+                              <EditIcon onClick={() => handleEdit(category.id)} />
+                            </EditIconWrapper>
+                          </td>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </tbody>
+                {isLoading && (
+                  <tr>
+                    <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
+                      불러오는 중...
                     </td>
-                    <td style={{ width: '600px', textAlign: 'left' }}>
-                      <ScrollableCell>
-                        <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
-                      </ScrollableCell>
-                    </td>
-                    <td style={{ width: '120px', textAlign: 'left' }}>
-                      <StatusWrapper>
-                        <StatusSummary
-                          items={[
-                            { type: 'Completed', count: category.status.completed },
-                            { type: 'Processing', count: category.status.processing },
-                            { type: 'Fail', count: category.status.fail },
-                          ]}
-                        />
-                      </StatusWrapper>
-                    </td>
-                    <td style={{ width: '80px', textAlign: 'center' }}>{category.documentCount}</td>
-                    <td style={{ width: '160px', textAlign: 'left' }}>
-                      {category.lastModifiedDate}
-                    </td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
-                      <EditIconWrapper>
-                        <EditIcon onClick={() => handleEdit(category.id)} />
-                      </EditIconWrapper>
-                    </td>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableLayout>
+                  </tr>
+                )}
+              </TableLayout>
+            </TableScrollWrapper>
+          </TableWrapper>
         </ContentWrapper>
       </Content>
       <Popup
@@ -322,7 +355,7 @@ const FilterBar = styled.div`
   align-items: center;
   gap: 12px;
   margin-left: 20px;
-  margin-bottom: 22px;
+  margin-bottom: 28px;
 `;
 const EmptyRow = styled.tr`
   height: 200px;
@@ -368,5 +401,34 @@ const StyledLink = styled(Link)`
 
   &:hover {
     color: ${colors.Normal};
+  }
+`;
+
+const TableWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  border: 1px solid
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const TableScrollWrapper = styled.div`
+  max-height: 520px;
+  overflow-y: auto;
+`;
+
+const TableHeaderSection = styled.div`
+  background-color: ${colors.Normal};
+  color: white;
+
+  thead {
+    tr {
+      th {
+        position: sticky;
+        top: 0;
+        background-color: ${colors.Normal};
+        z-index: 2;
+      }
+    }
   }
 `;

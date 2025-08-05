@@ -22,12 +22,21 @@ import DocsCategoryModalEdit from '@/components/common/modal/DocsCategoryModalEd
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import EditIcon from '@/assets/icons/common/edit.svg?react';
 import DeleteIcon from '@/assets/icons/common/delete.svg?react';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
+import type { DictCategory } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DocsPage() {
   const [activeMenuId, setActiveMenuId] = useState('docs');
-  const [categories] = useState(dictMockData);
+  const {
+    data: categories,
+    observerRef,
+    isLoading,
+  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
+    fetchFn: getPaginatedCategoriesData,
+  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
@@ -55,14 +64,13 @@ export default function DocsPage() {
     return (!start || date >= start) && (!end || date <= end);
   };
 
-  const filteredCategories = dictMockData.filter((item) => {
+  const filteredCategories = categories.filter((item) => {
     const matchesName = item.name.toLowerCase().includes(searchKeyword.toLowerCase());
     const matchesDept =
       !selectedDepartment || item.departments?.some((d) => d.departmentName === selectedDepartment);
-    const matchesDate = isDateInRange(item.lastModified.replace(/\./g, '-'));
+    const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
     return matchesName && matchesDept && matchesDate;
   });
-
   const toggleSelectAll = () => {
     const allSelected = selectedCount === categories.length;
     if (allSelected) {
@@ -91,10 +99,10 @@ export default function DocsPage() {
       width: '48px',
       align: 'center' as const,
     },
-    { label: '카테고리', width: '300px', align: 'left' as const },
-    { label: '상태', width: '120px', align: 'left' as const },
+    { label: '카테고리', width: '330px', align: 'left' as const },
+    { label: '상태', width: '205px', align: 'left' as const },
     { label: '문서 수', width: '80px', align: 'center' as const },
-    { label: '포함 부서', align: 'left' as const },
+    { label: '포함 부서', width: '220px', align: 'left' as const },
     { label: '최종 수정일', width: '160px', align: 'left' as const },
     { label: '', width: '40px', align: 'center' as const },
   ];
@@ -189,61 +197,83 @@ export default function DocsPage() {
             label="전체 선택"
           />
 
-          <TableLayout>
-            <TableHeader columns={columns} />
+          <TableWrapper>
+            <TableHeaderSection>
+              <TableLayout>
+                <thead>
+                  <TableHeader columns={columns} />
+                </thead>
+              </TableLayout>
+            </TableHeaderSection>
 
-            {filteredCategories.length === 0 ? (
-              <EmptyRow>
-                <EmptyCell colSpan={7}>카테고리를 등록해주세요.</EmptyCell>
-              </EmptyRow>
-            ) : (
-              filteredCategories.map((item) => {
-                const isChecked = !!checkedItems[item.id];
-                return (
-                  <TableRow key={item.id}>
-                    <td style={{ width: '48px', textAlign: 'center' }}>
-                      <CheckBox
-                        size="medium"
-                        id={`doc-${item.id}`}
-                        checked={isChecked}
-                        onChange={() => toggleCheckItem(item.id)}
-                        label=""
-                      />
-                    </td>
-                    <td style={{ width: '300px', textAlign: 'left' }}>
-                      <ScrollableCell>
-                        <StyledLink to={`/docs/${item.id}`}>{item.name}</StyledLink>
-                      </ScrollableCell>
-                    </td>
-                    <td style={{ width: '120px', textAlign: 'left' }}>
-                      <StatusWrapper>
-                        <StatusSummary
-                          items={[
-                            { type: 'Completed', count: item.status.completed },
-                            { type: 'Processing', count: item.status.processing },
-                            { type: 'Fail', count: item.status.fail },
-                          ]}
-                        />
-                      </StatusWrapper>
-                    </td>
-                    <td style={{ width: '80px', textAlign: 'center' }}>{item.documentCount}</td>
-                    <td>
-                      <DepartmentTagList departments={item.departments ?? []} />
-                    </td>
-                    <td style={{ width: '160px', textAlign: 'left' }}>{item.lastModifiedDate}</td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
-                      <EditIconWrapper>
-                        <EditIcon
-                          onClick={() => handleEdit(item.id)}
-                          style={{ cursor: 'pointer' }}
-                        />
-                      </EditIconWrapper>
-                    </td>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableLayout>
+            <TableScrollWrapper>
+              <TableLayout>
+                <tbody>
+                  {filteredCategories.length === 0 ? (
+                    <EmptyRow>
+                      <EmptyCell colSpan={columns.length}>
+                        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+                      </EmptyCell>
+                    </EmptyRow>
+                  ) : (
+                    filteredCategories.map((category, index) => {
+                      const isChecked = !!checkedItems[category.id];
+                      const isLast = index === filteredCategories.length - 1;
+
+                      return (
+                        <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
+                          <td style={{ width: '48px', textAlign: 'center' }}>
+                            <CheckBox
+                              size="medium"
+                              id={`check-${category.id}`}
+                              checked={isChecked}
+                              onChange={() => toggleCheckItem(category.id)}
+                              label=""
+                            />
+                          </td>
+                          <td style={{ width: '300px', textAlign: 'left' }}>
+                            <StyledLink to={`/docs/${category.id}`}>{category.name}</StyledLink>
+                          </td>
+                          <td style={{ width: '120px', textAlign: 'left' }}>
+                            <StatusWrapper>
+                              <StatusSummary
+                                items={[
+                                  { type: 'Completed', count: category.status.completed },
+                                  { type: 'Processing', count: category.status.processing },
+                                  { type: 'Fail', count: category.status.fail },
+                                ]}
+                              />
+                            </StatusWrapper>
+                          </td>
+                          <td style={{ width: '80px', textAlign: 'center' }}>
+                            {category.documentCount}
+                          </td>
+                          <ScrollableCell>
+                            <DepartmentTagList departments={category.departments ?? []} />
+                          </ScrollableCell>
+                          <td style={{ width: '160px', textAlign: 'left' }}>
+                            {category.lastModifiedDate}
+                          </td>
+                          <td style={{ width: '40px', textAlign: 'center' }}>
+                            <EditIconWrapper>
+                              <EditIcon onClick={() => handleEdit(category.id)} />
+                            </EditIconWrapper>
+                          </td>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                  {isLoading && (
+                    <tr>
+                      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
+                        불러오는 중...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </TableLayout>
+            </TableScrollWrapper>
+          </TableWrapper>
         </ContentWrapper>
       </Content>
 
@@ -318,7 +348,6 @@ const Content = styled.div`
   flex: 1;
   min-width: 1230px;
   padding: 0 36px;
-  background-color: ${colors.background};
 `;
 
 const PageTitle = styled.h1`
@@ -343,7 +372,7 @@ const FilterBar = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: 20px;
+  margin: 0 0 5px 20px;
 `;
 const EmptyRow = styled.tr`
   height: 200px;
@@ -386,4 +415,37 @@ const StyledLink = styled(Link)`
   &:hover {
     color: ${colors.Normal};
   }
+`;
+
+const TableWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  border: 1px solid
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const TableScrollWrapper = styled.div`
+  max-height: 520px;
+  overflow-y: auto;
+`;
+
+const TableHeaderSection = styled.div`
+  background-color: ${colors.Normal};
+  color: white;
+
+  thead {
+    tr {
+      th {
+        position: sticky;
+        top: 0;
+        background-color: ${colors.Normal};
+        z-index: 2;
+      }
+    }
+  }
+`;
+
+const EmptyMessage = styled.div`
+  display: inline-block;
 `;

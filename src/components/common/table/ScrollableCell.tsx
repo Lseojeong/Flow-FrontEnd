@@ -37,7 +37,7 @@ const CellContainer = styled.td<{ $align: string; $width: string }>`
   width: ${({ $width }) => $width};
   max-width: ${({ $width }) => $width};
   text-align: ${({ $align }) => $align};
-  padding: 16px 24px;
+  padding: 8px 24px;
   color: ${colors.Black};
   font-weight: 400;
   font-size: 14px;
