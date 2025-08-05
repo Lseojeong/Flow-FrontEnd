@@ -54,9 +54,9 @@ export default function FlowSettingPage() {
     fetchSpaces();
   }, []);
 
-  const [temperature, setTemperature] = useState(0);
-  const [maxTokens, setMaxTokens] = useState(128);
-  const [topK, setTopK] = useState(3);
+  const [temperature, setTemperature] = useState(0.9);
+  const [maxTokens, setMaxTokens] = useState(256);
+  const [topK, setTopK] = useState(5);
   const [topP, setTopP] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [isTestLoading, setIsTestLoading] = useState(false);
@@ -70,14 +70,14 @@ export default function FlowSettingPage() {
   };
 
   const handleParameterReset = () => {
-    setTemperature(0);
-    setMaxTokens(128);
-    setTopK(3);
+    setTemperature(0.9);
+    setMaxTokens(256);
+    setTopK(5);
     setTopP(0);
   };
 
   const isParameterDefault = () => {
-    return temperature === 0 && maxTokens === 128 && topK === 3 && topP === 0;
+    return temperature === 0.9 && maxTokens === 256 && topK === 5 && topP === 0;
   };
 
   const handleTestRun = async (question: string): Promise<string> => {
