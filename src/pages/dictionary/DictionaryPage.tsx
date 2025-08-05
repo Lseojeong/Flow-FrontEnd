@@ -11,10 +11,9 @@ import StatusSummary from '@/components/common/status/StatusSummary';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { dictMockData } from '@/pages/mock/dictMock';
-import { DeleteIcon, EditIcon } from '@/assets/icons/common';
+import { DeleteIcon, EditIcon } from '@/assets/icons/common/index';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
-import { Popup } from '@/components/common/popup/Popup';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -38,8 +37,6 @@ export default function DictionaryPage() {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
@@ -119,7 +116,17 @@ export default function DictionaryPage() {
 
   const handleDeleteSelected = () => {
     if (selectedCount === 0) return;
-    setIsPopupOpen(true);
+    // TODO: 실제 삭제 로직 구현
+    console.log(
+      '선택된 카테고리 삭제:',
+      Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
+    );
+    setCheckedItems({});
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!(
+        '선택한 카테고리가 삭제되었습니다.'
+      );
+    }
   };
 
   const filteredCategories = useMemo(() => {
@@ -250,26 +257,7 @@ export default function DictionaryPage() {
           </TableWrapper>
         </ContentWrapper>
       </Content>
-      <Popup
-        isOpen={isPopupOpen}
-        title="카테고리 삭제"
-        onClose={() => setIsPopupOpen(false)}
-        onDelete={() => {
-          setIsPopupOpen(false);
-          setIsSuccessPopupOpen(true);
-        }}
-        confirmText="삭제"
-        cancelText="취소"
-        warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
-      />
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="삭제 완료"
-        message="카테고리가 삭제되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
-      />
+
       <DictCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
