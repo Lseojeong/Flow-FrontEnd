@@ -5,7 +5,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
-import { CATEGORY_MODAL_CONSTANTS, ERROR_TYPES } from '@/constants/Modal.constants';
+import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -25,7 +25,9 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   children,
 }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [errorType, setErrorType] = useState<'' | typeof ERROR_TYPES.DUPLICATE>('');
+  const [errorType, setErrorType] = useState<'' | typeof CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR>(
+    ''
+  );
   const [description, setDescription] = useState('');
 
   useEffect(() => {
@@ -35,16 +37,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    const trimmed = categoryName.trim();
-
-    if (trimmed !== '' && existingCategoryNames.includes(trimmed)) {
-      setErrorType(ERROR_TYPES.DUPLICATE);
-    } else {
-      setErrorType('');
-    }
-  }, [categoryName, existingCategoryNames]);
-
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
 
@@ -53,7 +45,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     }
 
     if (existingCategoryNames.includes(trimmedName)) {
-      setErrorType(ERROR_TYPES.DUPLICATE);
+      setErrorType(CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR);
       return;
     }
 
@@ -71,14 +63,15 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE,
         'success'
       );
-    }, CATEGORY_MODAL_CONSTANTS.TOAST_DELAY);
+    }, MODAL_STYLE.TOAST_DELAY);
   };
 
   const trimmedName = categoryName.trim();
   const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
 
   const getErrorMessage = () => {
-    if (errorType === ERROR_TYPES.DUPLICATE) return CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR;
+    if (errorType === CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR)
+      return CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR;
     return '';
   };
 
@@ -133,29 +126,29 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_BACKGROUND};
+  background: ${MODAL_STYLE.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_Z_INDEX};
+  z-index: ${MODAL_STYLE.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: ${CATEGORY_MODAL_CONSTANTS.MODAL_PADDING};
-  border-radius: ${CATEGORY_MODAL_CONSTANTS.MODAL_BORDER_RADIUS};
+  padding: ${MODAL_STYLE.PADDING};
+  border-radius: ${MODAL_STYLE.BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: ${CATEGORY_MODAL_CONSTANTS.MODAL_WIDTH};
+  width: ${MODAL_STYLE.WIDTH};
   display: flex;
   flex-direction: column;
-  gap: ${CATEGORY_MODAL_CONSTANTS.MODAL_GAP};
+  gap: ${MODAL_STYLE.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: ${CATEGORY_MODAL_CONSTANTS.TITLE_FONT_SIZE};
+  font-size: ${MODAL_STYLE.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
-  margin-bottom: ${CATEGORY_MODAL_CONSTANTS.TITLE_MARGIN_BOTTOM};
+  margin-bottom: ${MODAL_STYLE.TITLE_MARGIN_BOTTOM};
 `;
 
 const Container = styled.div`
@@ -163,12 +156,12 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: ${CATEGORY_MODAL_CONSTANTS.CONTAINER_GAP};
+  gap: ${MODAL_STYLE.CONTAINER_GAP};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: ${CATEGORY_MODAL_CONSTANTS.BUTTON_GAP};
-  margin-top: ${CATEGORY_MODAL_CONSTANTS.BUTTON_ROW_MARGIN_TOP};
+  gap: ${MODAL_STYLE.BUTTON_GAP};
+  margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
 `;

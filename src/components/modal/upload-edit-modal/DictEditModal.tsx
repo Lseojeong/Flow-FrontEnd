@@ -1,12 +1,6 @@
-import React, { useRef, useState } from 'react';
-import styled from 'styled-components';
-import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '@/components/common/button/Button';
-import { colors, fontWeight } from '@/styles/index';
-import { Popup } from '@/components/common/popup/Popup';
-import { VersionSelector } from '@/components/common/version/VersionCard';
-import Divider from '@/components/common/divider/FlatDivider';
-import { useEffect } from 'react';
+import React from 'react';
+import BaseUploadEditModal from './BaseUploadEditModal';
+import { UPLOAD_EDIT_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
 interface Props {
   isOpen: boolean;
@@ -23,164 +17,17 @@ export const DictEditModalEdit: React.FC<Props> = ({
   originalFileName,
   originalVersion,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [description, setDescription] = useState('');
-  const [version, setVersion] = useState(originalVersion);
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  const handleConfirm = () => {
-    onSubmit({
-      title: file?.name || originalFileName,
-      description: description.trim(),
-      version,
-    });
-
-    setFile(null);
-    setDescription('');
-    setVersion('');
-    onClose();
-
-    setTimeout(() => {
-      setIsSuccessPopupOpen(true);
-    }, 100);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    setFile(selectedFile);
-  };
-
-  const isDisabled = !file && !originalFileName;
-
   return (
-    <>
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="수정 완료"
-        message="데이터가 수정되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
-      />
-
-      {isOpen && (
-        <Overlay>
-          <ModalBox>
-            <Title>용어사전 데이터 수정</Title>
-            <Divider />
-
-            <UploadRow>
-              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
-              <HiddenFileInput
-                type="file"
-                accept=".csv"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
-              <Button variant="primary" size="medium" onClick={() => fileInputRef.current?.click()}>
-                + 업로드
-              </Button>
-            </UploadRow>
-
-            <DescriptionInput
-              label="히스토리 설명"
-              placeholder="히스토리 설명을 작성해주세요."
-              maxLength={30}
-              value={description}
-              onChange={setDescription}
-            />
-
-            <VersionSelector
-              onSelect={(ver: string) => {
-                setVersion(ver);
-              }}
-            />
-            <ButtonRow>
-              <Button variant="dark" onClick={onClose}>
-                취소
-              </Button>
-              <Button onClick={handleConfirm} disabled={isDisabled}>
-                수정
-              </Button>
-            </ButtonRow>
-          </ModalBox>
-        </Overlay>
-      )}
-    </>
+    <BaseUploadEditModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSubmit={onSubmit}
+      originalFileName={originalFileName}
+      originalVersion={originalVersion}
+      title="용어사전 데이터 수정"
+      acceptFileType={UPLOAD_EDIT_MODAL_CONSTANTS.CSV_ACCEPT}
+    />
   );
 };
 
 export default DictEditModalEdit;
-
-const Overlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-`;
-
-const ModalBox = styled.div`
-  background: ${colors.White};
-  padding: 32px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
-const Title = styled.h3`
-  font-size: 20px;
-  font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Dark};
-`;
-
-const UploadRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const ReadOnlyInput = styled.input`
-  flex: 1;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid ${colors.BoxStroke};
-  border-radius: 6px;
-  font-size: 12px;
-  background-color: ${colors.GridLine};
-  color: ${colors.BoxText};
-`;
-
-const HiddenFileInput = styled.input`
-  display: none;
-`;
-
-const ButtonRow = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
-`;

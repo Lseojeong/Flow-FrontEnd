@@ -5,7 +5,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
-import { CATEGORY_MODAL_CONSTANTS } from '@/constants/Modal.constants';
+import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 
 interface BaseCategoryEditModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     const trimmedName = categoryName.trim();
 
     if (trimmedName === '') {
-      setError(CATEGORY_MODAL_CONSTANTS.EMPTY_NAME_ERROR);
+      setError(CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR);
       return;
     }
 
@@ -66,7 +66,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
       (window as { showToast?: (_message: string) => void }).showToast?.(
         CATEGORY_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE
       );
-    }, CATEGORY_MODAL_CONSTANTS.TOAST_DELAY);
+    }, MODAL_STYLE.TOAST_DELAY);
   };
 
   const isDisabled = categoryName.trim() === '';
@@ -120,34 +120,34 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_BACKGROUND};
+  background: ${MODAL_STYLE.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_Z_INDEX};
+  z-index: ${MODAL_STYLE.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: ${CATEGORY_MODAL_CONSTANTS.MODAL_PADDING};
-  border-radius: ${CATEGORY_MODAL_CONSTANTS.MODAL_BORDER_RADIUS};
+  padding: ${MODAL_STYLE.PADDING};
+  border-radius: ${MODAL_STYLE.BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: ${CATEGORY_MODAL_CONSTANTS.MODAL_WIDTH};
+  width: ${MODAL_STYLE.WIDTH};
   display: flex;
   flex-direction: column;
-  gap: ${CATEGORY_MODAL_CONSTANTS.MODAL_GAP};
+  gap: ${MODAL_STYLE.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: ${CATEGORY_MODAL_CONSTANTS.TITLE_FONT_SIZE};
+  font-size: ${MODAL_STYLE.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
-  margin-bottom: ${CATEGORY_MODAL_CONSTANTS.TITLE_MARGIN_BOTTOM};
+  margin-bottom: ${MODAL_STYLE.TITLE_MARGIN_BOTTOM};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: ${CATEGORY_MODAL_CONSTANTS.BUTTON_GAP_EDIT};
-  margin-top: ${CATEGORY_MODAL_CONSTANTS.BUTTON_ROW_MARGIN_TOP};
+  gap: ${MODAL_STYLE.BUTTON_GAP_EDIT};
+  margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
 `;
