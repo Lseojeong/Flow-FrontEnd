@@ -27,19 +27,19 @@ const DictCategoryModal: React.FC<Props> = ({
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
 
-useEffect(() => {
-  if (isOpen) {
-    setCategoryName(initialName ?? '');
-    setDescription(initialDescription ?? '');
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'unset'; 
-  }
+  useEffect(() => {
+    if (isOpen) {
+      setCategoryName(initialName ?? '');
+      setDescription(initialDescription ?? '');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  return () => {
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen, initialName, initialDescription]);
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, initialName, initialDescription]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -81,7 +81,7 @@ useEffect(() => {
         <Overlay>
           <ModalBox>
             <Title>카테고리 수정</Title>
-            <Divider/>
+            <Divider />
 
             <CategoryInput
               value={categoryName}
@@ -90,11 +90,7 @@ useEffect(() => {
               error={error}
               showValidation
             />
-            <DescriptionInput
-              value={description}
-              onChange={setDescription}
-              onBlur={() => {}}
-            />
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -119,7 +115,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -146,7 +142,7 @@ const Title = styled.h3`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;

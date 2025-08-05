@@ -12,15 +12,11 @@ import { DepartmentCheck } from '@/components/common/department/DepartmentCheck'
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: {
-    name: string;
-    description: string;
-    departments: string[];
-  }) => void;
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   initialName: string;
   initialDescription: string;
-  initialDepartments: string[]; 
-  departments: Department[];    
+  initialDepartments: string[];
+  departments: Department[];
 }
 
 const DocsCategoryModalEdit: React.FC<Props> = ({
@@ -29,7 +25,7 @@ const DocsCategoryModalEdit: React.FC<Props> = ({
   onSubmit,
   initialName,
   initialDescription,
-  initialDepartments, 
+  initialDepartments,
   departments,
 }) => {
   const [categoryName, setCategoryName] = useState('');
@@ -38,20 +34,20 @@ const DocsCategoryModalEdit: React.FC<Props> = ({
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
-useEffect(() => {
-  if (isOpen) {
-    setCategoryName(initialName ?? '');
-    setDescription(initialDescription ?? '');
-    setSelectedDepartments(initialDepartments ?? []); 
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'unset'; 
-  }
+  useEffect(() => {
+    if (isOpen) {
+      setCategoryName(initialName ?? '');
+      setDescription(initialDescription ?? '');
+      setSelectedDepartments(initialDepartments ?? []);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  return () => {
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen, initialName, initialDescription, initialDepartments]);
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, initialName, initialDescription, initialDepartments]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -62,12 +58,12 @@ useEffect(() => {
     }
 
     onSubmit({
-    name: trimmedName,
-    description: description.trim(),
-    departments: selectedDepartments, 
-  });
-  
-  setSelectedDepartments([]);
+      name: trimmedName,
+      description: description.trim(),
+      departments: selectedDepartments,
+    });
+
+    setSelectedDepartments([]);
 
     setCategoryName('');
     setDescription('');
@@ -80,8 +76,6 @@ useEffect(() => {
   };
 
   const isDisabled = categoryName.trim() === '';
-
-  
 
   return (
     <>
@@ -98,7 +92,7 @@ useEffect(() => {
         <Overlay>
           <ModalBox>
             <Title>카테고리 수정</Title>
-            <Divider/>
+            <Divider />
 
             <CategoryInput
               value={categoryName}
@@ -112,11 +106,7 @@ useEffect(() => {
               selectedDepartmentIds={selectedDepartments}
               onChange={setSelectedDepartments}
             />
-            <DescriptionInput
-              value={description}
-              onChange={setDescription}
-              onBlur={() => {}}
-            />
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -141,7 +131,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -162,13 +152,13 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
   margin-bottom: 1px;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;

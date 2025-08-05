@@ -115,7 +115,7 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
 };
 
 const Wrapper = styled.div`
-  width: 560px;
+  width: 556px;
 `;
 
 const ErrorMessages = styled.div`
