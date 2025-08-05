@@ -414,6 +414,10 @@ const TableWrapper = styled.div`
 const TableScrollWrapper = styled.div`
   max-height: 520px;
   overflow-y: auto;
+    td {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
 `;
 
 const TableHeaderSection = styled.div`
