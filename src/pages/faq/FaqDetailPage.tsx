@@ -44,9 +44,9 @@ export default function FaqDetailPage() {
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: detailData.status.green },
-    { type: 'Processing', count: detailData.status.yellow },
-    { type: 'Fail', count: detailData.status.red },
+    { type: 'Completed', count: detailData.status.completed },
+    { type: 'Processing', count: detailData.status.processing },
+    { type: 'Fail', count: detailData.status.fail },
   ];
 
   const filteredFiles = detailData.files.filter((file) =>
