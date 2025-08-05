@@ -15,8 +15,8 @@ import { DeleteIcon, EditIcon } from '@/assets/icons/common';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/Divider';
 import { Popup } from '@/components/common/popup/Popup';
-import DictCategoryModal from '@/components/common/modal/DictCategoryModal';
-import DictCategoryModalEdit from '@/components/common/modal/DictCategoryModalEdit';
+import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
+import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 

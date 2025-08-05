@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '../button/Button';
+import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 

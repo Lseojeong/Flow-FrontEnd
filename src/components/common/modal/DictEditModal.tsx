@@ -16,7 +16,7 @@ interface Props {
   originalVersion: string;
 }
 
-export const DictEditModal: React.FC<Props> = ({
+export const DictEditModalEdit: React.FC<Props> = ({
   isOpen,
   onClose,
   onSubmit,
@@ -125,7 +125,7 @@ export const DictEditModal: React.FC<Props> = ({
   );
 };
 
-export default DictEditModal;
+export default DictEditModalEdit;
 
 const Overlay = styled.div`
   position: fixed;

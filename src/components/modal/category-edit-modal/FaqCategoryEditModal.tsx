@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '../button/Button';
+import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import Divider from '@/components/common/divider/FlatDivider';
@@ -19,7 +19,7 @@ interface Props {
   departments: Department[];
 }
 
-const DocsCategoryModalEdit: React.FC<Props> = ({
+const CategoryModalEdit: React.FC<Props> = ({
   isOpen,
   onClose,
   onSubmit,
@@ -123,7 +123,7 @@ const DocsCategoryModalEdit: React.FC<Props> = ({
   );
 };
 
-export default DocsCategoryModalEdit;
+export default CategoryModalEdit;
 
 const Overlay = styled.div`
   position: fixed;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
@@ -24,12 +24,11 @@ import Divider from '@/components/common/divider/Divider';
 import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { Popup } from '@/components/common/popup/Popup';
-import FaqCategoryModal from '@/components/common/modal/FaqCategoryModal';
-import FaqCategoryModalEdit from '@/components/common/modal/FaqCategoryModalEdit'; 
+import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
-
 
 export default function FaqPage() {
   const [activeMenuId, setActiveMenuId] = useState('faq');
@@ -43,18 +42,15 @@ export default function FaqPage() {
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ 
-    id: number; 
-    name: string; 
-    description: string ;
+  const [editingCategory, setEditingCategory] = useState<{
+    id: number;
+    name: string;
+    description: string;
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
   const [searchValue, setSearchValue] = useState('');
-  
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
-
-
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
@@ -62,7 +58,7 @@ export default function FaqPage() {
   };
 
   const toggleCheckItem = (id: number) => {
-    setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+    setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const toggleSelectAll = () => {
@@ -71,7 +67,7 @@ export default function FaqPage() {
       setCheckedItems({});
     } else {
       const newChecked: Record<number, boolean> = {};
-      filteredFaqData.forEach(item => {
+      filteredFaqData.forEach((item) => {
         newChecked[item.id] = true;
       });
       setCheckedItems(newChecked);
@@ -79,9 +75,9 @@ export default function FaqPage() {
   };
 
   const handleDeleteSelected = () => {
-  if (selectedCount === 0) return;
-  setIsPopupOpen(true); 
-};
+    if (selectedCount === 0) return;
+    setIsPopupOpen(true);
+  };
 
   const isDateInRange = (dateStr: string) => {
     if (!startDate && !endDate) return true;
@@ -93,25 +89,24 @@ export default function FaqPage() {
 
   const filteredFaqData = dictMockData.filter((item) => {
     const matchesDepartment =
-      !selectedDepartment || item.departments?.some(d => d.departmentName === selectedDepartment);
+      !selectedDepartment || item.departments?.some((d) => d.departmentName === selectedDepartment);
     const matchesDate = isDateInRange(item.lastModified.replace(/\./g, '-'));
     return matchesDepartment && matchesDate;
   });
 
   const handleRegisterCategory = ({
-  name,
-  description,
-  departments,
-}: {
-  name: string;
-  description: string;
-  departments: string[];
-}) => {
-  console.log('카테고리명:', name);
-  console.log('설명:', description);
-  console.log('선택된 부서:', departments);
-
-};
+    name,
+    description,
+    departments,
+  }: {
+    name: string;
+    description: string;
+    departments: string[];
+  }) => {
+    console.log('카테고리명:', name);
+    console.log('설명:', description);
+    console.log('선택된 부서:', departments);
+  };
 
   return (
     <PageWrapper>
@@ -216,8 +211,8 @@ export default function FaqPage() {
                         />
                       </StatusWrapper>
                     ) : (
-                      '-')
-                    }
+                      '-'
+                    )}
                   </TableCell>
 
                   <TableCell align="center">
@@ -242,7 +237,7 @@ export default function FaqPage() {
                         setIsEditModalOpen(true);
                       }}
                       style={{ cursor: 'pointer', width: 20, height: 20 }}
-                    />  
+                    />
                   </TableCell>
                 </TableRow>
               );
@@ -251,22 +246,22 @@ export default function FaqPage() {
         </TableLayout>
       </Content>
       <Popup
-            isOpen={isPopupOpen}
-            title="카테고리 삭제"
-            onClose={() => setIsPopupOpen(false)}
-            onDelete={() => {
-              setIsPopupOpen(false);
-              setIsSuccessPopupOpen(true);
-            }}
-            confirmText="삭제"
-            cancelText="취소"
-            warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
-          />
-          <Popup
+        isOpen={isPopupOpen}
+        title="카테고리 삭제"
+        onClose={() => setIsPopupOpen(false)}
+        onDelete={() => {
+          setIsPopupOpen(false);
+          setIsSuccessPopupOpen(true);
+        }}
+        confirmText="삭제"
+        cancelText="취소"
+        warningMessages={['선택한 카테고리를 삭제하면 복구할 수 없습니다.']}
+      />
+      <Popup
         isOpen={isSuccessPopupOpen}
         isAlert
         title="삭제 완료"
-        message="카테고리가 삭제되었습니다."  
+        message="카테고리가 삭제되었습니다."
         alertButtonText="확인"
         onClose={() => setIsSuccessPopupOpen(false)}
       />
@@ -275,23 +270,22 @@ export default function FaqPage() {
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
         departments={mockDepartments}
-        existingCategoryNames={existingCategoryNames} 
+        existingCategoryNames={existingCategoryNames}
+      />
+      {editingCategory && (
+        <FaqCategoryModalEdit
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={({ name, description }) => {
+            console.log('수정된 카테고리:', name, description);
+            setIsEditModalOpen(false);
+          }}
+          initialName={editingCategory.name}
+          initialDescription={editingCategory.description}
+          initialDepartments={editingCategory?.departments?.map((d) => d.departmentId) ?? []}
+          departments={mockDepartments}
         />
-        {editingCategory && (
-      <FaqCategoryModalEdit
-      isOpen={isEditModalOpen}
-      onClose={() => setIsEditModalOpen(false)}
-      onSubmit={({ name, description }) => {
-        console.log('수정된 카테고리:', name, description);
-        setIsEditModalOpen(false);
-      }}
-      initialName={editingCategory.name}
-      initialDescription={editingCategory.description}
-      initialDepartments={editingCategory?.departments?.map((d) => d.departmentId) ?? []}
-      departments={mockDepartments}
-    />
-)}
-        
+      )}
     </PageWrapper>
   );
 }
@@ -312,13 +306,13 @@ const SideBarWrapper = styled.div`
 `;
 
 const Content = styled.div`
-  margin-left: 280px; 
+  margin-left: 280px;
   padding: 40px;
   width: calc(100% - 280px);
 
   @media (min-width: 1920px) {
     width: auto;
-    max-width: 1360px; 
+    max-width: 1360px;
     margin-left: auto;
     margin-right: auto;
   }

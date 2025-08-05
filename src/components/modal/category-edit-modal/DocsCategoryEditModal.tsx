@@ -2,35 +2,43 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '../button/Button';
+import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
 import Divider from '@/components/common/divider/FlatDivider';
+import { Department } from '@/components/common/department/Department.types';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string }) => void;
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   initialName: string;
   initialDescription: string;
+  initialDepartments: string[];
+  departments: Department[];
 }
 
-const DictCategoryModal: React.FC<Props> = ({
+const DocsCategoryModalEdit: React.FC<Props> = ({
   isOpen,
   onClose,
   onSubmit,
   initialName,
   initialDescription,
+  initialDepartments,
+  departments,
 }) => {
   const [categoryName, setCategoryName] = useState('');
   const [error, setError] = useState('');
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       setCategoryName(initialName ?? '');
       setDescription(initialDescription ?? '');
+      setSelectedDepartments(initialDepartments ?? []);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -39,7 +47,7 @@ const DictCategoryModal: React.FC<Props> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialName, initialDescription]);
+  }, [isOpen, initialName, initialDescription, initialDepartments]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
@@ -52,7 +60,10 @@ const DictCategoryModal: React.FC<Props> = ({
     onSubmit({
       name: trimmedName,
       description: description.trim(),
+      departments: selectedDepartments,
     });
+
+    setSelectedDepartments([]);
 
     setCategoryName('');
     setDescription('');
@@ -90,6 +101,11 @@ const DictCategoryModal: React.FC<Props> = ({
               error={error}
               showValidation
             />
+            <DepartmentCheck
+              departments={departments}
+              selectedDepartmentIds={selectedDepartments}
+              onChange={setSelectedDepartments}
+            />
             <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
@@ -107,7 +123,7 @@ const DictCategoryModal: React.FC<Props> = ({
   );
 };
 
-export default DictCategoryModal;
+export default DocsCategoryModalEdit;
 
 const Overlay = styled.div`
   position: fixed;
@@ -136,7 +152,7 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
   margin-bottom: 1px;
 `;
 
