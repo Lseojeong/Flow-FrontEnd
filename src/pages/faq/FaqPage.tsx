@@ -17,8 +17,8 @@ import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors, fontWeight } from '@/styles/index';
 import { Popup } from '@/components/common/popup/Popup';
-import DocsCategoryModal from '@/components/common/modal/DocsCategoryModal';
-import DocsCategoryModalEdit from '@/components/common/modal/DocsCategoryModalEdit';
+import FaqCategoryModal from '@/components/common/modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/common/modal/FaqCategoryModalEdit';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import EditIcon from '@/assets/icons/common/edit.svg?react';
 import DeleteIcon from '@/assets/icons/common/delete.svg?react';
@@ -300,7 +300,7 @@ export default function FaqPage() {
         onClose={() => setIsSuccessPopupOpen(false)}
       />
 
-      <DocsCategoryModal
+      <FaqCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
@@ -309,7 +309,7 @@ export default function FaqPage() {
       />
 
       {editingCategory && (
-        <DocsCategoryModalEdit
+        <FaqCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onSubmit={({ name, description }) => {
