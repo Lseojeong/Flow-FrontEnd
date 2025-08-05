@@ -5,6 +5,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
+import { CATEGORY_MODAL_CONSTANTS, ERROR_TYPES } from '@/constants/Modal.constants';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   children,
 }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [errorType, setErrorType] = useState<'' | 'duplicate'>('');
+  const [errorType, setErrorType] = useState<'' | typeof ERROR_TYPES.DUPLICATE>('');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
@@ -38,7 +39,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     const trimmed = categoryName.trim();
 
     if (trimmed !== '' && existingCategoryNames.includes(trimmed)) {
-      setErrorType('duplicate');
+      setErrorType(ERROR_TYPES.DUPLICATE);
     } else {
       setErrorType('');
     }
@@ -52,7 +53,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     }
 
     if (existingCategoryNames.includes(trimmedName)) {
-      setErrorType('duplicate');
+      setErrorType(ERROR_TYPES.DUPLICATE);
       return;
     }
 
@@ -67,17 +68,17 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
     setTimeout(() => {
       (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        '카테고리가 등록되었습니다.',
+        CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE,
         'success'
       );
-    }, 100);
+    }, CATEGORY_MODAL_CONSTANTS.TOAST_DELAY);
   };
 
   const trimmedName = categoryName.trim();
   const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
 
   const getErrorMessage = () => {
-    if (errorType === 'duplicate') return '중복된 카테고리입니다.';
+    if (errorType === ERROR_TYPES.DUPLICATE) return CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR;
     return '';
   };
 
@@ -111,10 +112,10 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
             <ButtonRow>
               <Button variant="dark" size="medium" onClick={handleClose}>
-                취소
+                {CATEGORY_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
               <Button variant="primary" size="medium" onClick={handleConfirm} disabled={isDisabled}>
-                등록
+                {CATEGORY_MODAL_CONSTANTS.REGISTER_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -132,29 +133,29 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: 32px;
-  border-radius: 8px;
+  padding: ${CATEGORY_MODAL_CONSTANTS.MODAL_PADDING};
+  border-radius: ${CATEGORY_MODAL_CONSTANTS.MODAL_BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
+  width: ${CATEGORY_MODAL_CONSTANTS.MODAL_WIDTH};
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: ${CATEGORY_MODAL_CONSTANTS.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: 20px;
+  font-size: ${CATEGORY_MODAL_CONSTANTS.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
-  margin-bottom: 1px;
+  margin-bottom: ${CATEGORY_MODAL_CONSTANTS.TITLE_MARGIN_BOTTOM};
 `;
 
 const Container = styled.div`
@@ -162,12 +163,12 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: ${CATEGORY_MODAL_CONSTANTS.CONTAINER_GAP};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: ${CATEGORY_MODAL_CONSTANTS.BUTTON_GAP};
+  margin-top: ${CATEGORY_MODAL_CONSTANTS.BUTTON_ROW_MARGIN_TOP};
 `;

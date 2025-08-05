@@ -5,6 +5,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
+import { CATEGORY_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
 interface BaseCategoryEditModalProps {
   isOpen: boolean;
@@ -47,7 +48,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     const trimmedName = categoryName.trim();
 
     if (trimmedName === '') {
-      setError('카테고리를 입력해주세요.');
+      setError(CATEGORY_MODAL_CONSTANTS.EMPTY_NAME_ERROR);
       return;
     }
 
@@ -63,9 +64,9 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
     setTimeout(() => {
       (window as { showToast?: (_message: string) => void }).showToast?.(
-        '카테고리가 수정되었습니다.'
+        CATEGORY_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE
       );
-    }, 100);
+    }, CATEGORY_MODAL_CONSTANTS.TOAST_DELAY);
   };
 
   const isDisabled = categoryName.trim() === '';
@@ -98,10 +99,10 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
             <ButtonRow>
               <Button variant="dark" size="medium" onClick={handleClose}>
-                취소
+                {CATEGORY_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
               <Button variant="primary" size="medium" onClick={handleConfirm} disabled={isDisabled}>
-                수정
+                {CATEGORY_MODAL_CONSTANTS.EDIT_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -119,34 +120,34 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: ${CATEGORY_MODAL_CONSTANTS.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: 32px;
-  border-radius: 8px;
+  padding: ${CATEGORY_MODAL_CONSTANTS.MODAL_PADDING};
+  border-radius: ${CATEGORY_MODAL_CONSTANTS.MODAL_BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
+  width: ${CATEGORY_MODAL_CONSTANTS.MODAL_WIDTH};
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: ${CATEGORY_MODAL_CONSTANTS.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: 20px;
+  font-size: ${CATEGORY_MODAL_CONSTANTS.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
-  margin-bottom: 1px;
+  margin-bottom: ${CATEGORY_MODAL_CONSTANTS.TITLE_MARGIN_BOTTOM};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
+  gap: ${CATEGORY_MODAL_CONSTANTS.BUTTON_GAP_EDIT};
+  margin-top: ${CATEGORY_MODAL_CONSTANTS.BUTTON_ROW_MARGIN_TOP};
 `;

@@ -25,7 +25,7 @@ import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { Popup } from '@/components/common/popup/Popup';
 import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
-import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
+import FaqCategoryEditModal from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -204,9 +204,9 @@ export default function FaqPage() {
                       <StatusWrapper>
                         <StatusSummary
                           items={[
-                            { type: 'Completed', count: item.status.green },
-                            { type: 'Processing', count: item.status.yellow },
-                            { type: 'Fail', count: item.status.red },
+                            { type: 'Completed', count: item.status.completed },
+                            { type: 'Processing', count: item.status.processing },
+                            { type: 'Fail', count: item.status.fail },
                           ]}
                         />
                       </StatusWrapper>
@@ -273,7 +273,7 @@ export default function FaqPage() {
         existingCategoryNames={existingCategoryNames}
       />
       {editingCategory && (
-        <FaqCategoryModalEdit
+        <FaqCategoryEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onSubmit={({ name, description }) => {

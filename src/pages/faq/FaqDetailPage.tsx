@@ -18,11 +18,10 @@ import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
 
 import { Popup } from '@/components/common/popup/Popup';
-import FaqUploadModal from '@/components/common/modal/FaqUploadModal';
-import FaqEditModal from '@/components/common/modal/FaqEditModal';
+import FaqUploadModal from '@/components/modal/upload-modal/FaqUploadModal';
+import FaqEditModal from '@/components/modal/upload-edit-modal/FaqEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { DictFile } from '@/pages/mock/dictMock';
-
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -40,7 +39,7 @@ export default function FaqDetailPage() {
     version: string;
   } | null>(null);
 
-    const [selectedFile, setSelectedFile] = useState<DictFile | null>(null); 
+  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
   if (!detailData) return <NoData>데이터가 없습니다.</NoData>;
 
@@ -76,7 +75,9 @@ export default function FaqDetailPage() {
         <InfoBox>
           <InfoItemColumn>
             <Label>상태:</Label>
-            <Value><StatusSummary items={statusItems} /></Value>
+            <Value>
+              <StatusSummary items={statusItems} />
+            </Value>
           </InfoItemColumn>
           <InfoItemColumn>
             <Label>등록일:</Label>
@@ -92,17 +93,16 @@ export default function FaqDetailPage() {
           </InfoItemColumn>
           <InfoItemColumn style={{ flexBasis: '100%', marginTop: '12px' }}>
             <Label>포함 부서:</Label>
-            <Value><DepartmentTagList departments={detailData.departments} /></Value>
+            <Value>
+              <DepartmentTagList departments={detailData.departments} />
+            </Value>
           </InfoItemColumn>
         </InfoBox>
 
         <FileSection>
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
-            <FileSearch
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-            />
+            <FileSearch value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
           </FileSectionHeader>
 
           <Table>
@@ -121,9 +121,7 @@ export default function FaqDetailPage() {
               {filteredFiles.map((file, index) => (
                 <tr key={file.id}>
                   <Td style={{ textAlign: 'center' }}>{index + 1}</Td>
-                  <HoverTd 
-                  onClick={() => setSelectedFile(file)}>
-                  {file.name}</HoverTd>
+                  <HoverTd onClick={() => setSelectedFile(file)}>{file.name}</HoverTd>
                   <Td>
                     <StatusBadge status={file.status}>{file.status}</StatusBadge>
                   </Td>
@@ -132,19 +130,27 @@ export default function FaqDetailPage() {
                   <Td>{file.updatedAt}</Td>
                   <Td>
                     <FileDownloadWrapper>
-                      <DownloadIconWrapper><DownloadIcon /></DownloadIconWrapper>
+                      <DownloadIconWrapper>
+                        <DownloadIcon />
+                      </DownloadIconWrapper>
                       <ActionIcons>
                         <EditIcon
-                           onClick={() => {
-                             setEditTargetFile({
-                               title: file.name,
-                               version: file.version,
-                             });
-                             setIsEditModalOpen(true);
-                           }}
-                           style={{ cursor: 'pointer' }}
-                         />
-                        <DeleteIcon onClick={() => {setTargetFileName(file.name);setIsDeletePopupOpen(true);}} style={{ cursor: 'pointer' }}/>
+                          onClick={() => {
+                            setEditTargetFile({
+                              title: file.name,
+                              version: file.version,
+                            });
+                            setIsEditModalOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <DeleteIcon
+                          onClick={() => {
+                            setTargetFileName(file.name);
+                            setIsDeletePopupOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
                       </ActionIcons>
                     </FileDownloadWrapper>
                   </Td>
@@ -165,7 +171,7 @@ export default function FaqDetailPage() {
           setIsSuccessPopupOpen(true);
         }}
       />
-      
+
       <Popup
         isOpen={isSuccessPopupOpen}
         isAlert
@@ -175,40 +181,39 @@ export default function FaqDetailPage() {
         onClose={() => setIsSuccessPopupOpen(false)}
       />
       <FaqUploadModal
-                isOpen={isCsvModalOpen}
-                onClose={() => setIsCsvModalOpen(false)}
-                onSubmit={(data) => {
-                  console.log('업로드된 CSV:', data);
-                  setIsCsvModalOpen(false);
-                }}
-              />
-              {editTargetFile && (
-              <FaqEditModal
-                isOpen={isEditModalOpen}
-                onClose={() => {
-                  setIsEditModalOpen(false);
-                  setEditTargetFile(null);
-                }}
-                onSubmit={(data) => {
-                  console.log('수정된 파일 데이터:', data);
-                  setIsEditModalOpen(false);
-                  setEditTargetFile(null);
-                }}
-                originalFileName={editTargetFile.title}
-                originalVersion={editTargetFile.version}
-              />
-            )}
-            {selectedFile && (
-  <FileDetailPanel
-    file={selectedFile}
-    onClose={() => setSelectedFile(null)}
-  />
-)}
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSubmit={(data) => {
+          console.log('업로드된 CSV:', data);
+          setIsCsvModalOpen(false);
+        }}
+      />
+      {editTargetFile && (
+        <FaqEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditTargetFile(null);
+          }}
+          onSubmit={(data) => {
+            console.log('수정된 파일 데이터:', data);
+            setIsEditModalOpen(false);
+            setEditTargetFile(null);
+          }}
+          originalFileName={editTargetFile.title}
+          originalVersion={editTargetFile.version}
+        />
+      )}
+      {selectedFile && (
+        <FileDetailPanel file={selectedFile} onClose={() => setSelectedFile(null)} />
+      )}
     </PageWrapper>
   );
 }
 
-const PageWrapper = styled.div` display: flex; `;
+const PageWrapper = styled.div`
+  display: flex;
+`;
 const Content = styled.div`
   flex: 1;
   padding: 40px;
@@ -222,7 +227,10 @@ const Header = styled.div`
   align-items: center;
   margin-bottom: 20px;
 `;
-const TitleGroup = styled.div` display: flex; flex-direction: column; `;
+const TitleGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 const Title = styled.h2`
   font-size: 28px;
   font-weight: 700;
@@ -255,8 +263,13 @@ const InfoItemColumn = styled(InfoItem)`
   align-items: flex-start;
   gap: 4px;
 `;
-const Label = styled.div` font-weight: 600; color: #444; `;
-const Value = styled.div` color: #666;  `;
+const Label = styled.div`
+  font-weight: 600;
+  color: #444;
+`;
+const Value = styled.div`
+  color: #666;
+`;
 const FileSection = styled.div``;
 const FileSectionHeader = styled.div`
   display: flex;
@@ -272,7 +285,8 @@ const SectionTitle = styled.h3`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  th, td {
+  th,
+  td {
     font-size: 14px;
     border-bottom: 1px solid #ddd;
     padding: 14px 8px;
