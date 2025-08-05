@@ -164,7 +164,7 @@ const TestInputContainer = styled.div`
 
 const TestInput = styled.input`
   flex: 1;
-  height: 32px;
+  height: 38px;
   padding: 0 16px;
   border: 1px solid ${colors.BoxStroke};
   border-radius: 4px;

@@ -7,7 +7,7 @@ import { ResetIcon } from '@/assets/icons/common/index';
 const COUNTER_COLORS = {
   NORMAL: colors.BoxText,
   WARNING: '#FFB560',
-  CRITICAL: '#FF8902',
+  CRITICAL: colors.MainRed,
 } as const;
 
 export const PromptInput: React.FC<PromptInputProps> = ({
