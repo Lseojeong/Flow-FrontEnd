@@ -29,7 +29,6 @@ const StyledThead = styled.thead`
     font-weight: ${fontWeight.Medium};
     white-space: nowrap;
     overflow: hidden;
-    position: sticky;
   }
 
   th:first-child {
