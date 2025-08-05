@@ -1,6 +1,6 @@
 import { createGlobalStyle } from 'styled-components';
 import colors from './colors';
-import fontWeights from './fontWeights';
+import fontWeight from './fontWeight';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -13,7 +13,7 @@ const GlobalStyle = createGlobalStyle`
     font-family: 'Pretendard', sans-serif;
     color: ${colors.text.primary};
     background-color: ${colors.background};
-    font-weight: ${fontWeights.Regular};
+    font-weight: ${fontWeight.Regular};
   }
 
   a {

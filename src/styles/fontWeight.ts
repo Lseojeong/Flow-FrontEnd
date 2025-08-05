@@ -1,4 +1,4 @@
-const fontWeights = {
+const fontWeight = {
   Thin: 100,
   Light: 300,
   Regular: 400,
@@ -8,5 +8,5 @@ const fontWeights = {
   ExtraBold: 800,
 } as const;
 
-export type FontWeights = typeof fontWeights;
-export default fontWeights;
+export type FontWeight = typeof fontWeight;
+export default fontWeight;
