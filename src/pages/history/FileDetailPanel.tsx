@@ -133,7 +133,7 @@ const TableHeaderSection = styled.div`
 
 const TableBodySection = styled.div`
   flex: 1;
-  max-height: calc(100vh - 160px);
+  max-height: calc(100vh - 154px);
   overflow-y: auto;
   overflow-x: hidden;
 `;

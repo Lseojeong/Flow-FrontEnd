@@ -494,7 +494,7 @@ const StyledLink = styled.div`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 400px;
+  max-height: 280px;
   overflow-y: auto;
   border-radius: 8px;
   background: ${colors.White};
