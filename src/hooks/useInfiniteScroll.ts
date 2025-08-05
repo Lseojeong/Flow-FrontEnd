@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseInfiniteScrollParams<T> {
-  fetchFn: (_page: number, _size: number) => { result: { historyList: T[]; pagination: { last: boolean } }; code: string };
+  fetchFn: (
+    _page: number,
+    _size: number
+  ) => { result: { historyList: T[]; pagination: { last: boolean } }; code: string };
   pageSize?: number;
 }
 
 export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
   fetchFn,
-  pageSize = 15,
-}: UseInfiniteScrollParams<T>) =>  {
+  pageSize = 5,
+}: UseInfiniteScrollParams<T>) => {
   const [data, setData] = useState<T[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -31,7 +34,6 @@ export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
   }, [hasMore, isLoading, page, fetchFn, pageSize]);
 
   useEffect(() => {
-    
     loadMore();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

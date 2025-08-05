@@ -4,6 +4,34 @@ import { HistoryFilterData } from '@/components/dash-board/history-filter/Histor
 import { User } from '@/types/usersetting.types';
 import { DepartmentSetting } from '@/types/departmentsetting.types';
 
+const duplicatedDicts = Array.from({ length: 40 }, (_, index) => ({
+  id: index + 2,
+  name: `카카오워크 용어사전 ${index + 2}`,
+  description:
+    '카카오워크는 익숙하면서도 안전하게, 온라인과 오프라인의 구분 없이 어디서나 빠른 협업을 할 수 있도록 최신 기술과 AI 기술을 활용',
+  status: {
+    total: 9,
+    completed: 2,
+    processing: 3,
+    fail: 4,
+  },
+  documentCount: 12,
+  createdAt: `2025-07-${String((index % 28) + 1).padStart(2, '0')}T10:30:00`,
+  updatedAt: `2025-07-${String((index % 28) + 1).padStart(2, '0')}T10:30:00`,
+  registeredDate: `2025.07.${String((index % 28) + 1).padStart(2, '0')}`,
+  lastModified: `2025.07.${String((index % 28) + 2).padStart(2, '0')}`,
+  lastEditor: 'Milo',
+  lastModifiedDate: `2025.07.${String((index % 28) + 2).padStart(2, '0')}`,
+  departments: [
+    { departmentId: '1', departmentName: '기술전략실' },
+    { departmentId: '2', departmentName: 'B2B 사업부' },
+    { departmentId: '2', departmentName: 'B2B 사업부' },
+    { departmentId: '2', departmentName: 'B2B 사업부' },
+    { departmentId: '2', departmentName: 'B2B 사업부' },
+  ] as Department[],
+  files: [] as DictFile[],
+}));
+
 export const dictMockData = [
   {
     id: 1,
@@ -26,11 +54,14 @@ export const dictMockData = [
     departments: [
       { departmentId: '1', departmentName: '기술전략실' },
       { departmentId: '2', departmentName: 'B2B 사업부' },
+      { departmentId: '2', departmentName: 'B2B 사업부' },
+      { departmentId: '2', departmentName: 'B2B 사업부' },
+      { departmentId: '2', departmentName: 'B2B 사업부' },
     ] as Department[],
     files: [
       {
         id: 1,
-        name: '카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf카카오워크_기능_정의서.pdf',
+        name: '카카오워크_기능_정의서.pdf',
         status: 'Completed',
         manager: 'kodari385(Milo)',
         registeredAt: '2025.07.05 16:30',
@@ -46,8 +77,90 @@ export const dictMockData = [
         updatedAt: '2025.07.05 16:30',
         version: '1.0.0',
       },
+      {
+        id: 3,
+        name: '카카오워크_UI_가이드.pdf',
+        status: 'Completed',
+        manager: 'Tom',
+        registeredAt: '2025.07.06 10:00',
+        updatedAt: '2025.07.06 10:00',
+        version: '1.0.1',
+      },
+      {
+        id: 4,
+        name: '카카오워크_보안정책_요약.pdf',
+        status: 'Fail',
+        manager: 'Alice',
+        registeredAt: '2025.07.06 11:00',
+        updatedAt: '2025.07.06 11:00',
+        version: '1.0.1',
+      },
+      {
+        id: 5,
+        name: '카카오워크_서버_구조도.pdf',
+        status: 'Processing',
+        manager: 'Bob',
+        registeredAt: '2025.07.07 09:30',
+        updatedAt: '2025.07.07 09:30',
+        version: '1.1.0',
+      },
+      {
+        id: 6,
+        name: '카카오워크_이용약관.pdf',
+        status: 'Completed',
+        manager: 'Emma',
+        registeredAt: '2025.07.07 14:15',
+        updatedAt: '2025.07.07 14:15',
+        version: '2.0.0',
+      },
+      {
+        id: 7,
+        name: '카카오워크_서비스_흐름도.pdf',
+        status: 'Completed',
+        manager: 'Leo',
+        registeredAt: '2025.07.08 09:00',
+        updatedAt: '2025.07.08 09:00',
+        version: '2.1.0',
+      },
+      {
+        id: 8,
+        name: '카카오워크_서버_구조도.pdf',
+        status: 'Processing',
+        manager: 'Bob',
+        registeredAt: '2025.07.07 09:30',
+        updatedAt: '2025.07.07 09:30',
+        version: '1.1.0',
+      },
+      {
+        id: 9,
+        name: '카카오워크_이용약관.pdf',
+        status: 'Completed',
+        manager: 'Emma',
+        registeredAt: '2025.07.07 14:15',
+        updatedAt: '2025.07.07 14:15',
+        version: '2.0.0',
+      },
+      {
+        id: 10,
+        name: '카카오워크_서비스_흐름도.pdf',
+        status: 'Completed',
+        manager: 'Leo',
+        registeredAt: '2025.07.08 09:00',
+        updatedAt: '2025.07.08 09:00',
+        version: '2.1.0',
+      },
+      ...Array.from({ length: 40 }, (_, i) => ({
+        id: i + 11,
+        name: `카카오워크_문서_${i + 11}.pdf`,
+        status: i % 3 === 0 ? 'Completed' : i % 3 === 1 ? 'Processing' : 'Fail',
+        manager: i % 4 === 0 ? 'Milo' : i % 4 === 1 ? 'Jane' : i % 4 === 2 ? 'Leo' : 'Emma',
+        registeredAt: `2025.07.${String((i % 28) + 1).padStart(2, '0')} 10:00`,
+        updatedAt: `2025.07.${String((i % 28) + 1).padStart(2, '0')} 10:00`,
+        version: `1.${Math.floor(i / 10)}.${i % 10}`,
+      })),
     ],
   },
+  ...duplicatedDicts,
 ];
 
 const baseData: HistoryData[] = [
@@ -282,3 +395,54 @@ export const mockDepartments: DepartmentSetting[] = [
     categoryCount: 1,
   },
 ];
+
+export const getPaginatedFilesData = (page = 1, size = 5) => {
+  const files = dictMockData[0].files;
+  const start = (page - 1) * size;
+  const end = start + size;
+
+  const sliced = files.slice(start, end);
+
+  return {
+    code: '200',
+    result: {
+      historyList: sliced,
+      pagination: {
+        last: end >= files.length,
+      },
+    },
+  };
+};
+export const getPaginatedCategoriesData = (page = 1, size = 5) => {
+  const start = (page - 1) * size;
+  const end = start + size;
+  const sliced = dictMockData.slice(start, end);
+
+  return {
+    code: '200',
+    result: {
+      historyList: sliced,
+      pagination: {
+        last: end >= dictMockData.length,
+      },
+    },
+  };
+};
+
+export interface DictCategory {
+  id: number;
+  name: string;
+  description: string;
+  status: {
+    total: number;
+    completed: number;
+    processing: number;
+    fail: number;
+  };
+  documentCount: number;
+  lastModifiedDate: string;
+  departments?: {
+    departmentId: string;
+    departmentName: string;
+  }[];
+}

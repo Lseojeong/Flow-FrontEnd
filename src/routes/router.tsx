@@ -52,7 +52,7 @@ const routes: RouteObject[] = [
         element: <FaqPage />,
       },
       {
-        path: ':categoryId',
+        path: ':faqId',
         element: <FaqDetailPage />,
       },
     ],
@@ -82,10 +82,10 @@ const routes: RouteObject[] = [
     path: '/settings/department',
     element: <DepartmentSettingPage />,
   },
-    {
+  {
     path: '/error/access-denied',
     element: <AccessDeniedPage />,
-  }
+  },
 ];
 
 export default routes;

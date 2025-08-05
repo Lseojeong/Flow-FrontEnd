@@ -42,27 +42,26 @@ const LogoGroup = styled.div`
 const LogoIcon = styled.img`
   width: 180px;
   height: 140px;
-  margin-bottom : 10px;
+  margin-bottom: 10px;
 `;
 
 const LogoText = styled.img`
   width: 160px;
   height: auto;
-  margin-bottom : 30px;
+  margin-bottom: 30px;
 `;
 
 const Message = styled.p`
   color: ${colors.White};
   font-size: 18px;
   margin-bottom: 50px;
-  font-weight: ${fontWeight.Medium}
-  fonr-size : 24px
+  font-weight: ${fontWeight.Medium};
 `;
 
 const BackButton = styled.button`
   background-color: ${colors.background};
   color: ${colors.Normal_hover};
-  width : 200px;
+  width: 200px;
   font-weight: bold;
   padding: 12px 24px;
   border-radius: 6px;
@@ -71,6 +70,6 @@ const BackButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-  background: ${colors.Light};
+    background: ${colors.Light};
   }
 `;
