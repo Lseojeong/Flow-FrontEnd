@@ -2,89 +2,78 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '../../common/button/Button';
+import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 
-interface BaseCategoryModalProps {
+interface BaseCategoryEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (_data: { name: string; description: string; departments?: string[] }) => void;
-  existingCategoryNames: string[];
+  initialName: string;
+  initialDescription: string;
   title?: string;
   children?: React.ReactNode;
 }
 
-const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
+const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  existingCategoryNames,
-  title = '카테고리 등록',
+  initialName,
+  initialDescription,
+  title = '카테고리 수정',
   children,
 }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [errorType, setErrorType] = useState<'' | 'duplicate'>('');
+  const [error, setError] = useState('');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    if (isOpen) {
+      setCategoryName(initialName ?? '');
+      setDescription(initialDescription ?? '');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const trimmed = categoryName.trim();
-
-    if (trimmed !== '' && existingCategoryNames.includes(trimmed)) {
-      setErrorType('duplicate');
-    } else {
-      setErrorType('');
-    }
-  }, [categoryName, existingCategoryNames]);
+  }, [isOpen, initialName, initialDescription]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
 
     if (trimmedName === '') {
+      setError('카테고리를 입력해주세요.');
       return;
     }
-
-    if (existingCategoryNames.includes(trimmedName)) {
-      setErrorType('duplicate');
-      return;
-    }
-
-    setErrorType('');
 
     onSubmit({
       name: trimmedName,
-      description,
+      description: description.trim(),
     });
 
-    handleClose();
+    setCategoryName('');
+    setDescription('');
+    setError('');
+    onClose();
 
     setTimeout(() => {
-      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        '카테고리가 등록되었습니다.',
-        'success'
+      (window as { showToast?: (_message: string) => void }).showToast?.(
+        '카테고리가 수정되었습니다.'
       );
     }, 100);
   };
 
-  const trimmedName = categoryName.trim();
-  const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
-
-  const getErrorMessage = () => {
-    if (errorType === 'duplicate') return '중복된 카테고리입니다.';
-    return '';
-  };
+  const isDisabled = categoryName.trim() === '';
 
   const handleClose = () => {
     setCategoryName('');
     setDescription('');
-    setErrorType('');
+    setError('');
     onClose();
   };
 
@@ -96,25 +85,23 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
             <Title>{title}</Title>
             <Divider />
 
-            <Container>
-              <CategoryInput
-                value={categoryName}
-                onChange={setCategoryName}
-                onBlur={() => {}}
-                error={getErrorMessage()}
-              />
+            <CategoryInput
+              value={categoryName}
+              onChange={setCategoryName}
+              onBlur={() => {}}
+              error={error}
+            />
 
-              {children}
+            {children}
 
-              <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
-            </Container>
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" size="medium" onClick={handleClose}>
                 취소
               </Button>
               <Button variant="primary" size="medium" onClick={handleConfirm} disabled={isDisabled}>
-                등록
+                수정
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -124,7 +111,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   );
 };
 
-export default BaseCategoryModal;
+export default BaseCategoryEditModal;
 
 const Overlay = styled.div`
   position: fixed;
@@ -157,17 +144,9 @@ const Title = styled.h3`
   margin-bottom: 1px;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-`;
-
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   margin-top: 20px;
 `;

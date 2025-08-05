@@ -25,7 +25,7 @@ import { colors } from '@/styles/index';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { Popup } from '@/components/common/popup/Popup';
 import DocsCategoryModal from '@/components/modal/category-modal/DocsCategoryModal';
-import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCategoryEditModal';
+import DocsCategoryEditModal from '@/components/modal/category-edit-modal/DocsCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -204,9 +204,9 @@ export default function DocsPage() {
                       <StatusWrapper>
                         <StatusSummary
                           items={[
-                            { type: 'Completed', count: item.status.green },
-                            { type: 'Processing', count: item.status.yellow },
-                            { type: 'Fail', count: item.status.red },
+                            { type: 'Completed', count: item.status.completed },
+                            { type: 'Processing', count: item.status.processing },
+                            { type: 'Fail', count: item.status.fail },
                           ]}
                         />
                       </StatusWrapper>
@@ -273,7 +273,7 @@ export default function DocsPage() {
         existingCategoryNames={existingCategoryNames}
       />
       {editingCategory && (
-        <DocsCategoryModalEdit
+        <DocsCategoryEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           onSubmit={({ name, description }) => {
