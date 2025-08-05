@@ -1,6 +1,6 @@
 import React from 'react';
 import BaseUploadEditModal from './BaseUploadEditModal';
-import { UPLOAD_EDIT_MODAL_CONSTANTS } from '@/constants/Modal.constants';
+import { UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
 interface Props {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export const DocsEditModal: React.FC<Props> = ({
       originalFileName={originalFileName}
       originalVersion={originalVersion}
       title="사내문서 데이터 수정"
-      acceptFileType={UPLOAD_EDIT_MODAL_CONSTANTS.PDF_ACCEPT}
+      acceptFileType={UPLOAD_MODAL_CONSTANTS.PDF_ACCEPT}
     />
   );
 };
