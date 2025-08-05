@@ -12,11 +12,7 @@ import { DepartmentCheck } from '@/components/common/department/DepartmentCheck'
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: {
-    name: string;
-    description: string;
-    departments: string[];
-  }) => void;
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   departments: Department[];
   existingCategoryNames: string[];
 }
@@ -43,7 +39,7 @@ const DocsCategoryModal: React.FC<Props> = ({
 
   useEffect(() => {
     const trimmed = categoryName.trim();
-  
+
     if (trimmed === '') {
       setErrorType('empty');
     } else if (existingCategoryNames.includes(trimmed)) {
@@ -95,12 +91,12 @@ const DocsCategoryModal: React.FC<Props> = ({
   };
 
   const handleClose = () => {
-  setCategoryName('');
-  setDescription('');
-  setSelectedDepartments([]);
-  setErrorType('');
-  onClose();
-};
+    setCategoryName('');
+    setDescription('');
+    setSelectedDepartments([]);
+    setErrorType('');
+    onClose();
+  };
 
   return (
     <>
@@ -131,11 +127,7 @@ const DocsCategoryModal: React.FC<Props> = ({
               selectedDepartmentIds={selectedDepartments}
               onChange={setSelectedDepartments}
             />
-            <DescriptionInput
-              value={description}
-              onChange={setDescription}
-              onBlur={() => {}}
-            />
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" onClick={handleClose}>
@@ -160,7 +152,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -181,7 +173,7 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
   margin-bottom: 1px;
 `;
 

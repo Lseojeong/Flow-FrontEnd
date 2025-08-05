@@ -8,7 +8,6 @@ import { VersionSelector } from '@/components/common/version/VersionCard';
 import Divider from '@/components/common/divider/FlatDivider';
 import { useEffect } from 'react';
 
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -32,19 +31,17 @@ export const FaqEditModal: React.FC<Props> = ({
   const [error, setError] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
 
-      useEffect(() => {
-      if (isOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'unset';
-      }
-    
-      return () => {
-        document.body.style.overflow = 'unset';
-      };
-    }, [isOpen]);
-  
-  
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const handleConfirm = () => {
     if (!file && !originalFileName) {
@@ -82,7 +79,6 @@ export const FaqEditModal: React.FC<Props> = ({
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-
     setFile(selectedFile);
     setError('');
   };
@@ -107,10 +103,7 @@ export const FaqEditModal: React.FC<Props> = ({
             <Divider />
 
             <UploadRow>
-              <ReadOnlyInput
-                value={file?.name || originalFileName}
-                readOnly
-              />
+              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
               <UploadButtonWrapper>
                 <HiddenFileInput
                   type="file"
@@ -138,8 +131,16 @@ export const FaqEditModal: React.FC<Props> = ({
               errorMessage={error}
             />
 
-            <VersionSelector onSelect={(ver: string) => { setVersion(ver); setIsVersionSelected(true); setError(''); }}/>
-              {!isVersionSelected && error === '버전을 선택해주세요.' && (<ErrorText>버전을 선택해주세요.</ErrorText>)}
+            <VersionSelector
+              onSelect={(ver: string) => {
+                setVersion(ver);
+                setIsVersionSelected(true);
+                setError('');
+              }}
+            />
+            {!isVersionSelected && error === '버전을 선택해주세요.' && (
+              <ErrorText>버전을 선택해주세요.</ErrorText>
+            )}
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
                 취소
@@ -157,14 +158,13 @@ export const FaqEditModal: React.FC<Props> = ({
 
 export default FaqEditModal;
 
-
 const Overlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -185,7 +185,7 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
 `;
 
 const UploadRow = styled.div`
@@ -218,9 +218,9 @@ const UploadButtonWrapper = styled.div`
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;
 
 const ErrorText = styled.p`

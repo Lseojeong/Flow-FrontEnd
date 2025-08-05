@@ -65,7 +65,7 @@ export const DictEditModal: React.FC<Props> = ({
     setFile(selectedFile);
   };
 
-  const isDisabled = false;
+  const isDisabled = !file && !originalFileName;
 
   return (
     <>

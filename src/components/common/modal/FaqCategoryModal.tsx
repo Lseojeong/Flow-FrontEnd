@@ -10,42 +10,42 @@ import Divider from '@/components/common/divider/FlatDivider';
 import { Department } from '@/components/common/department/Department.types';
 import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: {
-    name: string;
-    description: string;
-    departments: string[];
-  }) => void;
-  departments: Department[]; 
-  existingCategoryNames: string[]; 
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  departments: Department[];
+  existingCategoryNames: string[];
 }
 
-const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,departments,existingCategoryNames, }) => {
+const FaqCategoryModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  departments,
+  existingCategoryNames,
+}) => {
   const [categoryName, setCategoryName] = useState('');
   const [errorType, setErrorType] = useState<'' | 'empty' | 'duplicate'>('');
   const [description, setDescription] = useState('');
   const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
-
   useEffect(() => {
-  if (isOpen) {
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = 'unset';
-  }
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
 
-  return () => {
-    document.body.style.overflow = 'unset';
-  };
-}, [isOpen]);
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const trimmed = categoryName.trim();
-  
+
     if (trimmed === '') {
       setErrorType('empty');
     } else if (existingCategoryNames.includes(trimmed)) {
@@ -71,10 +71,10 @@ const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,departmen
     setErrorType('');
 
     onSubmit({
-  name: trimmedName,
-  description,
-  departments: selectedDepartments,
-});
+      name: trimmedName,
+      description,
+      departments: selectedDepartments,
+    });
     setCategoryName('');
     setDescription('');
     setSelectedDepartments([]);
@@ -96,12 +96,12 @@ const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,departmen
   };
 
   const handleClose = () => {
-  setCategoryName('');
-  setDescription('');
-  setSelectedDepartments([]);
-  setErrorType('');
-  onClose();
-};
+    setCategoryName('');
+    setDescription('');
+    setSelectedDepartments([]);
+    setErrorType('');
+    onClose();
+  };
 
   return (
     <>
@@ -128,16 +128,11 @@ const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit,departmen
               showValidation
             />
             <DepartmentCheck
-              departments={departments} 
+              departments={departments}
               selectedDepartmentIds={selectedDepartments}
               onChange={setSelectedDepartments}
-              
             />
-            <DescriptionInput
-              value={description}
-              onChange={setDescription}
-              onBlur={() => {}}
-            />
+            <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
@@ -162,7 +157,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -183,13 +178,13 @@ const ModalBox = styled.div`
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
   margin-bottom: 1px;
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;

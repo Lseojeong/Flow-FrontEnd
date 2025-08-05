@@ -29,7 +29,7 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
     } else {
       document.body.style.overflow = 'unset';
     }
-  
+
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -91,11 +91,13 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
             <Title>사내문서 데이터 등록</Title>
             <Divider />
             <DescriptionRow>
-              <span>양식을 다운로드하여 내용을 채우고 업로드 해주세요.
-              <DownloadLink href="/assets/faq-template.csv" download>
-                양식 다운로드
-              </DownloadLink></span>
-            </DescriptionRow>  
+              <span>
+                양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+                <DownloadLink href="/assets/faq-template.csv" download>
+                  양식 다운로드
+                </DownloadLink>
+              </span>
+            </DescriptionRow>
 
             <UploadRow>
               <UploadInput
@@ -109,9 +111,9 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) 
                 <Button
                   variant="primary"
                   size="medium"
-                  onClick={() => {document.getElementById('hidden-input')?.click(); 
-
-                }}
+                  onClick={() => {
+                    document.getElementById('hidden-input')?.click();
+                  }}
                 >
                   + 업로드
                 </Button>
@@ -161,7 +163,7 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -176,20 +178,20 @@ const ModalBox = styled.div`
   width: 720px;
   display: flex;
   flex-direction: column;
-  gap : 8px;
+  gap: 8px;
 `;
 
 const Title = styled.h3`
   font-size: 20px;
   font-weight: ${fontWeight.SemiBold};
-  color: ${colors.Black};
+  color: ${colors.Dark};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   gap: 8px;
-  margin-top: 24px; 
+  margin-top: 24px;
 `;
 
 const ErrorText = styled.p`
@@ -206,7 +208,7 @@ const UploadRow = styled.div`
 
 const UploadButtonWrapper = styled.div`
   button {
-    height : 48px;
+    height: 48px;
     width: 120px;
   }
 `;
@@ -221,7 +223,7 @@ const DescriptionRow = styled.div`
 `;
 
 const DownloadLink = styled.a`
-  color: ${colors.Normal}; 
+  color: ${colors.Normal};
   text-decoration: underline;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;
@@ -230,8 +232,6 @@ const DownloadLink = styled.a`
     text-decoration: none;
   }
 `;
-
-
 
 const VersionWrapper = styled.div`
   display: flex;
