@@ -1,38 +1,35 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { VersionSelector } from '@/components/common/version/VersionCard';
+import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
-interface BaseUploadEditModalProps {
+interface BaseUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (_data: { title: string; description: string; version: string }) => void;
-  originalFileName: string;
-  originalVersion: string;
   title: string;
-  acceptFileType: string;
+  fileType: 'csv' | 'pdf';
+  downloadLink: string;
   children?: React.ReactNode;
 }
 
-const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
+const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  originalFileName,
-  originalVersion,
   title,
-  acceptFileType,
+  fileType,
+  downloadLink,
   children,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
-  const [version, setVersion] = useState(originalVersion);
-  const [isVersionSelected, setIsVersionSelected] = useState(false);
+  const [version, setVersion] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -48,7 +45,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
 
   const handleConfirm = () => {
     onSubmit({
-      title: file?.name || originalFileName,
+      title: file!.name,
       description: description.trim(),
       version,
     });
@@ -60,25 +57,21 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
 
     setTimeout(() => {
       (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
+        UPLOAD_MODAL_CONSTANTS.SUCCESS_UPLOAD_MESSAGE,
         'success'
       );
     }, MODAL_STYLE.TOAST_DELAY);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
+  const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
   };
 
   const handleVersionSelect = (ver: string) => {
     setVersion(ver);
-    setIsVersionSelected(true);
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected;
+  const isDisabled = !file || version === '';
 
   return (
     <>
@@ -88,19 +81,24 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
             <Title>{title}</Title>
             <Divider />
 
+            <DescriptionRow>
+              <span>
+                양식을 다운로드하여 내용을 채우고 업로드 해주세요.
+                <DownloadLink href={downloadLink} download>
+                  양식 다운로드
+                </DownloadLink>
+              </span>
+            </DescriptionRow>
+
             <UploadRow>
-              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
+              <UploadInput onFileSelect={handleFileSelect} fileType={fileType} />
               <UploadButtonWrapper>
-                <HiddenFileInput
-                  type="file"
-                  accept={acceptFileType}
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                />
                 <Button
                   variant="primary"
                   size="medium"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    document.getElementById('hidden-input')?.click();
+                  }}
                 >
                   {UPLOAD_MODAL_CONSTANTS.UPLOAD_BUTTON}
                 </Button>
@@ -115,8 +113,8 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
               onChange={setDescription}
               errorMessage="히스토리 설명을 입력해주세요."
             />
-
             <VersionSelector onSelect={handleVersionSelect} />
+
             {children}
 
             <ButtonRow>
@@ -124,7 +122,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
                 {UPLOAD_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
               <Button onClick={handleConfirm} disabled={isDisabled}>
-                {UPLOAD_MODAL_CONSTANTS.EDIT_BUTTON}
+                {UPLOAD_MODAL_CONSTANTS.REGISTER_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -134,7 +132,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   );
 };
 
-export default BaseUploadEditModal;
+export default BaseUploadModal;
 
 const Overlay = styled.div`
   position: fixed;
@@ -152,12 +150,12 @@ const Overlay = styled.div`
 const ModalBox = styled.div`
   background: ${colors.White};
   padding: ${MODAL_STYLE.PADDING};
-  border-radius: ${MODAL_STYLE.BORDER_RADIUS};
+  border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: ${MODAL_STYLE.WIDTH};
+  width: 724px;
   display: flex;
   flex-direction: column;
-  gap: ${MODAL_STYLE.MODAL_GAP};
+  gap: 8px;
 `;
 
 const Title = styled.h3`
@@ -166,10 +164,17 @@ const Title = styled.h3`
   color: ${colors.Dark};
 `;
 
+const ButtonRow = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+`;
+
 const UploadRow = styled.div`
   display: flex;
   align-items: center;
-  gap: ${MODAL_STYLE.CONTAINER_GAP};
+  gap: 12px;
 `;
 
 const UploadButtonWrapper = styled.div`
@@ -177,24 +182,23 @@ const UploadButtonWrapper = styled.div`
   align-items: center;
 `;
 
-const ReadOnlyInput = styled.input`
-  flex: 1;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid ${colors.BoxStroke};
-  border-radius: 4px;
-  font-size: 12px;
-  background-color: ${colors.GridLine};
-  color: ${colors.BoxText};
-`;
-
-const HiddenFileInput = styled.input`
-  display: none;
-`;
-
-const ButtonRow = styled.div`
+const DescriptionRow = styled.div`
+  font-size: 14px;
+  color: ${colors.Black};
+  margin: 8px 0 16px;
   display: flex;
-  justify-content: center;
-  gap: ${MODAL_STYLE.BUTTON_GAP};
-  margin-top: 8px;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const DownloadLink = styled.a`
+  color: ${colors.Normal};
+  text-decoration: underline;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+  margin-left: 8px;
+
+  &:hover {
+    color: rgb(255, 184, 77);
+  }
 `;

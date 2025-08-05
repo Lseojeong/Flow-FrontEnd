@@ -1,6 +1,6 @@
 import React from 'react';
 import BaseUploadEditModal from './BaseUploadEditModal';
-import { UPLOAD_EDIT_MODAL_CONSTANTS } from '@/constants/Modal.constants';
+import { UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
 interface Props {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export const FaqEditModal: React.FC<Props> = ({
       originalFileName={originalFileName}
       originalVersion={originalVersion}
       title="FAQ 데이터 수정"
-      acceptFileType={UPLOAD_EDIT_MODAL_CONSTANTS.CSV_ACCEPT}
+      acceptFileType={UPLOAD_MODAL_CONSTANTS.CSV_ACCEPT}
     />
   );
 };

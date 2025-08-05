@@ -28,9 +28,10 @@ export const CATEGORY_MODAL_CONSTANTS = {
   DUPLICATE_ERROR: '중복된 카테고리입니다.',
 } as const;
 
-export const UPLOAD_EDIT_MODAL_CONSTANTS = {
+export const UPLOAD_MODAL_CONSTANTS = {
   CANCEL_BUTTON: '취소',
   EDIT_BUTTON: '수정',
+  REGISTER_BUTTON: '등록',
   UPLOAD_BUTTON: '+ 업로드',
 
   SUCCESS_TITLE: '수정 완료',
