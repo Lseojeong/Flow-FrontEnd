@@ -15,10 +15,10 @@ interface Props {
 }
 
 const columns = [
-  { label: '버전', width: '80px', align: 'left' as const },
-  { label: '파일명', width: '140px', align: 'left' as const },
-  { label: '관리자', width: '100px', align: 'left' as const },
-  { label: '일시', width: '150px', align: 'left' as const },
+  { label: '버전', width: '100px', align: 'left' as const },
+  { label: '파일명', width: '135px', align: 'left' as const },
+  { label: '관리자', width: '90px', align: 'left' as const },
+  { label: '일시', width: '183px', align: 'left' as const },
   { label: '작업', width: '80px', align: 'left' as const },
   { label: '설명', width: '160px', align: 'left' as const },
   { label: ' ', width: '80px', align: 'left' as const },
@@ -33,7 +33,7 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
     setEndDate(end);
   };
 
-  const { data: historyList } = useInfiniteScroll<HistoryData, HTMLTableRowElement>({
+  const { data: historyList, observerRef } = useInfiniteScroll<HistoryData, HTMLTableRowElement>({
     fetchFn: getPaginatedHistoryData,
   });
 
@@ -48,37 +48,45 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
         <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
       </Header>
 
-      <Content>
-        <TableLayout>
-          <TableHeader columns={columns} />
-          <tbody>
-            {historyList.map((item, index) => (
-              <TableRow key={index}>
-                <td>{item.version}</td>
-                <ScrollableCell maxWidth="140px" align="left">
-                  {item.fileName}
-                </ScrollableCell>
-                <td>{item.modifier}</td>
-                <td>{item.timeStamp}</td>
-                <td>{item.work}</td>
-                <ScrollableCell maxWidth="160px" align="left">
-                  {item.description}
-                </ScrollableCell>
-                <td style={{ textAlign: 'center' }}>
-                  <DownloadIcon />
-                </td>
-              </TableRow>
-            ))}
-            {historyList.length === 0 && (
-              <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>
-                  히스토리 데이터가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </TableLayout>
-      </Content>
+      <TableHeaderSection>
+        <TableHeader columns={columns} />
+      </TableHeaderSection>
+
+      <TableBodySection>
+        <TableWrapper>
+          <TableLayout>
+            <tbody>
+              {historyList.map((item, index) => {
+                const isLast = index === historyList.length - 1;
+                return (
+                  <TableRow key={index} ref={isLast ? observerRef : undefined}>
+                    <td>{item.version}</td>
+                    <ScrollableCell maxWidth="140px" align="left">
+                      {item.fileName}
+                    </ScrollableCell>
+                    <td>{item.modifier}</td>
+                    <td>{item.timeStamp}</td>
+                    <td>{item.work}</td>
+                    <ScrollableCell maxWidth="160px" align="left">
+                      {item.description}
+                    </ScrollableCell>
+                    <td style={{ textAlign: 'center' }}>
+                      <DownloadIcon />
+                    </td>
+                  </TableRow>
+                );
+              })}
+              {historyList.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>
+                    히스토리 데이터가 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </TableLayout>
+        </TableWrapper>
+      </TableBodySection>
     </Wrapper>
   );
 };
@@ -119,13 +127,15 @@ const Title = styled.h2`
   margin: 0;
 `;
 
-const Content = styled.div`
+const TableHeaderSection = styled.div`
   margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: calc(100vh - 105px);
+`;
+
+const TableBodySection = styled.div`
+  flex: 1;
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const SideCloseButton = styled.button`
@@ -156,4 +166,9 @@ const SideCloseButton = styled.button`
   &:hover {
     background-color: ${colors.Normal_active};
   }
+`;
+
+const TableWrapper = styled.div`
+  border-radius: 8px;
+  overflow: hidden;
 `;
