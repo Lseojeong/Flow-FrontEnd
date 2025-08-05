@@ -30,6 +30,7 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState('');
+  const [fileError, setFileError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -53,6 +54,7 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
     setFile(null);
     setDescription('');
     setVersion('');
+    setFileError('');
     onClose();
 
     setTimeout(() => {
@@ -65,13 +67,14 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
+    setFileError('');
   };
 
   const handleVersionSelect = (ver: string) => {
     setVersion(ver);
   };
 
-  const isDisabled = !file || version === '';
+  const isDisabled = !file || version === '' || !!fileError;
 
   return (
     <>
@@ -93,7 +96,11 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
             )}
 
             <UploadRow>
-              <UploadInput onFileSelect={handleFileSelect} fileType={fileType} />
+              <UploadInput
+                onFileSelect={handleFileSelect}
+                onError={setFileError}
+                fileType={fileType}
+              />
               <UploadButtonWrapper>
                 <Button
                   variant="primary"
@@ -170,7 +177,7 @@ const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 24px;
+  margin-top: 8px;
 `;
 
 const UploadRow = styled.div`

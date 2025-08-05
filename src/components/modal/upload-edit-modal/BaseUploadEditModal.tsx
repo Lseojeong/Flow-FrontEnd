@@ -4,6 +4,7 @@ import { DescriptionInput } from '@/components/common/description-input/Descript
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import { VersionSelector } from '@/components/common/version/VersionCard';
+import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
@@ -33,6 +34,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
   const [isVersionSelected, setIsVersionSelected] = useState(false);
+  const [fileError, setFileError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +58,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     setFile(null);
     setDescription('');
     setVersion('');
+    setFileError('');
     onClose();
 
     setTimeout(() => {
@@ -70,7 +73,22 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
+    // 파일 크기 검증 (20MB)
+    const FILE_SIZE_LIMIT = 20 * 1024 * 1024;
+    if (selectedFile.size > FILE_SIZE_LIMIT) {
+      setFileError('20MB가 넘는 파일입니다.');
+      return;
+    }
+
+    // 파일 확장자 검증
+    const fileExtension = selectedFile.name.toLowerCase();
+    if (!fileExtension.endsWith(acceptFileType.toLowerCase())) {
+      setFileError('지원하지 않는 확장자입니다.');
+      return;
+    }
+
     setFile(selectedFile);
+    setFileError('');
   };
 
   const handleVersionSelect = (ver: string) => {
@@ -78,7 +96,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     setIsVersionSelected(true);
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected;
+  const isDisabled = (!file && !originalFileName) || !isVersionSelected || !!fileError;
 
   return (
     <>
@@ -89,7 +107,15 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
             <Divider />
 
             <UploadRow>
-              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
+              <FileInputContainer>
+                {fileError && <ErrorText>{fileError}</ErrorText>}
+                <UploadInput
+                  fileType={acceptFileType === '.csv' ? 'csv' : 'pdf'}
+                  value={file?.name || originalFileName}
+                  readOnly={true}
+                  onFileSelect={() => {}}
+                />
+              </FileInputContainer>
               <UploadButtonWrapper>
                 <HiddenFileInput
                   type="file"
@@ -168,24 +194,13 @@ const Title = styled.h3`
 
 const UploadRow = styled.div`
   display: flex;
-  align-items: center;
-  gap: ${MODAL_STYLE.CONTAINER_GAP};
+  align-items: flex-end;
+  gap: 4px;
 `;
 
 const UploadButtonWrapper = styled.div`
   display: flex;
   align-items: center;
-`;
-
-const ReadOnlyInput = styled.input`
-  flex: 1;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid ${colors.BoxStroke};
-  border-radius: 4px;
-  font-size: 12px;
-  background-color: ${colors.GridLine};
-  color: ${colors.BoxText};
 `;
 
 const HiddenFileInput = styled.input`
@@ -197,4 +212,16 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP};
   margin-top: 8px;
+`;
+
+const FileInputContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ErrorText = styled.div`
+  color: ${colors.MainRed};
+  font-size: 10px;
+  text-align: right;
 `;

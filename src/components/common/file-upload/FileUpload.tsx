@@ -49,7 +49,13 @@ const validateFile = (file: File, fileType: FileType): string | null => {
   return null;
 };
 
-export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType = 'csv' }) => {
+export const UploadInput: React.FC<UploadInputProps> = ({
+  onFileSelect,
+  onError,
+  fileType = 'csv',
+  readOnly = false,
+  value,
+}) => {
   const [error, setError] = useState<string>('');
   const [selectedFileName, setSelectedFileName] = useState<string>('');
 
@@ -64,6 +70,7 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
 
   const handleValidationError = (errorMessage: string): void => {
     setError(errorMessage);
+    onError?.(errorMessage);
     resetFileSelection();
   };
 
@@ -85,8 +92,8 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
 
   const currentConfig = FILE_TYPE_CONFIG[fileType];
   const hasError = !!error;
-  const hasFile = !!selectedFileName;
-  const displayText = selectedFileName || currentConfig.placeholder;
+  const hasFile = !!selectedFileName || !!value;
+  const displayText = value || selectedFileName || currentConfig.placeholder;
 
   return (
     <Wrapper>
@@ -96,13 +103,15 @@ export const UploadInput: React.FC<UploadInputProps> = ({ onFileSelect, fileType
           {error.includes('20MB') && <div>{ERROR_MESSAGES.FILE_TOO_LARGE}</div>}
         </ErrorMessages>
       )}
-      <Label $hasError={hasError} $hasFile={hasFile}>
-        <HiddenInput
-          id="hidden-input"
-          type="file"
-          accept={currentConfig.accept}
-          onChange={handleFileChange}
-        />
+      <Label $hasError={hasError} $hasFile={hasFile} $readOnly={readOnly}>
+        {!readOnly && (
+          <HiddenInput
+            id="hidden-input"
+            type="file"
+            accept={currentConfig.accept}
+            onChange={handleFileChange}
+          />
+        )}
         <Text $hasFile={hasFile}>{displayText}</Text>
         {hasError && (
           <ErrorWrapper>
@@ -132,27 +141,31 @@ const ErrorMessages = styled.div`
   visibility: ${({ children }) => (children ? 'visible' : 'hidden')};
 `;
 
-const Label = styled.label<{ $hasError: boolean; $hasFile: boolean }>`
+const Label = styled.label<{ $hasError: boolean; $hasFile: boolean; $readOnly: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   height: 38px;
   border: 1px solid
-    ${({ $hasError, $hasFile }) => {
+    ${({ $hasError, $hasFile, $readOnly }) => {
+      if ($readOnly) return colors.BoxStroke;
       if ($hasError) return colors.MainRed;
       if ($hasFile) return colors.Normal;
       return colors.BoxStroke;
     }};
   border-radius: 4px;
-  cursor: pointer;
+  cursor: ${({ $readOnly }) => ($readOnly ? 'default' : 'pointer')};
   width: 100%;
   padding: 0 12px;
   box-sizing: border-box;
   position: relative;
+  background-color: ${({ $readOnly }) => ($readOnly ? colors.GridLine : 'transparent')};
 
   &:hover {
-    border-color: ${({ $hasError }) => ($hasError ? colors.MainRed : colors.Normal)};
-    background-color: ${({ $hasError }) => ($hasError ? colors.GridLine : colors.Light)};
+    border-color: ${({ $hasError, $readOnly }) =>
+      $readOnly ? colors.BoxStroke : $hasError ? colors.MainRed : colors.Normal};
+    background-color: ${({ $hasError, $readOnly }) =>
+      $readOnly ? colors.GridLine : $hasError ? colors.GridLine : colors.Light};
   }
 `;
 
