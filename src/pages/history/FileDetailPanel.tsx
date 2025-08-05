@@ -17,8 +17,8 @@ interface Props {
 const columns = [
   { label: '버전', width: '90px', align: 'left' as const },
   { label: '파일명', width: '145px', align: 'left' as const },
-  { label: '관리자', width: '90x', align: 'left' as const },
-  { label: '일시', width: '190px', align: 'left' as const },
+  { label: '관리자', width: '90px', align: 'left' as const },
+  { label: '일시', width: '180px', align: 'left' as const },
   { label: '작업', width: '80px', align: 'left' as const },
   { label: '설명', width: '160px', align: 'left' as const },
   { label: ' ', width: '80px', align: 'left' as const },
