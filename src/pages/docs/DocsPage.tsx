@@ -420,7 +420,6 @@ const StyledLink = styled(Link)`
 const TableWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  border: 1px solid
   border-radius: 8px;
   overflow: hidden;
 `;
