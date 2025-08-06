@@ -5,11 +5,14 @@ import { textV1Logo } from '@/assets/logo';
 import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
-
 import { useNavigate } from 'react-router-dom';
+import { postAdminLogin } from '@/apis/auth/api';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const setIsLoggedIn = useAuthStore((state) => state.setIsLoggedIn);
+
   const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
   });
@@ -26,15 +29,19 @@ export function LoginForm() {
     adminIdField.errorMessage !== '' ||
     passwordField.errorMessage !== '';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (adminIdField.value === 'admin' && passwordField.value === '1234') {
-      console.log('✅ 로그인 성공');
+    try {
+      await postAdminLogin({
+        adminId: adminIdField.value,
+        password: passwordField.value,
+      });
       setIsError(false);
+      setIsLoggedIn(true); // 로그인 성공 시 상태 변경
       navigate('/dictionary');
-    } else {
-      console.log('❌ 로그인 실패');
+    } catch (error) {
+      console.error(error);
       setIsError(true);
     }
   };

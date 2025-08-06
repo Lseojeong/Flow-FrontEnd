@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRoutes } from 'react-router-dom';
 import routes from '@/routes/router';
 import GlobalStyle from '@/styles/globalStyle';
@@ -7,9 +7,15 @@ import { ToastContainer } from '@/components/common/toast-popup/ToastContainer';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/reactQuery';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
+  const checkLoginStatus = useAuthStore((state) => state.checkLoginStatus);
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, [checkLoginStatus]);
 
   return (
     <>
