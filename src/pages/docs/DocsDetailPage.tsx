@@ -8,11 +8,11 @@ import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
 import { Popup } from '@/components/common/popup/Popup';
-import DocsUploadModal from '@/components/common/modal/DocsUploadModal';
-import DocsEditModal from '@/components/common/modal/DocsEditModal';
+
+import DocsUploadModal from '@/components/modal/upload-modal/DocsUploadModal';
+import DocsEditModal from '@/components/modal/upload-edit-modal/DocsEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
-
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
@@ -23,7 +23,6 @@ import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getPaginatedFilesData } from '@/pages/mock/dictMock';
-
 interface EditTargetFile {
   title: string;
   version: string;
@@ -38,7 +37,6 @@ export default function DocsDetailPage() {
     fetchFn: (page, size) => getPaginatedFilesData(page, size),
     pageSize: 5,
   });
-
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');

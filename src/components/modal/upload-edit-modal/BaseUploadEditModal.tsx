@@ -1,35 +1,40 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
-import { Popup } from '@/components/common/popup/Popup';
 import { VersionSelector } from '@/components/common/version/VersionCard';
+import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
-import { useEffect } from 'react';
+import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 
-interface Props {
+interface BaseUploadEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (_data: { title: string; description: string; version: string }) => void;
   originalFileName: string;
   originalVersion: string;
+  title: string;
+  acceptFileType: string;
+  children?: React.ReactNode;
 }
 
-export const FaqEditModal: React.FC<Props> = ({
+const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   originalFileName,
   originalVersion,
+  title,
+  acceptFileType,
+  children,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
   const [isVersionSelected, setIsVersionSelected] = useState(false);
-  const [error, setError] = useState('');
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
+  const [fileError, setFileError] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -44,20 +49,6 @@ export const FaqEditModal: React.FC<Props> = ({
   }, [isOpen]);
 
   const handleConfirm = () => {
-    if (!file && !originalFileName) {
-      setError('PDF 파일을 업로드해주세요.');
-      return;
-    }
-
-    if (description.trim() === '') {
-      setError('히스토리 설명을 입력해주세요.');
-      return;
-    }
-    if (!isVersionSelected) {
-      setError('버전을 선택해주세요.');
-      return;
-    }
-
     onSubmit({
       title: file?.name || originalFileName,
       description: description.trim(),
@@ -67,47 +58,68 @@ export const FaqEditModal: React.FC<Props> = ({
     setFile(null);
     setDescription('');
     setVersion('');
-    setError('');
+    setFileError('');
     onClose();
 
     setTimeout(() => {
-      setIsSuccessPopupOpen(true);
-    }, 100);
+      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
+        UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
+        'success'
+      );
+    }, MODAL_STYLE.TOAST_DELAY);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
+    // 파일 크기 검증 (20MB)
+    const FILE_SIZE_LIMIT = 20 * 1024 * 1024;
+    if (selectedFile.size > FILE_SIZE_LIMIT) {
+      setFileError('20MB가 넘는 파일입니다.');
+      return;
+    }
+
+    // 파일 확장자 검증
+    const fileExtension = selectedFile.name.toLowerCase();
+    if (!fileExtension.endsWith(acceptFileType.toLowerCase())) {
+      setFileError('지원하지 않는 확장자입니다.');
+      return;
+    }
+
     setFile(selectedFile);
-    setError('');
+    setFileError('');
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected;
+  const handleVersionSelect = (ver: string) => {
+    setVersion(ver);
+    setIsVersionSelected(true);
+  };
+
+  const isDisabled = (!file && !originalFileName) || !isVersionSelected || !!fileError;
 
   return (
     <>
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="수정 완료"
-        message="데이터가 수정되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
-      />
-
       {isOpen && (
         <Overlay>
           <ModalBox>
-            <Title>FAQ 데이터 수정</Title>
+            <Title>{title}</Title>
             <Divider />
 
             <UploadRow>
-              <ReadOnlyInput value={file?.name || originalFileName} readOnly />
+              <FileInputContainer>
+                {fileError && <ErrorText>{fileError}</ErrorText>}
+                <UploadInput
+                  fileType={acceptFileType === '.csv' ? 'csv' : 'pdf'}
+                  value={file?.name || originalFileName}
+                  readOnly={true}
+                  onFileSelect={() => {}}
+                />
+              </FileInputContainer>
               <UploadButtonWrapper>
                 <HiddenFileInput
                   type="file"
-                  accept=".csv"
+                  accept={acceptFileType}
                   ref={fileInputRef}
                   onChange={handleFileChange}
                 />
@@ -116,11 +128,10 @@ export const FaqEditModal: React.FC<Props> = ({
                   size="medium"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  + 업로드
+                  {UPLOAD_MODAL_CONSTANTS.UPLOAD_BUTTON}
                 </Button>
               </UploadButtonWrapper>
             </UploadRow>
-            {error && <ErrorText>{error}</ErrorText>}
 
             <DescriptionInput
               label="히스토리 설명"
@@ -128,25 +139,18 @@ export const FaqEditModal: React.FC<Props> = ({
               maxLength={30}
               value={description}
               onChange={setDescription}
-              errorMessage={error}
+              errorMessage="히스토리 설명을 입력해주세요."
             />
 
-            <VersionSelector
-              onSelect={(ver: string) => {
-                setVersion(ver);
-                setIsVersionSelected(true);
-                setError('');
-              }}
-            />
-            {!isVersionSelected && error === '버전을 선택해주세요.' && (
-              <ErrorText>버전을 선택해주세요.</ErrorText>
-            )}
+            <VersionSelector onSelect={handleVersionSelect} />
+            {children}
+
             <ButtonRow>
               <Button variant="dark" onClick={onClose}>
-                취소
+                {UPLOAD_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
               <Button onClick={handleConfirm} disabled={isDisabled}>
-                수정
+                {UPLOAD_MODAL_CONSTANTS.EDIT_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -156,7 +160,7 @@ export const FaqEditModal: React.FC<Props> = ({
   );
 };
 
-export default FaqEditModal;
+export default BaseUploadEditModal;
 
 const Overlay = styled.div`
   position: fixed;
@@ -164,67 +168,60 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${MODAL_STYLE.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: ${MODAL_STYLE.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: 32px;
-  border-radius: 8px;
+  padding: ${MODAL_STYLE.PADDING};
+  border-radius: ${MODAL_STYLE.BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
+  width: ${MODAL_STYLE.WIDTH};
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: ${MODAL_STYLE.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: 20px;
+  font-size: ${MODAL_STYLE.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
 `;
 
 const UploadRow = styled.div`
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 4px;
 `;
 
-const ReadOnlyInput = styled.input`
-  flex: 1;
-  height: 48px;
-  padding: 0 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  background-color: #f5f5f5;
-  color: #666;
+const UploadButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 const HiddenFileInput = styled.input`
   display: none;
 `;
 
-const UploadButtonWrapper = styled.div`
-  button {
-    height: 48px;
-    width: 120px;
-  }
-`;
-
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
+  gap: ${MODAL_STYLE.BUTTON_GAP};
+  margin-top: 8px;
 `;
 
-const ErrorText = styled.p`
+const FileInputContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ErrorText = styled.div`
   color: ${colors.MainRed};
-  font-size: 12px;
-  margin: -8px 0 0 4px;
+  font-size: 10px;
+  text-align: right;
 `;

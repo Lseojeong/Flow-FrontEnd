@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
@@ -16,12 +15,10 @@ import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constant
 import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors, fontWeight } from '@/styles/index';
-import { Popup } from '@/components/common/popup/Popup';
-import FaqCategoryModal from '@/components/common/modal/FaqCategoryModal';
-import FaqCategoryModalEdit from '@/components/common/modal/FaqCategoryModalEdit';
+import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
-import EditIcon from '@/assets/icons/common/edit.svg?react';
-import DeleteIcon from '@/assets/icons/common/delete.svg?react';
+import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
 import type { DictCategory } from '@/pages/mock/dictMock';
@@ -42,8 +39,6 @@ export default function FaqPage() {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
@@ -126,7 +121,19 @@ export default function FaqPage() {
   };
 
   const handleDeleteSelected = () => {
-    if (selectedCount > 0) setIsPopupOpen(true);
+    if (selectedCount > 0) {
+      // TODO: 실제 삭제 로직 구현
+      console.log(
+        '선택된 카테고리 삭제:',
+        Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
+      );
+      setCheckedItems({});
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '선택한 카테고리가 삭제되었습니다.'
+        );
+      }
+    }
   };
 
   const handleRegisterCategory = ({
@@ -277,28 +284,6 @@ export default function FaqPage() {
           </TableWrapper>
         </ContentWrapper>
       </Content>
-
-      <Popup
-        isOpen={isPopupOpen}
-        title="카테고리 삭제"
-        onClose={() => setIsPopupOpen(false)}
-        onDelete={() => {
-          setIsPopupOpen(false);
-          setIsSuccessPopupOpen(true);
-        }}
-        confirmText="삭제"
-        cancelText="취소"
-        warningMessages={['삭제한 카테고리는 복구할 수 없습니다.']}
-      />
-
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="삭제 완료"
-        message="카테고리가 삭제되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
-      />
 
       <FaqCategoryModal
         isOpen={isCategoryModalOpen}

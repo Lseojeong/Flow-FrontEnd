@@ -6,7 +6,7 @@ import { DepartmentCheckProps } from './Department.types';
 
 /**
  * 부서 선택 체크박스 컴포넌트
- * 여러 부서를 체크박스로 선택할 수 있으며, 모두 선택 기능을 제공합니다.
+ * TODO: 사용자의 부서가 무조건 체크되게 해야함
  */
 export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   departments,
@@ -16,32 +16,21 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   showSelectAll = true,
   title = '부서 선택',
 }) => {
-  // 모든 부서가 선택되었는지 확인
   const isAllSelected =
     departments.length > 0 && selectedDepartmentIds.length === departments.length;
 
-  /**
-   * 개별 부서 선택/해제 처리
-   */
   const handleDepartmentChange = (departmentId: string, checked: boolean) => {
     if (checked) {
-      // 선택: 기존 목록에 추가
       onChange([...selectedDepartmentIds, departmentId]);
     } else {
-      // 해제: 기존 목록에서 제거
       onChange(selectedDepartmentIds.filter((id) => id !== departmentId));
     }
   };
 
-  /**
-   * 모두 선택/해제 처리
-   */
   const handleSelectAllChange = (checked: boolean) => {
     if (checked) {
-      // 모두 선택: 모든 부서 ID를 선택
       onChange(departments.map((dept) => dept.departmentId));
     } else {
-      // 모두 해제: 빈 배열
       onChange([]);
     }
   };

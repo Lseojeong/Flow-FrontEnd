@@ -2,43 +2,38 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
-import { Button } from '../button/Button';
+import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
-import { Popup } from '@/components/common/popup/Popup';
 import Divider from '@/components/common/divider/FlatDivider';
-import { Department } from '@/components/common/department/Department.types';
-import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
+import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 
-interface Props {
+interface BaseCategoryEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  onSubmit: (_data: { name: string; description: string; departments?: string[] }) => void;
   initialName: string;
   initialDescription: string;
-  initialDepartments: string[];
-  departments: Department[];
+  title?: string;
+  children?: React.ReactNode;
 }
 
-const CategoryModalEdit: React.FC<Props> = ({
+const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   initialName,
   initialDescription,
-  initialDepartments,
-  departments,
+  title = '카테고리 수정',
+  children,
 }) => {
   const [categoryName, setCategoryName] = useState('');
   const [error, setError] = useState('');
   const [description, setDescription] = useState('');
-  const [isSuccessPopupOpen, setIsSuccessPopupOpen] = useState(false);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       setCategoryName(initialName ?? '');
       setDescription(initialDescription ?? '');
-      setSelectedDepartments(initialDepartments ?? []);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -47,23 +42,20 @@ const CategoryModalEdit: React.FC<Props> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialName, initialDescription, initialDepartments]);
+  }, [isOpen, initialName, initialDescription]);
 
   const handleConfirm = () => {
     const trimmedName = categoryName.trim();
 
     if (trimmedName === '') {
-      setError('카테고리를 입력해주세요.');
+      setError(CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR);
       return;
     }
 
     onSubmit({
       name: trimmedName,
       description: description.trim(),
-      departments: selectedDepartments,
     });
-
-    setSelectedDepartments([]);
 
     setCategoryName('');
     setDescription('');
@@ -71,27 +63,27 @@ const CategoryModalEdit: React.FC<Props> = ({
     onClose();
 
     setTimeout(() => {
-      setIsSuccessPopupOpen(true);
-    }, 100);
+      (window as { showToast?: (_message: string) => void }).showToast?.(
+        CATEGORY_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE
+      );
+    }, MODAL_STYLE.TOAST_DELAY);
   };
 
   const isDisabled = categoryName.trim() === '';
 
+  const handleClose = () => {
+    setCategoryName('');
+    setDescription('');
+    setError('');
+    onClose();
+  };
+
   return (
     <>
-      <Popup
-        isOpen={isSuccessPopupOpen}
-        isAlert
-        title="수정 완료"
-        message="카테고리가 수정되었습니다."
-        alertButtonText="확인"
-        onClose={() => setIsSuccessPopupOpen(false)}
-      />
-
       {isOpen && (
         <Overlay>
           <ModalBox>
-            <Title>카테고리 수정</Title>
+            <Title>{title}</Title>
             <Divider />
 
             <CategoryInput
@@ -99,21 +91,18 @@ const CategoryModalEdit: React.FC<Props> = ({
               onChange={setCategoryName}
               onBlur={() => {}}
               error={error}
-              showValidation
             />
-            <DepartmentCheck
-              departments={departments}
-              selectedDepartmentIds={selectedDepartments}
-              onChange={setSelectedDepartments}
-            />
+
+            {children}
+
             <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
             <ButtonRow>
-              <Button variant="dark" onClick={onClose}>
-                취소
+              <Button variant="dark" size="medium" onClick={handleClose}>
+                {CATEGORY_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
-              <Button onClick={handleConfirm} disabled={isDisabled}>
-                수정
+              <Button variant="primary" size="medium" onClick={handleConfirm} disabled={isDisabled}>
+                {CATEGORY_MODAL_CONSTANTS.EDIT_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
@@ -123,7 +112,7 @@ const CategoryModalEdit: React.FC<Props> = ({
   );
 };
 
-export default CategoryModalEdit;
+export default BaseCategoryEditModal;
 
 const Overlay = styled.div`
   position: fixed;
@@ -131,34 +120,34 @@ const Overlay = styled.div`
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: ${MODAL_STYLE.OVERLAY_BACKGROUND};
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: ${MODAL_STYLE.OVERLAY_Z_INDEX};
 `;
 
 const ModalBox = styled.div`
   background: ${colors.White};
-  padding: 32px;
-  border-radius: 8px;
+  padding: ${MODAL_STYLE.PADDING};
+  border-radius: ${MODAL_STYLE.BORDER_RADIUS};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 720px;
+  width: ${MODAL_STYLE.WIDTH};
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: ${MODAL_STYLE.MODAL_GAP};
 `;
 
 const Title = styled.h3`
-  font-size: 20px;
+  font-size: ${MODAL_STYLE.TITLE_FONT_SIZE};
   font-weight: ${fontWeight.SemiBold};
   color: ${colors.Dark};
-  margin-bottom: 1px;
+  margin-bottom: ${MODAL_STYLE.TITLE_MARGIN_BOTTOM};
 `;
 
 const ButtonRow = styled.div`
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 24px;
+  gap: ${MODAL_STYLE.BUTTON_GAP_EDIT};
+  margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
 `;

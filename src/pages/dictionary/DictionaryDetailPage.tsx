@@ -8,8 +8,8 @@ import { StatusBadge } from '@/components/common/status/StatusBadge';
 import Divider from '@/components/common/divider/Divider';
 import FileSearch from '@/components/common/file-search/FileSearch';
 import { Popup } from '@/components/common/popup/Popup';
-import DictUploadModal from '@/components/common/modal/DictUploadModal';
-import DictEditModal from '@/components/common/modal/DictEditModal';
+import DictUploadModal from '@/components/modal/upload-modal/DictUploadModal';
+import DictEditModal from '@/components/modal/upload-edit-modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 
@@ -502,7 +502,7 @@ const StyledLink = styled.div`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 450px;
+  max-height: 380px;
   overflow-y: auto;
   border-radius: 8px;
   background: ${colors.White};

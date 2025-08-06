@@ -1,8 +1,8 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
-import { User } from '@/types/userSetting.types';
-import { DepartmentSetting } from '@/types/departmentSetting.types';
+import { User } from '@/types/usersetting.types';
+import { DepartmentSetting } from '@/types/departmentsetting.types';
 
 const duplicatedDicts = Array.from({ length: 40 }, (_, index) => ({
   id: index + 2,
