@@ -54,17 +54,21 @@ export const HistoryTable: React.FC = () => {
 
   const renderTableRow = (row: HistoryData, index: number) => (
     <TableRow key={index}>
-      <td style={{ width: '80px', textAlign: 'center' }}>{row.version}</td>
+      <ScrollableCell maxWidth="80px" align="center">
+        {row.version}
+      </ScrollableCell>
       <ScrollableCell maxWidth="160px" align="left">
         {row.fileName}
       </ScrollableCell>
-      <td style={{ width: '160px', textAlign: 'left' }}>{row.modifier}</td>
-      <td style={{ width: '160px', textAlign: 'left' }}>{row.timeStamp}</td>
-      <td style={{ width: '100px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <OperationBadge operation={row.work}>{row.work}</OperationBadge>
-        </div>
-      </td>
+      <ScrollableCell maxWidth="120px" align="left">
+        {row.modifier}
+      </ScrollableCell>
+      <ScrollableCell maxWidth="120px" align="left">
+        {row.timeStamp}
+      </ScrollableCell>
+      <ScrollableCell maxWidth="100px" align="center">
+        <OperationBadge operation={row.work}>{row.work}</OperationBadge>
+      </ScrollableCell>
       <ScrollableCell maxWidth="400px" align="left">
         {row.description}
       </ScrollableCell>
@@ -72,14 +76,11 @@ export const HistoryTable: React.FC = () => {
   );
 
   const renderEmptyState = () => (
-    <TableRow>
-      <td
-        colSpan={columns.length}
-        style={{ textAlign: 'center', padding: '80px', border: 'none', color: colors.BoxText }}
-      >
-        원하는 필터 옵션을 선택해주세요.
-      </td>
-    </TableRow>
+    <EmptyRow>
+      <EmptyCell colSpan={columns.length}>
+        <EmptyMessage>원하는 필터 옵션을 선택해주세요.</EmptyMessage>
+      </EmptyCell>
+    </EmptyRow>
   );
 
   return (
@@ -154,4 +155,19 @@ const OperationBadge = styled.span<{ operation: string }>`
   font-weight: ${fontWeight.Medium};
   color: ${colors.Normal};
   background-color: ${colors.Light};
+`;
+
+const EmptyRow = styled.tr`
+  border: none;
+`;
+
+const EmptyCell = styled.td`
+  text-align: center;
+  padding: 80px;
+  border: none;
+`;
+
+const EmptyMessage = styled.div`
+  color: ${colors.BoxText};
+  font-size: 14px;
 `;
