@@ -19,7 +19,7 @@ import DashBoardPage from '@/pages/dash-board/DashBoardPage';
 import DepartmentSettingPage from '@/pages/settings/DepartmentSettingPage';
 import AccessDeniedPage from '@/pages/error/AccessDeniedPage';
 
-import { ProtectedRoute } from './ProtectedRoute';
+import { ProtectedRoute } from './protectedRoute';
 
 const routes: RouteObject[] = [
   {

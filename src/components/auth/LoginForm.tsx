@@ -38,7 +38,7 @@ export function LoginForm() {
         password: passwordField.value,
       });
       setIsError(false);
-      setIsLoggedIn(true); // 로그인 성공 시 상태 변경
+      setIsLoggedIn(true);
       navigate('/dictionary');
     } catch (error) {
       console.error(error);
