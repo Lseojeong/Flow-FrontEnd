@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { DictFile, getPaginatedHistoryData } from '@/pages/mock/dictMock';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
@@ -27,6 +27,14 @@ const columns = [
 export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
