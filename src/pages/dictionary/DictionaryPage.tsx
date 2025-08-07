@@ -409,7 +409,7 @@ const StyledLink = styled(Link)`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 520px;
+  max-height: 580px;
   overflow-y: auto;
   td {
     padding-top: 24px;

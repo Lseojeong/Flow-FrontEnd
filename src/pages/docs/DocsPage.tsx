@@ -181,7 +181,7 @@ export default function DocsPage() {
           />
         </td>
         <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
-          <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
+          <StyledLink to={`/docs/${category.id}`}>{category.name}</StyledLink>
         </td>
         <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
           <StatusWrapper>
@@ -419,7 +419,7 @@ const StyledLink = styled(Link)`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 520px;
+  max-height: 580px;
   overflow-y: auto;
 `;
 

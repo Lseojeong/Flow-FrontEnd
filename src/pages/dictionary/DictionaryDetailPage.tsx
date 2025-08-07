@@ -12,6 +12,7 @@ import DictUploadModal from '@/components/modal/upload-modal/DictUploadModal';
 import DictEditModal from '@/components/modal/upload-edit-modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
+import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
 
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
@@ -19,6 +20,7 @@ import { colors, fontWeight } from '@/styles/index';
 import { StatusItemData } from '@/components/common/status/Status.types';
 import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
+import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getPaginatedFilesData } from '@/pages/mock/dictMock';
@@ -219,7 +221,25 @@ export default function DictionaryDetailPage() {
 
           <InfoBox>
             <InfoItemColumn>
-              <Label>상태:</Label>
+              <LabelContainer>
+                <Label>파일 현황:</Label>
+                <Tooltip
+                  content="업로드한 파일의 상태를 종합한 내용입니다."
+                  description={
+                    <>
+                      Completed는 학습 및 등록 완료,
+                      <br />
+                      Processing은 파일 처리 중,
+                      <br />
+                      Fail은 학습 실패를 의미합니다.
+                    </>
+                  }
+                >
+                  <InfoIcon>
+                    <InformationIcon />
+                  </InfoIcon>
+                </Tooltip>
+              </LabelContainer>
               <Value>
                 <StatusSummary items={statusItems} />
               </Value>
@@ -369,6 +389,30 @@ const InfoItemColumn = styled(InfoItem)`
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+`;
+
+const LabelContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+`;
+
+const InfoIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 4px;
+  color: ${colors.Light_active};
+
+  &:hover {
+    color: ${colors.Normal};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const Label = styled.div`
