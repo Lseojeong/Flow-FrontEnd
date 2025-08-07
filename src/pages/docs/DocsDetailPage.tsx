@@ -149,24 +149,48 @@ export default function DocsDetailPage() {
 
   const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
     <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
-      <td style={{ width: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>{index + 1}</td>
+      <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
+        {index + 1}
+      </td>
       <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
         <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
       </ScrollableCell>
-      <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+      <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
         <StatusWrapper>
           <StatusBadge status={file.status}>{file.status}</StatusBadge>
         </StatusWrapper>
       </td>
-      <td style={{ width: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>{file.manager}</td>
-      <td style={{ width: CELL_WIDTHS.REGISTERED_AT, textAlign: 'left' }}>{file.registeredAt}</td>
-      <td style={{ width: CELL_WIDTHS.UPDATED_AT, textAlign: 'left' }}>{file.updatedAt}</td>
-      <td style={{ width: CELL_WIDTHS.DOWNLOAD, textAlign: 'left' }}>
+      <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
+        {file.manager}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.REGISTERED_AT,
+          minWidth: CELL_WIDTHS.REGISTERED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.registeredAt}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.UPDATED_AT,
+          minWidth: CELL_WIDTHS.UPDATED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.updatedAt}
+      </td>
+      <td
+        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'left' }}
+      >
         <DownloadIconWrapper>
           <DownloadIcon />
         </DownloadIconWrapper>
       </td>
-      <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+      <td
+        style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+      >
         <ActionButtons>
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
@@ -341,13 +365,13 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;

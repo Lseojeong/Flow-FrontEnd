@@ -17,6 +17,7 @@ const TableWrapper = styled.div`
 
 const StyledTable = styled.table`
   width: 100%;
+  table-layout: auto;
   border-collapse: separate;
   border-radius: 4px 4px 0 0;
   border-spacing: 0;

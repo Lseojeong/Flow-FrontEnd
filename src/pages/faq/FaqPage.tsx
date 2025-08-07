@@ -177,7 +177,13 @@ export default function FaqPage() {
 
     return (
       <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-        <td style={{ width: CELL_WIDTHS.CHECKBOX, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.CHECKBOX,
+            minWidth: CELL_WIDTHS.CHECKBOX,
+            textAlign: 'center',
+          }}
+        >
           <CheckBox
             size="medium"
             id={`check-${category.id}`}
@@ -186,10 +192,12 @@ export default function FaqPage() {
             label=""
           />
         </td>
-        <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
+        <td
+          style={{ width: CELL_WIDTHS.CATEGORY, minWidth: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}
+        >
           <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
         </td>
-        <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+        <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
           <StatusWrapper>
             <StatusSummary
               items={[
@@ -200,7 +208,13 @@ export default function FaqPage() {
             />
           </StatusWrapper>
         </td>
-        <td style={{ width: CELL_WIDTHS.DOCUMENT_COUNT, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.DOCUMENT_COUNT,
+            minWidth: CELL_WIDTHS.DOCUMENT_COUNT,
+            textAlign: 'center',
+          }}
+        >
           {category.documentCount}
         </td>
         <ScrollableCell
@@ -210,10 +224,19 @@ export default function FaqPage() {
         >
           <DepartmentTagList departments={category.departments ?? []} />
         </ScrollableCell>
-        <td style={{ width: CELL_WIDTHS.LAST_MODIFIED, textAlign: 'left', paddingLeft: ' 34px' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.LAST_MODIFIED,
+            minWidth: CELL_WIDTHS.LAST_MODIFIED,
+            textAlign: 'left',
+            paddingLeft: ' 34px',
+          }}
+        >
           {category.lastModifiedDate}
         </td>
-        <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+        <td
+          style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+        >
           <EditIconWrapper>
             <EditIcon onClick={() => handleEdit(category.id)} />
           </EditIconWrapper>
@@ -351,7 +374,7 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
@@ -375,7 +398,7 @@ const TopBar = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;
@@ -432,6 +455,8 @@ const StyledLink = styled(Link)`
 const TableScrollWrapper = styled.div`
   max-height: 580px;
   overflow-y: auto;
+  border-radius: 8px;
+  background: ${colors.White};
 `;
 
 const EmptyMessage = styled.div`

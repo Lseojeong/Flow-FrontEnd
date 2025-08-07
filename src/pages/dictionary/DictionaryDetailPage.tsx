@@ -29,25 +29,25 @@ import { getPaginatedFilesData } from '@/pages/mock/dictMock';
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
-  { label: '번호', width: '72px', align: 'left' as const },
-  { label: '파일명', width: '318px', align: 'left' as const },
-  { label: '학습 상태', width: '110px', align: 'left' as const },
+  { label: '번호', width: '80px', align: 'left' as const },
+  { label: '파일명', width: '300px', align: 'left' as const },
+  { label: '학습 상태', width: '120px', align: 'left' as const },
   { label: '관리자', width: '150px', align: 'left' as const },
-  { label: '등록일', width: '149px', align: 'left' as const },
-  { label: '수정일', width: '148px', align: 'left' as const },
-  { label: '파일 다운로드', width: '120px', align: 'left' as const },
-  { label: ' ', width: '95px', align: 'left' as const },
+  { label: '등록일', width: '150px', align: 'left' as const },
+  { label: '수정일', width: '150px', align: 'left' as const },
+  { label: '파일 다운로드', width: '132px', align: 'center' as const },
+  { label: ' ', width: '70px', align: 'left' as const },
 ];
 
 const CELL_WIDTHS = {
-  NUMBER: '72px',
-  FILENAME: '318px',
-  STATUS: '110px',
+  NUMBER: '80px',
+  FILENAME: '300px',
+  STATUS: '120px',
   MANAGER: '150px',
-  REGISTERED_AT: '149px',
-  UPDATED_AT: '148px',
-  DOWNLOAD: '120px',
-  ACTIONS: '95px',
+  REGISTERED_AT: '150px',
+  UPDATED_AT: '150px',
+  DOWNLOAD: '132px',
+  ACTIONS: '70px',
 } as const;
 
 interface EditTargetFile {
@@ -148,24 +148,52 @@ export default function DictionaryDetailPage() {
 
   const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
     <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
-      <td style={{ width: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>{index + 1}</td>
+      <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
+        {index + 1}
+      </td>
       <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
         <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
       </ScrollableCell>
-      <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+      <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
         <StatusWrapper>
           <StatusBadge status={file.status}>{file.status}</StatusBadge>
         </StatusWrapper>
       </td>
-      <td style={{ width: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>{file.manager}</td>
-      <td style={{ width: CELL_WIDTHS.REGISTERED_AT, textAlign: 'left' }}>{file.registeredAt}</td>
-      <td style={{ width: CELL_WIDTHS.UPDATED_AT, textAlign: 'left' }}>{file.updatedAt}</td>
-      <td style={{ width: CELL_WIDTHS.DOWNLOAD, textAlign: 'left' }}>
+      <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
+        {file.manager}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.REGISTERED_AT,
+          minWidth: CELL_WIDTHS.REGISTERED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.registeredAt}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.UPDATED_AT,
+          minWidth: CELL_WIDTHS.UPDATED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.updatedAt}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.DOWNLOAD,
+          minWidth: CELL_WIDTHS.DOWNLOAD,
+          textAlign: 'center',
+        }}
+      >
         <DownloadIconWrapper>
           <DownloadIcon />
         </DownloadIconWrapper>
       </td>
-      <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+      <td
+        style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+      >
         <ActionButtons>
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
@@ -272,20 +300,15 @@ export default function DictionaryDetailPage() {
             <FileSearch value={searchKeyword} onChange={handleSearchChange} />
           </FileSectionHeader>
 
-          <TableWrapper>
-            <TableHeaderSection>
-              <TableLayout>
-                <thead>
-                  <TableHeader columns={TABLE_COLUMNS} />
-                </thead>
-              </TableLayout>
-            </TableHeaderSection>
+          <TableLayout>
+            <thead>
+              <TableHeader columns={TABLE_COLUMNS} />
+            </thead>
+
             <TableScrollWrapper>
-              <TableLayout>
-                <tbody>{renderFileList()}</tbody>
-              </TableLayout>
+              <tbody>{renderFileList()}</tbody>
             </TableScrollWrapper>
-          </TableWrapper>
+          </TableLayout>
         </ContentWrapper>
       </Content>
 
@@ -334,13 +357,13 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;
@@ -531,26 +554,4 @@ const TableScrollWrapper = styled.div`
   overflow-y: auto;
   border-radius: 8px;
   background: ${colors.White};
-`;
-
-const TableHeaderSection = styled.div`
-  background-color: ${colors.Normal};
-  color: white;
-
-  thead {
-    tr {
-      th {
-        position: sticky;
-        top: 0;
-        background-color: ${colors.Normal};
-        z-index: 2;
-      }
-    }
-  }
-`;
-
-const TableWrapper = styled.div`
-  border-radius: 8px;
-  overflow: hidden;
-  width: 100%;
 `;

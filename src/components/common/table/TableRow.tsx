@@ -28,6 +28,7 @@ const StyledTableRow = styled.tr`
     white-space: nowrap;
     border-bottom: 1px solid #f2f2f2;
     overflow: hidden;
+    max-width: 0;
   }
 `;
 
@@ -35,4 +36,5 @@ export const TableCell = styled.td<TableCellProps>`
   white-space: nowrap;
   text-align: ${({ align }) => align || 'left'};
   overflow: hidden;
+  max-width: 0;
 `;
