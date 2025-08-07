@@ -21,7 +21,7 @@ const StyledTableRow = styled.tr`
   }
 
   td {
-    padding: 15px 24px;
+    padding: 16px 24px;
     color: ${colors.Black};
     font-weight: ${fontWeight.Regular};
     font-size: 14px;

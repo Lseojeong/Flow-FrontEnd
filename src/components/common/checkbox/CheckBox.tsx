@@ -103,20 +103,18 @@ const getCheckMarkColor = (variant: CheckBoxVariant): string => {
 };
 
 const createCheckMarkStyles = (size: CheckBoxSize, variant: CheckBoxVariant): string => {
-  const config = getSizeConfig(size);
   const checkColor = getCheckMarkColor(variant);
-  const { left, bottom } = DESIGN_TOKENS.checkMarkPosition;
 
   return `
-    content: '';
+    content: '✓';
     position: absolute;
-    left: ${left};
-    bottom: ${bottom};
-    width: ${config.checkWidth};
-    height: ${config.checkHeight};
-    border: solid ${checkColor};
-    border-width: 0 1px 1px 0;
-    transform: rotate(45deg);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: ${checkColor};
+    font-size: ${size === 'small' ? '10px' : '12px'};
+    font-weight: ${fontWeight.Regular};
+    line-height: 1;
   `;
 };
 
@@ -184,9 +182,11 @@ export const CheckBox: React.FC<Props> = ({
         disabled={disabled}
       />
       <CheckBoxIndicator $checked={checked} $disabled={disabled} $size={size} $variant={variant} />
-      <CheckBoxLabel $disabled={disabled} $size={size} $variant={variant}>
-        {label}
-      </CheckBoxLabel>
+      {label && (
+        <CheckBoxLabel $disabled={disabled} $size={size} $variant={variant}>
+          {label}
+        </CheckBoxLabel>
+      )}
     </CheckBoxContainer>
   );
 };
