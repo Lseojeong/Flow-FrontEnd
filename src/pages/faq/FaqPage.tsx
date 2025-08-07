@@ -25,15 +25,27 @@ import type { DictCategory } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
+const TABLE_COLUMNS = [
+  { label: '카테고리', width: '330px', align: 'left' as const },
+  { label: '상태', width: '205px', align: 'left' as const },
+  { label: '문서 수', width: '80px', align: 'center' as const },
+  { label: '포함 부서', width: '266px', align: 'left' as const },
+  { label: '최종 수정일', width: '165px', align: 'left' as const },
+  { label: '', width: '57px', align: 'center' as const },
+];
+
+const CELL_WIDTHS = {
+  CHECKBOX: '48px',
+  CATEGORY: '330px',
+  STATUS: '206px',
+  DOCUMENT_COUNT: '80px',
+  DEPARTMENTS: '266px',
+  LAST_MODIFIED: '165px',
+  ACTIONS: '57px',
+} as const;
+
 export default function FaqPage() {
   const [activeMenuId, setActiveMenuId] = useState('faq');
-  const {
-    data: categories,
-    observerRef,
-    isLoading,
-  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: getPaginatedCategoriesData,
-  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
@@ -47,6 +59,14 @@ export default function FaqPage() {
     description: string;
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
+
+  const {
+    data: categories,
+    observerRef,
+    isLoading,
+  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
+    fetchFn: getPaginatedCategoriesData,
+  });
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
@@ -67,11 +87,11 @@ export default function FaqPage() {
   });
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
+  const isAllSelected =
+    selectedCount === filteredCategories.length && filteredCategories.length > 0;
 
   const toggleSelectAll = () => {
-    const allSelected =
-      selectedCount === filteredCategories.length && filteredCategories.length > 0;
-    if (allSelected) {
+    if (isAllSelected) {
       setCheckedItems({});
     } else {
       const newChecked: Record<number, boolean> = {};
@@ -81,29 +101,6 @@ export default function FaqPage() {
       setCheckedItems(newChecked);
     }
   };
-
-  const columns = [
-    {
-      label: (
-        <CheckBox
-          size="medium"
-          variant="outline"
-          id="select-all"
-          checked={selectedCount === filteredCategories.length && filteredCategories.length > 0}
-          onChange={toggleSelectAll}
-          label=""
-        />
-      ),
-      width: '48px',
-      align: 'center' as const,
-    },
-    { label: '카테고리', width: '330px', align: 'left' as const },
-    { label: '상태', width: '205px', align: 'left' as const },
-    { label: '문서 수', width: '80px', align: 'center' as const },
-    { label: '포함 부서', width: '220px', align: 'left' as const },
-    { label: '최종 수정일', width: '160px', align: 'left' as const },
-    { label: '', width: '40px', align: 'center' as const },
-  ];
 
   const toggleCheckItem = (id: number) => {
     setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -124,7 +121,6 @@ export default function FaqPage() {
 
   const handleDeleteSelected = () => {
     if (selectedCount > 0) {
-      // TODO: 실제 삭제 로직 구현
       console.log(
         '선택된 카테고리 삭제:',
         Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
@@ -138,22 +134,103 @@ export default function FaqPage() {
     }
   };
 
-  const handleRegisterCategory = ({
-    name,
-    description,
-    departments,
-  }: {
-    name: string;
-    description: string;
-    departments: string[];
-  }) => {
-    console.log('카테고리 등록:', { name, description, departments });
+  const handleRegisterCategory = () => {
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!(
+        '카테고리가 등록되었습니다.'
+      );
+    }
   };
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
   };
+
+  const columns = [
+    {
+      label: (
+        <CheckBox
+          size="medium"
+          variant="outline"
+          id="select-all"
+          checked={isAllSelected}
+          onChange={toggleSelectAll}
+          label=""
+        />
+      ),
+      width: CELL_WIDTHS.CHECKBOX,
+      align: 'center' as const,
+    },
+    ...TABLE_COLUMNS,
+  ];
+
+  const renderTableRow = (category: DictCategory, index: number) => {
+    const isChecked = !!checkedItems[category.id];
+    const isLast = index === filteredCategories.length - 1;
+
+    return (
+      <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
+        <td style={{ width: CELL_WIDTHS.CHECKBOX, textAlign: 'center' }}>
+          <CheckBox
+            size="medium"
+            id={`check-${category.id}`}
+            checked={isChecked}
+            onChange={() => toggleCheckItem(category.id)}
+            label=""
+          />
+        </td>
+        <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
+          <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
+        </td>
+        <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+          <StatusWrapper>
+            <StatusSummary
+              items={[
+                { type: 'Completed', count: category.status.completed },
+                { type: 'Processing', count: category.status.processing },
+                { type: 'Fail', count: category.status.fail },
+              ]}
+            />
+          </StatusWrapper>
+        </td>
+        <td style={{ width: CELL_WIDTHS.DOCUMENT_COUNT, textAlign: 'center' }}>
+          {category.documentCount}
+        </td>
+        <ScrollableCell
+          width={CELL_WIDTHS.DEPARTMENTS}
+          maxWidth={CELL_WIDTHS.DEPARTMENTS}
+          align="left"
+        >
+          <DepartmentTagList departments={category.departments ?? []} />
+        </ScrollableCell>
+        <td style={{ width: CELL_WIDTHS.LAST_MODIFIED, textAlign: 'left', paddingLeft: ' 34px' }}>
+          {category.lastModifiedDate}
+        </td>
+        <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+          <EditIconWrapper>
+            <EditIcon onClick={() => handleEdit(category.id)} />
+          </EditIconWrapper>
+        </td>
+      </TableRow>
+    );
+  };
+
+  const renderEmptyState = () => (
+    <EmptyRow>
+      <EmptyCell colSpan={columns.length}>
+        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+      </EmptyCell>
+    </EmptyRow>
+  );
+
+  const renderLoadingState = () => (
+    <tr>
+      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
+        불러오는 중...
+      </td>
+    </tr>
+  );
 
   return (
     <PageWrapper>
@@ -202,88 +279,24 @@ export default function FaqPage() {
             size="medium"
             variant="outline"
             id="select-all"
-            checked={selectedCount === filteredCategories.length && filteredCategories.length > 0}
+            checked={isAllSelected}
             onChange={toggleSelectAll}
             label="전체 선택"
           />
 
-          <TableWrapper>
-            <TableHeaderSection>
-              <TableLayout>
-                <thead>
-                  <TableHeader columns={columns} />
-                </thead>
-              </TableLayout>
-            </TableHeaderSection>
-
+          <TableLayout>
+            <thead>
+              <TableHeader columns={columns} />
+            </thead>
             <TableScrollWrapper>
-              <TableLayout>
-                <tbody>
-                  {filteredCategories.length === 0 ? (
-                    <EmptyRow>
-                      <EmptyCell colSpan={columns.length}>
-                        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
-                      </EmptyCell>
-                    </EmptyRow>
-                  ) : (
-                    filteredCategories.map((category, index) => {
-                      const isChecked = !!checkedItems[category.id];
-                      const isLast = index === filteredCategories.length - 1;
-
-                      return (
-                        <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-                          <td style={{ width: '48px', textAlign: 'center' }}>
-                            <CheckBox
-                              size="medium"
-                              id={`check-${category.id}`}
-                              checked={isChecked}
-                              onChange={() => toggleCheckItem(category.id)}
-                              label=""
-                            />
-                          </td>
-                          <td style={{ width: '300px', textAlign: 'left' }}>
-                            <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
-                          </td>
-                          <td style={{ width: '120px', textAlign: 'left' }}>
-                            <StatusWrapper>
-                              <StatusSummary
-                                items={[
-                                  { type: 'Completed', count: category.status.completed },
-                                  { type: 'Processing', count: category.status.processing },
-                                  { type: 'Fail', count: category.status.fail },
-                                ]}
-                              />
-                            </StatusWrapper>
-                          </td>
-                          <td style={{ width: '80px', textAlign: 'center' }}>
-                            {category.documentCount}
-                          </td>
-                          <ScrollableCell>
-                            <DepartmentTagList departments={category.departments ?? []} />
-                          </ScrollableCell>
-                          <td style={{ width: '160px', textAlign: 'left' }}>
-                            {category.lastModifiedDate}
-                          </td>
-                          <td style={{ width: '40px', textAlign: 'center' }}>
-                            <EditIconWrapper>
-                              <EditIcon onClick={() => handleEdit(category.id)} />
-                            </EditIconWrapper>
-                          </td>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                  {isLoading && (
-                    <tr>
-                      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
-                        불러오는 중...
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </TableLayout>
+              <tbody>
+                {filteredCategories.length === 0
+                  ? renderEmptyState()
+                  : filteredCategories.map((category, index) => renderTableRow(category, index))}
+                {isLoading && renderLoadingState()}
+              </tbody>
             </TableScrollWrapper>
-          </TableWrapper>
+          </TableLayout>
         </ContentWrapper>
       </Content>
 
@@ -299,8 +312,12 @@ export default function FaqPage() {
         <FaqCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSubmit={({ name, description }) => {
-            console.log('카테고리 수정:', name, description);
+          onSubmit={() => {
+            if ((window as { showToast?: (_message: string) => void }).showToast) {
+              (window as { showToast?: (_message: string) => void }).showToast!(
+                '카테고리가 수정되었습니다.'
+              );
+            }
             setIsEditModalOpen(false);
           }}
           initialName={editingCategory.name}
@@ -406,32 +423,9 @@ const StyledLink = styled(Link)`
   }
 `;
 
-const TableWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
 const TableScrollWrapper = styled.div`
   max-height: 520px;
   overflow-y: auto;
-`;
-
-const TableHeaderSection = styled.div`
-  background-color: ${colors.Normal};
-  color: white;
-
-  thead {
-    tr {
-      th {
-        position: sticky;
-        top: 0;
-        background-color: ${colors.Normal};
-        z-index: 2;
-      }
-    }
-  }
 `;
 
 const EmptyMessage = styled.div`
