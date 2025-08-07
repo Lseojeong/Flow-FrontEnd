@@ -353,7 +353,7 @@ export default function FaqDetailPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1000px;
+  min-width: 1158px;
   overflow-x: auto;
 `;
 
