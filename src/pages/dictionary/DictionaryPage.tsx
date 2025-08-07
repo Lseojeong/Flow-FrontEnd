@@ -20,7 +20,7 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useMemo } from 'react';
 import type { DictCategory } from '@/pages/mock/dictMock';
 import { getAllDictCategories } from '@/apis/dictcategory/api';
-
+//savepoint
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DictionaryPage() {
