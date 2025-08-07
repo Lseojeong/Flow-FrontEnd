@@ -48,15 +48,22 @@ export default function DictionaryPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
-  const selectedCount = Object.values(checkedItems).filter(Boolean).length;
+  const filteredCategories = useMemo(() => {
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
+  }, [categories, searchKeyword]);
+
+  const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
 
   const toggleSelectAll = () => {
-    const allSelected = selectedCount === categories.length;
+    const allSelected =
+      selectedCount === filteredCategories.length && filteredCategories.length > 0;
     if (allSelected) {
       setCheckedItems({});
     } else {
       const newChecked: Record<number, boolean> = {};
-      categories.forEach((cat) => {
+      filteredCategories.forEach((cat) => {
         newChecked[cat.id] = true;
       });
       setCheckedItems(newChecked);
@@ -70,7 +77,7 @@ export default function DictionaryPage() {
           size="medium"
           variant="outline"
           id="select-all"
-          checked={selectedCount === categories.length && categories.length > 0}
+          checked={selectedCount === filteredCategories.length && filteredCategories.length > 0}
           onChange={toggleSelectAll}
           label=""
         />
@@ -128,12 +135,6 @@ export default function DictionaryPage() {
       );
     }
   };
-
-  const filteredCategories = useMemo(() => {
-    return categories.filter((category) =>
-      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
-    );
-  }, [categories, searchKeyword]);
 
   return (
     <PageWrapper>

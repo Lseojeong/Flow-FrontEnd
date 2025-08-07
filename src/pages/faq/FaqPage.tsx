@@ -48,7 +48,6 @@ export default function FaqPage() {
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
 
-  const selectedCount = Object.values(checkedItems).filter(Boolean).length;
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
   const isDateInRange = (dateStr: string) => {
@@ -67,13 +66,16 @@ export default function FaqPage() {
     return matchesName && matchesDept && matchesDate;
   });
 
+  const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
+
   const toggleSelectAll = () => {
-    const allSelected = selectedCount === categories.length;
+    const allSelected =
+      selectedCount === filteredCategories.length && filteredCategories.length > 0;
     if (allSelected) {
       setCheckedItems({});
     } else {
       const newChecked: Record<number, boolean> = {};
-      categories.forEach((cat) => {
+      filteredCategories.forEach((cat) => {
         newChecked[cat.id] = true;
       });
       setCheckedItems(newChecked);
@@ -87,7 +89,7 @@ export default function FaqPage() {
           size="medium"
           variant="outline"
           id="select-all"
-          checked={selectedCount === categories.length && categories.length > 0}
+          checked={selectedCount === filteredCategories.length && filteredCategories.length > 0}
           onChange={toggleSelectAll}
           label=""
         />
