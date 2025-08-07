@@ -17,9 +17,9 @@ import Divider from '@/components/common/divider/Divider';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
 import { useMemo } from 'react';
 import type { DictCategory } from '@/pages/mock/dictMock';
+import { getAllDictCategories } from '@/apis/dictcategory/api';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -31,7 +31,25 @@ export default function DictionaryPage() {
     observerRef,
     isLoading,
   } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: getPaginatedCategoriesData,
+    fetchFn: async (cursor) => {
+      const response = await getAllDictCategories(cursor);
+      const res = response.data;
+
+      const categoryList = res?.result?.categoryList ?? [];
+      const pagination = res?.result?.pagination ?? { last: true };
+
+      return {
+        code: res.code,
+        result: {
+          historyList: categoryList,
+          pagination: pagination,
+          nextCursor:
+            categoryList.length > 0
+              ? categoryList[categoryList.length - 1].lastModifiedDate
+              : undefined,
+        },
+      };
+    },
   });
   const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);

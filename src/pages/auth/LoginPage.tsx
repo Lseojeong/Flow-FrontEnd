@@ -13,7 +13,6 @@ export default function LoginPage() {
         wrapperRef.current.scrollLeft = wrapperRef.current.scrollWidth;
       }
     };
-    //로그인 폼 포커스
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
