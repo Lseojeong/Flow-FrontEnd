@@ -28,6 +28,14 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
+  const isDateInRange = (dateStr: string) => {
+    if (!startDate && !endDate) return true;
+    const date = new Date(dateStr);
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    return (!start || date >= start) && (!end || date <= end);
+  };
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
 
@@ -44,6 +52,10 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
   const { data: historyList, observerRef } = useInfiniteScroll<HistoryData, HTMLTableRowElement>({
     fetchFn: getPaginatedHistoryData,
   });
+
+  const filteredHistory = historyList.filter((item) =>
+    isDateInRange(item.timeStamp.replace(/\./g, '-'))
+  );
 
   return (
     <Wrapper>
@@ -64,7 +76,7 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
         <TableWrapper>
           <TableLayout>
             <tbody>
-              {historyList.map((item, index) => {
+              {filteredHistory.map((item, index) => {
                 const isLast = index === historyList.length - 1;
                 return (
                   <TableRow key={index} ref={isLast ? observerRef : undefined}>

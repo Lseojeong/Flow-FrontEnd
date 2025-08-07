@@ -12,11 +12,14 @@ import FaqDetailPage from '@/pages/faq/FaqDetailPage';
 
 import DocsPage from '@/pages/docs/DocsPage';
 import DocsDetailPage from '@/pages/docs/DocsDetailPage';
+
 import FlowSettingPage from '@/pages/settings/FlowSettingPage';
 import UserSettingPage from '@/pages/settings/UserSettingPage';
 import DashBoardPage from '@/pages/dash-board/DashBoardPage';
 import DepartmentSettingPage from '@/pages/settings/DepartmentSettingPage';
 import AccessDeniedPage from '@/pages/error/AccessDeniedPage';
+
+import { ProtectedRoute } from './protectedRoute';
 
 const routes: RouteObject[] = [
   {
@@ -25,22 +28,38 @@ const routes: RouteObject[] = [
   },
   {
     path: '/signin',
-    element: <SigninPage />,
+    element: (
+      <ProtectedRoute>
+        <SigninPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/dashboard',
-    element: <DashBoardPage />,
+    element: (
+      <ProtectedRoute>
+        <DashBoardPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/dictionary',
     children: [
       {
         index: true,
-        element: <DictionaryPage />,
+        element: (
+          <ProtectedRoute>
+            <DictionaryPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ':dictionaryId',
-        element: <DictionaryDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <DictionaryDetailPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
@@ -49,11 +68,19 @@ const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <FaqPage />,
+        element: (
+          <ProtectedRoute>
+            <FaqPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ':faqId',
-        element: <FaqDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <FaqDetailPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
@@ -62,25 +89,45 @@ const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <DocsPage />,
+        element: (
+          <ProtectedRoute>
+            <DocsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ':docId',
-        element: <DocsDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <DocsDetailPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
   {
     path: '/settings/flow',
-    element: <FlowSettingPage />,
+    element: (
+      <ProtectedRoute>
+        <FlowSettingPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/settings/user',
-    element: <UserSettingPage />,
+    element: (
+      <ProtectedRoute>
+        <UserSettingPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/settings/department',
-    element: <DepartmentSettingPage />,
+    element: (
+      <ProtectedRoute>
+        <DepartmentSettingPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: '/error/access-denied',
