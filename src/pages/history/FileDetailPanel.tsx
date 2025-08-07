@@ -80,17 +80,17 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
                 const isLast = index === historyList.length - 1;
                 return (
                   <TableRow key={index} ref={isLast ? observerRef : undefined}>
-                    <td>{item.version}</td>
-                    <ScrollableCell maxWidth="140px" align="left">
+                    <td style={{ width: '100px', minWidth: '100px' }}>{item.version}</td>
+                    <ScrollableCell maxWidth="135px" align="left">
                       {item.fileName}
                     </ScrollableCell>
-                    <td>{item.modifier}</td>
-                    <td>{item.timeStamp}</td>
-                    <td>{item.work}</td>
+                    <td style={{ width: '90px', minWidth: '90px' }}>{item.modifier}</td>
+                    <td style={{ width: '183px', minWidth: '183px' }}>{item.timeStamp}</td>
+                    <td style={{ width: '80px', minWidth: '80px' }}>{item.work}</td>
                     <ScrollableCell maxWidth="160px" align="left">
                       {item.description}
                     </ScrollableCell>
-                    <td style={{ textAlign: 'center' }}>
+                    <td style={{ width: '84px', minWidth: '84px', textAlign: 'center' }}>
                       <DownloadIcon />
                     </td>
                   </TableRow>
