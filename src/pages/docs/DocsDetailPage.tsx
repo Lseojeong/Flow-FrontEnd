@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -71,7 +72,16 @@ export default function DocsDetailPage() {
     pageSize: 5,
   });
 
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+
   const detailData = dictMockData.find((item) => item.id.toString() === docId);
+
+  const filteredFiles = useMemo(() => {
+    if (!detailData) return [];
+    return detailData.files.filter((file) =>
+      file.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
+    );
+  }, [detailData, debouncedSearchKeyword]);
 
   if (!detailData) {
     return <NoData>데이터가 없습니다.</NoData>;
@@ -82,10 +92,6 @@ export default function DocsDetailPage() {
     { type: 'Processing', count: detailData.status.processing },
     { type: 'Fail', count: detailData.status.fail },
   ];
-
-  const filteredFiles = detailData.files.filter((file) =>
-    file.name.toLowerCase().includes(searchKeyword.toLowerCase())
-  );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);

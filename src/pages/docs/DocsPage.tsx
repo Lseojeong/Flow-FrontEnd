@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
@@ -70,21 +71,26 @@ export default function DocsPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
-  const isDateInRange = (dateStr: string) => {
-    if (!startDate && !endDate) return true;
-    const date = new Date(dateStr);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    return (!start || date >= start) && (!end || date <= end);
-  };
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
-  const filteredCategories = categories.filter((item) => {
-    const matchesName = item.name.toLowerCase().includes(searchKeyword.toLowerCase());
-    const matchesDept =
-      !selectedDepartment || item.departments?.some((d) => d.departmentName === selectedDepartment);
-    const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
-    return matchesName && matchesDept && matchesDate;
-  });
+  const filteredCategories = useMemo(() => {
+    const isDateInRange = (dateStr: string) => {
+      if (!startDate && !endDate) return true;
+      const date = new Date(dateStr);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      return (!start || date >= start) && (!end || date <= end);
+    };
+
+    return categories.filter((item) => {
+      const matchesName = item.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase());
+      const matchesDept =
+        !selectedDepartment ||
+        item.departments?.some((d) => d.departmentName === selectedDepartment);
+      const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
+      return matchesName && matchesDept && matchesDate;
+    });
+  }, [categories, debouncedSearchKeyword, selectedDepartment, startDate, endDate]);
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
   const isAllSelected =

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
@@ -63,11 +64,13 @@ export default function DictionaryPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
-      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+      category.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
     );
-  }, [categories, searchKeyword]);
+  }, [categories, debouncedSearchKeyword]);
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
   const isAllSelected =
