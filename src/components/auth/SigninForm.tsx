@@ -1,11 +1,22 @@
+import React from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo/index';
 import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { postAdminSignup, checkAdminIdExists } from '@/apis/auth/api';
 
 export function SigninForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const invitationToken = new URLSearchParams(location.search).get('token') || '';
+
+  const [isIdChecked, setIsIdChecked] = useState(false);
+  const [checkError, setCheckError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const nameField = useFormField({
     validations: [
       { validate: (v) => v.trim() !== '', message: '* 닉네임을 입력해주세요.' },
@@ -44,6 +55,51 @@ export function SigninForm() {
   const handlePasswordCheckBlur = () => {
     passwordCheckField.onBlur();
   };
+  const handleCheckId = async () => {
+    try {
+      const exists = await checkAdminIdExists(adminIdField.value);
+      if (exists) {
+        setIsIdChecked(false);
+        setCheckError('* 이미 사용 중인 아이디입니다.');
+      } else {
+        setIsIdChecked(true);
+        setCheckError('');
+      }
+    } catch {
+      setIsIdChecked(false);
+      setCheckError('* 중복 확인 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!invitationToken) {
+      setSubmitError('* 초대 토큰이 없습니다. 초대 링크를 다시 확인해주세요.');
+      return;
+    }
+
+    if (!isIdChecked) {
+      setCheckError('* 아이디 중복 확인이 필요합니다.');
+      return;
+    }
+
+    try {
+      await postAdminSignup({
+        name: nameField.value,
+        adminId: adminIdField.value,
+        password: passwordField.value,
+        passwordCheck: passwordCheckField.value,
+        invitationToken,
+      });
+      navigate('/login');
+    } catch (error: unknown) {
+      console.error(error);
+      setSubmitError(
+        '* 회원가입에 실패했습니다. (초대 토큰이 유효하지 않거나 만료됐을 수 있습니다.)'
+      );
+    }
+  };
 
   const getPasswordCheckErrorMessage = () => {
     if (passwordCheckField.value.trim() === '') {
@@ -75,7 +131,7 @@ export function SigninForm() {
     <Card>
       <Title>모든 질문의 시작과 끝,</Title>
       <LogoTextImage src={textV1Logo} alt="로고" />
-      <Form>
+      <Form onSubmit={handleSubmit}>
         <FormInput
           id="login-nickname"
           label="닉네임"
@@ -101,10 +157,13 @@ export function SigninForm() {
             {!!adminIdField.errorMessage && <IdErrorText>{adminIdField.errorMessage}</IdErrorText>}
           </IdInputWrapper>
           <DuplicateCheckButton
+            type="button"
+            onClick={handleCheckId}
             disabled={!adminIdField.isValid || adminIdField.value.trim() === ''}
           >
             중복 확인
           </DuplicateCheckButton>
+          {checkError && <IdErrorText>{checkError}</IdErrorText>}
         </IdContainer>
         <FormInput
           id="login-pw"
@@ -126,9 +185,12 @@ export function SigninForm() {
           onBlur={handlePasswordCheckBlur}
           error={getPasswordCheckErrorMessage()}
         />
-        <Button size="large" disabled={isDisabled}>
-          완료
-        </Button>
+        <Form onSubmit={handleSubmit}>
+          <Button size="large" type="submit" disabled={isDisabled}>
+            완료
+          </Button>
+        </Form>
+        {submitError && <ErrorText>{submitError}</ErrorText>}
       </Form>
     </Card>
   );
@@ -246,4 +308,10 @@ const DuplicateCheckButton = styled.button`
     background: rgba(15, 66, 157, 0.5);
     cursor: not-allowed;
   }
+`;
+
+const ErrorText = styled.div`
+  color: ${colors.MainRed};
+  font-size: 12px;
+  margin-top: 12px;
 `;
