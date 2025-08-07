@@ -2,7 +2,7 @@ import { colors, fontWeight } from '@/styles/index';
 
 export const DATE_FORMAT = 'yyyy/MM/dd';
 export const DATE_FORMAT_CALENDAR = 'yyyy년 MM월';
-export const DEFAULT_PLACEHOLDER = '날짜를 선택하세요';
+export const DEFAULT_PLACEHOLDER = 'YYYY/MM/DD-YYYY/MM/DD';
 export const INPUT_WIDTH = '204px';
 export const INPUT_HEIGHT = '32px';
 export const INPUT_ICON_SIZE = '12px';
