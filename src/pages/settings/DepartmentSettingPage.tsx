@@ -10,8 +10,7 @@ import { EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { Button } from '@/components/common/button/Button';
 import DepartmentSettingModal from '@/components/department-setting/department-modal/DepartmentModal';
 import { Popup } from '@/components/common/popup/Popup';
-import { useDepartmentList } from '@/apis/department/query';
-import { useDepartmentStore } from '@/store/useDepartmentStore';
+import { useDepartmentSettingList } from '@/apis/department/query';
 import { Loading } from '@/components/common/loading/Loading';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -33,9 +32,8 @@ export default function DepartmentPage() {
   const [categoryResolved, setCategoryResolved] = useState(false);
   const [userResolved, setUserResolved] = useState(false);
 
-  const { isLoading, error, refetch } = useDepartmentList();
-
-  const { departments } = useDepartmentStore();
+  const { data, isLoading, error, refetch } = useDepartmentSettingList();
+  const departments = data?.result?.departmentList ?? [];
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -43,12 +41,7 @@ export default function DepartmentPage() {
     setEditingName(currentDept.departmentName);
   };
 
-  const handleSave = (index: number) => {
-    const updatedDepartments = [...departments];
-    updatedDepartments[index] = {
-      ...updatedDepartments[index],
-      departmentName: editingName,
-    };
+  const handleSave = () => {
     // TODO: 실제 API 호출로 부서명 수정
     setEditingIndex(null);
     setEditingName('');
@@ -83,7 +76,7 @@ export default function DepartmentPage() {
   };
 
   const getWarningMessages = () => {
-    const messages = [];
+    const messages = [] as string[];
     if (!categoryResolved) {
       messages.push('연결된 카테고리를 수정하거나 삭제하세요');
       return messages;
@@ -197,13 +190,13 @@ export default function DepartmentPage() {
                               value={editingName}
                               onChange={(e) => setEditingName(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSave(index);
+                                if (e.key === 'Enter') handleSave();
                                 if (e.key === 'Escape') handleCancel();
                               }}
                               autoFocus
                             />
                             <EditButtons>
-                              <SaveButton onClick={() => handleSave(index)}>저장</SaveButton>
+                              <SaveButton onClick={handleSave}>저장</SaveButton>
                               <CancelButton onClick={handleCancel}>취소</CancelButton>
                             </EditButtons>
                           </DepartmentEditCell>
@@ -212,12 +205,10 @@ export default function DepartmentPage() {
                         )}
                       </td>
                       <td style={{ width: '300px', textAlign: 'center' }}>
-                        {/* TODO: 실제 관리자 수 데이터 연동 */}
-                        0명
+                        {department.adminCount}명
                       </td>
                       <td style={{ width: '300px', textAlign: 'center' }}>
-                        {/* TODO: 실제 카테고리 수 데이터 연동 */}
-                        0건
+                        {department.categoryCount}건
                       </td>
                       <td style={{ width: '100px', textAlign: 'center' }}>
                         <ActionButtons>
