@@ -19,11 +19,11 @@ export const HistoryTable: React.FC = () => {
 
   const columns = [
     { label: '버전', width: '80px', align: 'center' as const },
-    { label: '파일명', width: '160px', align: 'left' as const },
-    { label: '수정자', width: '120px', align: 'left' as const },
-    { label: '일시', width: '120px', align: 'left' as const },
-    { label: '작업', width: '100px', align: 'center' as const },
-    { label: '설명', width: '400px', align: 'left' as const },
+    { label: '파일명', width: '200px', align: 'left' as const },
+    { label: '수정자', width: '150px', align: 'left' as const },
+    { label: '일시', width: '150px', align: 'left' as const },
+    { label: '작업', width: '120px', align: 'center' as const },
+    { label: '설명', width: '458px', align: 'left' as const },
   ];
 
   const handleFilterConfirm = (filters: { menu: string[]; category: string[]; file: string[] }) => {
@@ -54,22 +54,16 @@ export const HistoryTable: React.FC = () => {
 
   const renderTableRow = (row: HistoryData, index: number) => (
     <TableRow key={index}>
-      <ScrollableCell maxWidth="80px" align="center">
-        {row.version}
-      </ScrollableCell>
-      <ScrollableCell maxWidth="160px" align="left">
+      <td style={{ width: '80px', minWidth: '80px', textAlign: 'center' }}>{row.version}</td>
+      <ScrollableCell maxWidth="200px" align="left">
         {row.fileName}
       </ScrollableCell>
-      <ScrollableCell maxWidth="120px" align="left">
-        {row.modifier}
-      </ScrollableCell>
-      <ScrollableCell maxWidth="120px" align="left">
-        {row.timeStamp}
-      </ScrollableCell>
-      <ScrollableCell maxWidth="100px" align="center">
+      <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>{row.modifier}</td>
+      <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>{row.timeStamp}</td>
+      <td style={{ width: '120px', minWidth: '120px', textAlign: 'center' }}>
         <OperationBadge operation={row.work}>{row.work}</OperationBadge>
-      </ScrollableCell>
-      <ScrollableCell maxWidth="400px" align="left">
+      </td>
+      <ScrollableCell maxWidth="458px" align="left">
         {row.description}
       </ScrollableCell>
     </TableRow>

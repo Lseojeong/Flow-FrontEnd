@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
@@ -23,20 +24,20 @@ import type { DictCategory } from '@/pages/mock/dictMock';
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
-  { label: '카테고리', width: '604px', align: 'left' as const },
+  { label: '카테고리', width: '554px', align: 'left' as const },
   { label: '상태', width: '204px', align: 'left' as const },
   { label: '문서 수', width: '80px', align: 'center' as const },
-  { label: '최종 수정일', width: '160px', align: 'left' as const },
-  { label: '', width: '57px', align: 'center' as const },
+  { label: '최종 수정일', width: '180px', align: 'left' as const },
+  { label: '', width: '77px', align: 'center' as const },
 ];
 
 const CELL_WIDTHS = {
   CHECKBOX: '48px',
-  CATEGORY: '604px',
+  CATEGORY: '554px',
   STATUS: '204px',
   DOCUMENT_COUNT: '80px',
-  LAST_MODIFIED: '160px',
-  ACTIONS: '57px',
+  LAST_MODIFIED: '180px',
+  ACTIONS: '77px',
 } as const;
 
 export default function DictionaryPage() {
@@ -63,11 +64,13 @@ export default function DictionaryPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
-      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
+      category.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
     );
-  }, [categories, searchKeyword]);
+  }, [categories, debouncedSearchKeyword]);
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
   const isAllSelected =
@@ -155,7 +158,13 @@ export default function DictionaryPage() {
 
     return (
       <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-        <td style={{ width: CELL_WIDTHS.CHECKBOX, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.CHECKBOX,
+            minWidth: CELL_WIDTHS.CHECKBOX,
+            textAlign: 'center',
+          }}
+        >
           <CheckBox
             size="medium"
             id={`check-${category.id}`}
@@ -164,10 +173,17 @@ export default function DictionaryPage() {
             label=""
           />
         </td>
-        <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.CATEGORY,
+            minWidth: CELL_WIDTHS.CATEGORY,
+            textAlign: 'left',
+            padding: '25.5px 24px',
+          }}
+        >
           <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
         </td>
-        <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+        <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
           <StatusWrapper>
             <StatusSummary
               items={[
@@ -178,13 +194,27 @@ export default function DictionaryPage() {
             />
           </StatusWrapper>
         </td>
-        <td style={{ width: CELL_WIDTHS.DOCUMENT_COUNT, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.DOCUMENT_COUNT,
+            minWidth: CELL_WIDTHS.DOCUMENT_COUNT,
+            textAlign: 'center',
+          }}
+        >
           {category.documentCount}
         </td>
-        <td style={{ width: CELL_WIDTHS.LAST_MODIFIED, textAlign: 'left' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.LAST_MODIFIED,
+            minWidth: CELL_WIDTHS.LAST_MODIFIED,
+            textAlign: 'left',
+          }}
+        >
           {category.lastModifiedDate}
         </td>
-        <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+        <td
+          style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+        >
           <EditIconWrapper>
             <EditIcon onClick={() => handleEdit(category.id)} />
           </EditIconWrapper>
@@ -299,7 +329,7 @@ export default function DictionaryPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1000px;
+  min-width: 1158px;
   overflow-x: auto;
 `;
 
@@ -311,13 +341,13 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;
@@ -409,10 +439,8 @@ const StyledLink = styled(Link)`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 520px;
+  max-height: 580px;
   overflow-y: auto;
-  td {
-    padding-top: 24px;
-    padding-bottom: 24px;
-  }
+  border-radius: 8px;
+  background: ${colors.White};
 `;
