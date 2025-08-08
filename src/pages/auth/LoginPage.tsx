@@ -3,11 +3,15 @@ import { fontWeight, colors } from '@/styles/index';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { symbolLogo } from '@/assets/logo/index';
 import { useRef, useEffect } from 'react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
+    logout();
+
     const handleResize = () => {
       if (wrapperRef.current) {
         wrapperRef.current.scrollLeft = wrapperRef.current.scrollWidth;
@@ -16,7 +20,7 @@ export default function LoginPage() {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [logout]);
 
   return (
     <>

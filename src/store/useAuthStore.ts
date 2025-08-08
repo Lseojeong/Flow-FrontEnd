@@ -1,20 +1,25 @@
 import { create } from 'zustand';
-import { getAdminProfile } from '@/apis/auth/api';
+import { getAdminProfile, postLogout } from '@/apis/auth/api';
 
 interface AuthState {
   isLoggedIn: boolean;
   isLoading: boolean;
+  hasChecked: boolean;
   setIsLoggedIn: (_value: boolean) => void;
   checkLoginStatus: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   isLoggedIn: false,
   isLoading: true,
+  hasChecked: false,
 
   setIsLoggedIn: (value) => set({ isLoggedIn: value }),
 
   checkLoginStatus: async () => {
+    if (get().hasChecked) return;
+
     set({ isLoading: true });
     try {
       await getAdminProfile();
@@ -22,7 +27,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       set({ isLoggedIn: false });
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, hasChecked: true });
+    }
+  },
+
+  logout: async () => {
+    try {
+      await postLogout?.();
+    } finally {
+      localStorage.removeItem('accessToken');
+      set({ isLoggedIn: false, hasChecked: false });
     }
   },
 }));
