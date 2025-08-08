@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { colors, fontWeight } from '@/styles';
 import { ToastProps } from './ToastPopup.types';
-import { CompletedIcon } from '@/assets/icons/common/index';
+import { WarningIcon } from '@/assets/icons/common/index';
 
 export const Toast: React.FC<ToastProps> = ({ message, duration = 5000, onClose }) => {
   useEffect(() => {
@@ -15,7 +15,7 @@ export const Toast: React.FC<ToastProps> = ({ message, duration = 5000, onClose 
 
   return (
     <ToastContainer>
-      <CompletedIcon />
+      <WarningIcon />
       {message}
     </ToastContainer>
   );
