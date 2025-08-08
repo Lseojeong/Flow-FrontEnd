@@ -13,6 +13,7 @@ import UserModal from '@/components/user-settiing/user-modal/UserModal';
 import { Popup } from '@/components/common/popup/Popup';
 import { useUserSetting } from '@/apis/user/query';
 import { Loading } from '@/components/common/loading/Loading';
+import { formatDateTime } from '@/utils/formatDateTime';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -39,7 +40,7 @@ export default function UserSettingPage() {
         id: admin.adminId,
         nickname: admin.name,
         departmentName: dept.departmentName,
-        createdAt: new Date(admin.createdAt).toLocaleDateString('ko-KR'),
+        createdAt: admin.createdAt,
       }))
     ) ?? [];
 
@@ -204,7 +205,9 @@ export default function UserSettingPage() {
                           </DepartmentCell>
                         )}
                       </td>
-                      <td style={{ width: '200px', textAlign: 'center' }}>{user.createdAt}</td>
+                      <td style={{ width: '200px', textAlign: 'center' }}>
+                        {formatDateTime(user.createdAt)}
+                      </td>
                       <td style={{ width: '100px', textAlign: 'center' }}>
                         <ActionButtons>
                           <ActionButton onClick={() => handleEdit(index)}>
