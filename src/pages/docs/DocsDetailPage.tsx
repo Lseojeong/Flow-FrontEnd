@@ -25,7 +25,8 @@ import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedFilesData } from '@/pages/mock/dictMock';
+import { getAllDictCategories } from '@/apis/dictcategory/api';
+import type { DictCategory } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -36,7 +37,7 @@ const TABLE_COLUMNS = [
   { label: '관리자', width: '150px', align: 'left' as const },
   { label: '등록일', width: '149px', align: 'left' as const },
   { label: '수정일', width: '148px', align: 'left' as const },
-  { label: '파일 다운로드', width: '120px', align: 'left' as const },
+  { label: '파일 다운로드', width: '120px', align: 'center' as const },
   { label: ' ', width: '95px', align: 'left' as const },
 ];
 
@@ -68,8 +69,30 @@ export default function DocsDetailPage() {
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
   const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
-    fetchFn: (page, size) => getPaginatedFilesData(page, size),
-    pageSize: 5,
+    fetchFn: async (cursor) => {
+      const response = await getAllDictCategories(cursor);
+      const res = response.data;
+
+      const categoryList = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
+        ...item,
+        status: {
+          completed: item.status?.completed ?? 0,
+          processing: item.status?.processing ?? 0,
+          fail: item.status?.fail ?? 0,
+        },
+      }));
+
+      return {
+        code: res.code ?? '200',
+        result: {
+          historyList: categoryList as DictFile[],
+          pagination: {
+            last: res.result?.pagination?.last ?? true,
+          },
+          nextCursor: res.result?.pagination?.nextCursor, // 있으면 넣기
+        },
+      };
+    },
   });
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
@@ -182,7 +205,7 @@ export default function DocsDetailPage() {
         {file.updatedAt}
       </td>
       <td
-        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'left' }}
+        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
       >
         <DownloadIconWrapper>
           <DownloadIcon />

@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
@@ -18,31 +17,35 @@ import Divider from '@/components/common/divider/Divider';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
 import type { DictCategory } from '@/pages/mock/dictMock';
+import {
+  getAllDictCategories,
+  createDictCategory,
+  deleteDictCategories,
+} from '@/apis/dictcategory/api';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
-  { label: '카테고리', width: '554px', align: 'left' as const },
+  { label: '카테고리', width: '604px', align: 'left' as const },
   { label: '상태', width: '204px', align: 'left' as const },
   { label: '문서 수', width: '80px', align: 'center' as const },
-  { label: '최종 수정일', width: '180px', align: 'left' as const },
-  { label: '', width: '77px', align: 'center' as const },
+  { label: '최종 수정일', width: '160px', align: 'left' as const },
+  { label: '', width: '57px', align: 'center' as const },
 ];
 
 const CELL_WIDTHS = {
   CHECKBOX: '48px',
-  CATEGORY: '554px',
+  CATEGORY: '604px',
   STATUS: '204px',
   DOCUMENT_COUNT: '80px',
-  LAST_MODIFIED: '180px',
-  ACTIONS: '77px',
+  LAST_MODIFIED: '160px',
+  ACTIONS: '57px',
 } as const;
 
 export default function DictionaryPage() {
   const [activeMenuId, setActiveMenuId] = useState('dictionary');
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -53,24 +56,47 @@ export default function DictionaryPage() {
     description: string;
   } | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-
   const {
     data: categories,
     observerRef,
     isLoading,
   } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: getPaginatedCategoriesData,
+    fetchFn: async (cursor) => {
+      const response = await getAllDictCategories(cursor);
+      const res = response.data;
+
+      const categoryList = (res?.result?.categoryList ?? []).map(
+        (item: DictCategory, index: number) => ({
+          ...item,
+          id: index + (cursor ? parseInt(cursor) + 1 : 1),
+          status: {
+            completed: item.status?.completed ?? 0,
+            processing: item.status?.processing ?? 0,
+            fail: item.status?.fail ?? 0,
+          },
+        })
+      );
+
+      const pagination = res?.result?.pagination ?? { last: true };
+
+      return {
+        code: res.code,
+        result: {
+          historyList: categoryList,
+          pagination,
+          nextCursor: res?.result?.nextCursor,
+        },
+      };
+    },
   });
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-
   const filteredCategories = useMemo(() => {
     return categories.filter((category) =>
-      category.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
+      category.name.toLowerCase().includes(searchKeyword.toLowerCase())
     );
-  }, [categories, debouncedSearchKeyword]);
+  }, [categories, searchKeyword]);
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
   const isAllSelected =
@@ -80,7 +106,7 @@ export default function DictionaryPage() {
     if (isAllSelected) {
       setCheckedItems({});
     } else {
-      const newChecked: Record<number, boolean> = {};
+      const newChecked: Record<string, boolean> = {};
       filteredCategories.forEach((cat) => {
         newChecked[cat.id] = true;
       });
@@ -88,10 +114,11 @@ export default function DictionaryPage() {
     }
   };
 
-  const toggleCheckItem = (id: number) => {
+  const toggleCheckItem = (id: string | number) => {
+    const stringId = String(id);
     setCheckedItems((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      [stringId]: !prev[stringId],
     }));
   };
 
@@ -112,28 +139,54 @@ export default function DictionaryPage() {
     setEndDate(end);
   };
 
-  const handleRegisterCategory = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        '카테고리가 등록되었습니다.'
-      );
+  const handleRegisterCategory = async ({
+    name,
+    description,
+  }: {
+    name: string;
+    description: string;
+  }) => {
+    try {
+      await createDictCategory({ name, description });
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '카테고리가 등록되었습니다.'
+        );
+      }
+      window.location.reload();
+    } catch (error) {
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '카테고리 등록에 실패했습니다.'
+        );
+      }
+      console.error(error);
     }
   };
+  const handleDeleteSelected = async () => {
+    const selectedIds = filteredCategories
+      .filter((cat) => checkedItems[String(cat.id)])
+      .map((cat) => String(cat.id));
 
-  const handleDeleteSelected = () => {
-    if (selectedCount === 0) return;
-    console.log(
-      '선택된 카테고리 삭제:',
-      Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
-    );
-    setCheckedItems({});
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        '선택한 카테고리가 삭제되었습니다.'
-      );
+    if (selectedIds.length === 0) return;
+
+    try {
+      await deleteDictCategories(selectedIds); // string[] 전달
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '선택된 카테고리가 삭제되었습니다.'
+        );
+      }
+      window.location.reload();
+    } catch (error) {
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '카테고리 삭제에 실패했습니다.'
+        );
+      }
+      console.error(error);
     }
   };
-
   const columns = [
     {
       label: (
@@ -153,18 +206,12 @@ export default function DictionaryPage() {
   ];
 
   const renderTableRow = (category: DictCategory, index: number) => {
-    const isChecked = !!checkedItems[category.id];
+    const isChecked = !!checkedItems[String(category.id)];
     const isLast = index === filteredCategories.length - 1;
 
     return (
-      <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-        <td
-          style={{
-            width: CELL_WIDTHS.CHECKBOX,
-            minWidth: CELL_WIDTHS.CHECKBOX,
-            textAlign: 'center',
-          }}
-        >
+      <TableRow key={`${category.id}-${index}`} ref={isLast ? observerRef : undefined}>
+        <td style={{ width: CELL_WIDTHS.CHECKBOX, textAlign: 'center' }}>
           <CheckBox
             size="medium"
             id={`check-${category.id}`}
@@ -173,17 +220,10 @@ export default function DictionaryPage() {
             label=""
           />
         </td>
-        <td
-          style={{
-            width: CELL_WIDTHS.CATEGORY,
-            minWidth: CELL_WIDTHS.CATEGORY,
-            textAlign: 'left',
-            padding: '25.5px 24px',
-          }}
-        >
+        <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
           <StyledLink to={`/dictionary/${category.id}`}>{category.name}</StyledLink>
         </td>
-        <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+        <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
           <StatusWrapper>
             <StatusSummary
               items={[
@@ -194,27 +234,13 @@ export default function DictionaryPage() {
             />
           </StatusWrapper>
         </td>
-        <td
-          style={{
-            width: CELL_WIDTHS.DOCUMENT_COUNT,
-            minWidth: CELL_WIDTHS.DOCUMENT_COUNT,
-            textAlign: 'center',
-          }}
-        >
+        <td style={{ width: CELL_WIDTHS.DOCUMENT_COUNT, textAlign: 'center' }}>
           {category.documentCount}
         </td>
-        <td
-          style={{
-            width: CELL_WIDTHS.LAST_MODIFIED,
-            minWidth: CELL_WIDTHS.LAST_MODIFIED,
-            textAlign: 'left',
-          }}
-        >
+        <td style={{ width: CELL_WIDTHS.LAST_MODIFIED, textAlign: 'left' }}>
           {category.lastModifiedDate}
         </td>
-        <td
-          style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
-        >
+        <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
           <EditIconWrapper>
             <EditIcon onClick={() => handleEdit(category.id)} />
           </EditIconWrapper>
@@ -329,7 +355,7 @@ export default function DictionaryPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1158px;
+  min-width: 1000px;
   overflow-x: auto;
 `;
 
@@ -341,13 +367,13 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1158px;
+  min-width: 1230px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1158px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 `;
@@ -439,8 +465,10 @@ const StyledLink = styled(Link)`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 580px;
+  max-height: 520px;
   overflow-y: auto;
-  border-radius: 8px;
-  background: ${colors.White};
+  td {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
 `;

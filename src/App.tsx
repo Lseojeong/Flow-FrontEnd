@@ -8,14 +8,20 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/reactQuery';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useLocation } from 'react-router-dom';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
-  const checkLoginStatus = useAuthStore((state) => state.checkLoginStatus);
+  const { checkLoginStatus, logout } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
+    if (location.pathname === '/' || location.pathname === '/login') {
+      logout();
+      return;
+    }
     checkLoginStatus();
-  }, [checkLoginStatus]);
+  }, [location.pathname, checkLoginStatus, logout]);
 
   return (
     <>
