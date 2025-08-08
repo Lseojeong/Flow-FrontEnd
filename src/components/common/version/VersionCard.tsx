@@ -28,11 +28,11 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) =>
       <VersionTitle>Version</VersionTitle>
       <VersionButtonContainer>
         <VersionButton
-          $selected={selectedVersionType === 'patch'}
-          onClick={() => handleVersionSelect('patch')}
+          $selected={selectedVersionType === 'major'}
+          onClick={() => handleVersionSelect('major')}
         >
-          <VersionTypeLabel>Patch</VersionTypeLabel>
-          <VersionNumber>{versionOptions.patch}</VersionNumber>
+          <VersionTypeLabel>Major</VersionTypeLabel>
+          <VersionNumber>{versionOptions.major}</VersionNumber>
         </VersionButton>
         <VersionButton
           $selected={selectedVersionType === 'minor'}
@@ -42,11 +42,11 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) =>
           <VersionNumber>{versionOptions.minor}</VersionNumber>
         </VersionButton>
         <VersionButton
-          $selected={selectedVersionType === 'major'}
-          onClick={() => handleVersionSelect('major')}
+          $selected={selectedVersionType === 'patch'}
+          onClick={() => handleVersionSelect('patch')}
         >
-          <VersionTypeLabel>Major</VersionTypeLabel>
-          <VersionNumber>{versionOptions.major}</VersionNumber>
+          <VersionTypeLabel>Patch</VersionTypeLabel>
+          <VersionNumber>{versionOptions.patch}</VersionNumber>
         </VersionButton>
       </VersionButtonContainer>
       <CurrentVersionText>현재 버전: {currentVersion}</CurrentVersionText>
