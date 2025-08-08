@@ -16,6 +16,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   placeholder = '프롬프트를 입력해주세요(ex. 답변은 존댓말로 공손하고 친절하게 작성해)',
   maxLength = 300,
   label = '프롬프트',
+  defaultValue,
 }) => {
   const [internalValue, setInternalValue] = useState(value || '');
   const [isFocused, setIsFocused] = useState(false);
@@ -38,21 +39,25 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   };
 
   const getCounterColor = (length: number) => {
-    if (length >= 290) return COUNTER_COLORS.CRITICAL; // 290자 이상
-    if (length >= 250) return COUNTER_COLORS.WARNING; // 250자 이상
+    if (length >= 290) return COUNTER_COLORS.CRITICAL;
+    if (length >= 250) return COUNTER_COLORS.WARNING;
     return COUNTER_COLORS.NORMAL;
   };
 
   const handleReset = () => {
-    setInternalValue('');
-    onChange?.('');
+    const resetValue = defaultValue || '';
+    setInternalValue(resetValue);
+    onChange?.(resetValue);
   };
 
   return (
     <Container>
       <LabelRow>
         <Label>{label}</Label>
-        <ResetButton onClick={handleReset} disabled={!currentValue}>
+        <ResetButton
+          onClick={handleReset}
+          disabled={!currentValue || currentValue === defaultValue}
+        >
           <ResetIcon />
         </ResetButton>
       </LabelRow>

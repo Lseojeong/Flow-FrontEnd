@@ -4,4 +4,5 @@ export interface PromptInputProps {
   placeholder?: string;
   maxLength?: number;
   label?: string;
+  defaultValue?: string;
 }
