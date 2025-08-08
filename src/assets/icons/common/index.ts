@@ -10,6 +10,7 @@ import CompletedIcon from './completed.svg?react';
 import ProcessingIcon from './processing.svg?react';
 import FailIcon from './fail.svg?react';
 import ErrorIcon from './error.svg?react';
+import WarningIcon from './warning.svg?react';
 
 export {
   ArrowIcon,
@@ -24,4 +25,5 @@ export {
   ProcessingIcon,
   FailIcon,
   ErrorIcon,
+  WarningIcon,
 };
