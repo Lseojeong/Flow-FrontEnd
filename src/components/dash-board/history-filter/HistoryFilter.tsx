@@ -4,7 +4,8 @@ import { colors, fontWeight } from '@/styles/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
-import { HistoryFilterProps, HistoryMenu, Category } from './HistoryFilter.types';
+import { HistoryFilterProps } from './HistoryFilter.types';
+import { HistoryMenu, Category } from '@/apis/dash-board/types';
 import { MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
 import { useHistoryFilterMenu } from '@/apis/dash-board/query';
 

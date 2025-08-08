@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 
 import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
@@ -13,30 +14,51 @@ import DocsUploadModal from '@/components/modal/upload-modal/DocsUploadModal';
 import DocsEditModal from '@/components/modal/upload-edit-modal/DocsEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
+import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
 import { StatusItemData } from '@/components/common/status/Status.types';
 import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
+import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getPaginatedFilesData } from '@/pages/mock/dictMock';
+
+const menuItems = [...commonMenuItems, ...settingsMenuItems];
+
+const TABLE_COLUMNS = [
+  { label: '번호', width: '72px', align: 'left' as const },
+  { label: '파일명', width: '318px', align: 'left' as const },
+  { label: '학습 상태', width: '110px', align: 'left' as const },
+  { label: '관리자', width: '150px', align: 'left' as const },
+  { label: '등록일', width: '149px', align: 'left' as const },
+  { label: '수정일', width: '148px', align: 'left' as const },
+  { label: '파일 다운로드', width: '120px', align: 'left' as const },
+  { label: ' ', width: '95px', align: 'left' as const },
+];
+
+const CELL_WIDTHS = {
+  NUMBER: '72px',
+  FILENAME: '318px',
+  STATUS: '110px',
+  MANAGER: '150px',
+  REGISTERED_AT: '149px',
+  UPDATED_AT: '148px',
+  DOWNLOAD: '120px',
+  ACTIONS: '95px',
+} as const;
+
 interface EditTargetFile {
   title: string;
   version: string;
 }
 
-const menuItems = [...commonMenuItems, ...settingsMenuItems];
-
 export default function DocsDetailPage() {
   const { docId } = useParams();
 
-  const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
-    fetchFn: (page, size) => getPaginatedFilesData(page, size),
-    pageSize: 5,
-  });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
@@ -45,7 +67,21 @@ export default function DocsDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
+  const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
+    fetchFn: (page, size) => getPaginatedFilesData(page, size),
+    pageSize: 5,
+  });
+
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+
   const detailData = dictMockData.find((item) => item.id.toString() === docId);
+
+  const filteredFiles = useMemo(() => {
+    if (!detailData) return [];
+    return detailData.files.filter((file) =>
+      file.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
+    );
+  }, [detailData, debouncedSearchKeyword]);
 
   if (!detailData) {
     return <NoData>데이터가 없습니다.</NoData>;
@@ -55,21 +91,6 @@ export default function DocsDetailPage() {
     { type: 'Completed', count: detailData.status.completed },
     { type: 'Processing', count: detailData.status.processing },
     { type: 'Fail', count: detailData.status.fail },
-  ];
-
-  const filteredFiles = detailData.files.filter((file) =>
-    file.name.toLowerCase().includes(searchKeyword.toLowerCase())
-  );
-
-  const columns = [
-    { label: '번호', width: '48px', align: 'left' as const },
-    { label: '파일명', width: '280px', align: 'left' as const },
-    { label: '상태', width: '120px', align: 'left' as const },
-    { label: '관리자', width: '148px', align: 'left' as const },
-    { label: '등록일', width: '157px', align: 'left' as const },
-    { label: '수정일', width: '159px', align: 'left' as const },
-    { label: '파일 다운로드', width: '100px', align: 'left' as const },
-    { label: ' ', width: '80px', align: 'left' as const },
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,27 +128,102 @@ export default function DocsDetailPage() {
     setEditTargetFile(null);
   };
 
-  const handleEditModalSubmit = (_data: {
-    title: string;
-    description: string;
-    version: string;
-  }) => {
-    console.log('수정된 파일 데이터:', _data);
+  const handleEditModalSubmit = () => {
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
+    }
     setIsEditModalOpen(false);
     setEditTargetFile(null);
   };
 
-  const handleUploadModalSubmit = (_data: {
-    title: string;
-    description: string;
-    version: string;
-  }) => {
-    console.log('업로드된 PDF:', _data);
+  const handleUploadModalSubmit = () => {
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!('파일이 등록되었습니다.');
+    }
     setIsCsvModalOpen(false);
   };
 
   const handleFileDetailClose = () => {
     setSelectedFile(null);
+  };
+
+  const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
+    <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
+      <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
+        {index + 1}
+      </td>
+      <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
+        <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+      </ScrollableCell>
+      <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+        <StatusWrapper>
+          <StatusBadge status={file.status}>{file.status}</StatusBadge>
+        </StatusWrapper>
+      </td>
+      <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
+        {file.manager}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.REGISTERED_AT,
+          minWidth: CELL_WIDTHS.REGISTERED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.registeredAt}
+      </td>
+      <td
+        style={{
+          width: CELL_WIDTHS.UPDATED_AT,
+          minWidth: CELL_WIDTHS.UPDATED_AT,
+          textAlign: 'left',
+        }}
+      >
+        {file.updatedAt}
+      </td>
+      <td
+        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'left' }}
+      >
+        <DownloadIconWrapper>
+          <DownloadIcon />
+        </DownloadIconWrapper>
+      </td>
+      <td
+        style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+      >
+        <ActionButtons>
+          <ActionButton onClick={() => handleEditFile(file)}>
+            <EditIcon />
+          </ActionButton>
+          <ActionButton onClick={() => handleDeleteFile(file.name)}>
+            <DeleteIcon />
+          </ActionButton>
+        </ActionButtons>
+      </td>
+    </TableRow>
+  );
+
+  const renderEmptyState = () => (
+    <EmptyRow>
+      <EmptyCell colSpan={8}>
+        <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+      </EmptyCell>
+    </EmptyRow>
+  );
+
+  const renderFileList = () => {
+    if (searchKeyword.trim().length > 0) {
+      return filteredFiles.length === 0
+        ? renderEmptyState()
+        : filteredFiles.map((file, index) => renderFileRow(file, index));
+    }
+
+    return paginatedFiles.length === 0
+      ? renderEmptyState()
+      : paginatedFiles.map((file, index) => {
+          const isLast = index === paginatedFiles.length - 1;
+          return renderFileRow(file, index, isLast);
+        });
   };
 
   return (
@@ -156,7 +252,25 @@ export default function DocsDetailPage() {
 
           <InfoBox>
             <InfoItemColumn>
-              <Label>상태:</Label>
+              <LabelContainer>
+                <Label>파일 현황:</Label>
+                <Tooltip
+                  content="업로드한 파일의 상태를 종합한 내용입니다."
+                  description={
+                    <>
+                      Completed는 학습 및 등록 완료,
+                      <br />
+                      Processing은 파일 처리 중,
+                      <br />
+                      Fail은 학습 실패를 의미합니다.
+                    </>
+                  }
+                >
+                  <InfoIcon>
+                    <InformationIcon />
+                  </InfoIcon>
+                </Tooltip>
+              </LabelContainer>
               <Value>
                 <StatusSummary items={statusItems} />
               </Value>
@@ -193,100 +307,13 @@ export default function DocsDetailPage() {
             <TableHeaderSection>
               <TableLayout>
                 <thead>
-                  <TableHeader columns={columns} />
+                  <TableHeader columns={TABLE_COLUMNS} />
                 </thead>
               </TableLayout>
             </TableHeaderSection>
             <TableScrollWrapper>
               <TableLayout>
-                <tbody>
-                  {searchKeyword.trim().length > 0 ? (
-                    filteredFiles.length === 0 ? (
-                      <EmptyRow>
-                        <EmptyCell colSpan={8}>
-                          <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-                        </EmptyCell>
-                      </EmptyRow>
-                    ) : (
-                      filteredFiles.map((file, index) => (
-                        <TableRow key={`filtered-${file.id}`}>
-                          <td style={{ width: '73px', textAlign: 'center' }}>{index + 1}</td>
-                          <ScrollableCell maxWidth="320px" align="left">
-                            <StyledLink onClick={() => handleFileClick(file)}>
-                              {file.name}
-                            </StyledLink>
-                          </ScrollableCell>
-                          <td style={{ width: '120px', textAlign: 'left' }}>
-                            <StatusWrapper>
-                              <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                            </StatusWrapper>
-                          </td>
-                          <td style={{ width: '148px', textAlign: 'left' }}>{file.manager}</td>
-                          <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
-                          <td style={{ width: '157px', textAlign: 'left' }}>{file.updatedAt}</td>
-                          <td style={{ width: '159px', textAlign: 'center' }}>
-                            <DownloadIconWrapper>
-                              <DownloadIcon />
-                            </DownloadIconWrapper>
-                          </td>
-                          <td style={{ width: '80px', textAlign: 'center' }}>
-                            <ActionButtons>
-                              <ActionButton onClick={() => handleEditFile(file)}>
-                                <EditIcon />
-                              </ActionButton>
-                              <ActionButton onClick={() => handleDeleteFile(file.name)}>
-                                <DeleteIcon />
-                              </ActionButton>
-                            </ActionButtons>
-                          </td>
-                        </TableRow>
-                      ))
-                    )
-                  ) : paginatedFiles.length === 0 ? (
-                    <EmptyRow>
-                      <EmptyCell colSpan={8}>
-                        <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-                      </EmptyCell>
-                    </EmptyRow>
-                  ) : (
-                    paginatedFiles.map((file, index) => {
-                      const isLast = index === paginatedFiles.length - 1;
-                      return (
-                        <TableRow key={`scroll-${file.id}`} ref={isLast ? observerRef : undefined}>
-                          <td style={{ width: '73px', textAlign: 'center' }}>{index + 1}</td>
-                          <ScrollableCell maxWidth="320px" align="left">
-                            <StyledLink onClick={() => handleFileClick(file)}>
-                              {file.name}
-                            </StyledLink>
-                          </ScrollableCell>
-                          <td style={{ width: '120px', textAlign: 'left' }}>
-                            <StatusWrapper>
-                              <StatusBadge status={file.status}>{file.status}</StatusBadge>
-                            </StatusWrapper>
-                          </td>
-                          <td style={{ width: '148px', textAlign: 'left' }}>{file.manager}</td>
-                          <td style={{ width: '140px', textAlign: 'left' }}>{file.registeredAt}</td>
-                          <td style={{ width: '157px', textAlign: 'left' }}>{file.updatedAt}</td>
-                          <td style={{ width: '159px', textAlign: 'center' }}>
-                            <DownloadIconWrapper>
-                              <DownloadIcon />
-                            </DownloadIconWrapper>
-                          </td>
-                          <td style={{ width: '80px', textAlign: 'center' }}>
-                            <ActionButtons>
-                              <ActionButton onClick={() => handleEditFile(file)}>
-                                <EditIcon />
-                              </ActionButton>
-                              <ActionButton onClick={() => handleDeleteFile(file.name)}>
-                                <DeleteIcon />
-                              </ActionButton>
-                            </ActionButtons>
-                          </td>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </tbody>
+                <tbody>{renderFileList()}</tbody>
               </TableLayout>
             </TableScrollWrapper>
           </TableWrapper>
@@ -326,7 +353,7 @@ export default function DocsDetailPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1000px;
+  min-width: 1158px;
   overflow-x: auto;
 `;
 
@@ -338,13 +365,13 @@ const SideBarWrapper = styled.div`
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
   background-color: ${colors.background};
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;
@@ -399,6 +426,30 @@ const InfoItemColumn = styled(InfoItem)`
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+`;
+
+const LabelContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+`;
+
+const InfoIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 4px;
+  color: ${colors.Light_active};
+
+  &:hover {
+    color: ${colors.Normal};
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 const Label = styled.div`

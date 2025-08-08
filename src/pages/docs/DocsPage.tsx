@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
@@ -70,21 +71,26 @@ export default function DocsPage() {
 
   const existingCategoryNames = dictMockData.map((item) => item.name);
 
-  const isDateInRange = (dateStr: string) => {
-    if (!startDate && !endDate) return true;
-    const date = new Date(dateStr);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    return (!start || date >= start) && (!end || date <= end);
-  };
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
-  const filteredCategories = categories.filter((item) => {
-    const matchesName = item.name.toLowerCase().includes(searchKeyword.toLowerCase());
-    const matchesDept =
-      !selectedDepartment || item.departments?.some((d) => d.departmentName === selectedDepartment);
-    const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
-    return matchesName && matchesDept && matchesDate;
-  });
+  const filteredCategories = useMemo(() => {
+    const isDateInRange = (dateStr: string) => {
+      if (!startDate && !endDate) return true;
+      const date = new Date(dateStr);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      return (!start || date >= start) && (!end || date <= end);
+    };
+
+    return categories.filter((item) => {
+      const matchesName = item.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase());
+      const matchesDept =
+        !selectedDepartment ||
+        item.departments?.some((d) => d.departmentName === selectedDepartment);
+      const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
+      return matchesName && matchesDept && matchesDate;
+    });
+  }, [categories, debouncedSearchKeyword, selectedDepartment, startDate, endDate]);
 
   const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
   const isAllSelected =
@@ -171,7 +177,13 @@ export default function DocsPage() {
 
     return (
       <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-        <td style={{ width: CELL_WIDTHS.CHECKBOX, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.CHECKBOX,
+            minWidth: CELL_WIDTHS.CHECKBOX,
+            textAlign: 'center',
+          }}
+        >
           <CheckBox
             size="medium"
             id={`check-${category.id}`}
@@ -180,10 +192,12 @@ export default function DocsPage() {
             label=""
           />
         </td>
-        <td style={{ width: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}>
-          <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
+        <td
+          style={{ width: CELL_WIDTHS.CATEGORY, minWidth: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}
+        >
+          <StyledLink to={`/docs/${category.id}`}>{category.name}</StyledLink>
         </td>
-        <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+        <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
           <StatusWrapper>
             <StatusSummary
               items={[
@@ -194,7 +208,13 @@ export default function DocsPage() {
             />
           </StatusWrapper>
         </td>
-        <td style={{ width: CELL_WIDTHS.DOCUMENT_COUNT, textAlign: 'center' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.DOCUMENT_COUNT,
+            minWidth: CELL_WIDTHS.DOCUMENT_COUNT,
+            textAlign: 'center',
+          }}
+        >
           {category.documentCount}
         </td>
         <ScrollableCell
@@ -204,10 +224,19 @@ export default function DocsPage() {
         >
           <DepartmentTagList departments={category.departments ?? []} />
         </ScrollableCell>
-        <td style={{ width: CELL_WIDTHS.LAST_MODIFIED, textAlign: 'left', paddingLeft: ' 34px' }}>
+        <td
+          style={{
+            width: CELL_WIDTHS.LAST_MODIFIED,
+            minWidth: CELL_WIDTHS.LAST_MODIFIED,
+            textAlign: 'left',
+            paddingLeft: ' 34px',
+          }}
+        >
           {category.lastModifiedDate}
         </td>
-        <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+        <td
+          style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
+        >
           <EditIconWrapper>
             <EditIcon onClick={() => handleEdit(category.id)} />
           </EditIconWrapper>
@@ -329,7 +358,7 @@ export default function DocsPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1000px;
+  min-width: 1158px;
   overflow-x: auto;
 `;
 
@@ -340,14 +369,14 @@ const SideBarWrapper = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1200px;
+  max-width: 1158px;
   margin: 0 auto;
   width: 100%;
 `;
 
 const Content = styled.div`
   flex: 1;
-  min-width: 1230px;
+  min-width: 1158px;
   padding: 0 36px;
 `;
 
@@ -419,8 +448,10 @@ const StyledLink = styled(Link)`
 `;
 
 const TableScrollWrapper = styled.div`
-  max-height: 520px;
+  max-height: 580px;
   overflow-y: auto;
+  border-radius: 8px;
+  background: ${colors.White};
 `;
 
 const EmptyMessage = styled.div`

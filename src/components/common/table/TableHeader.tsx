@@ -8,7 +8,10 @@ export const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
     <StyledThead>
       <tr>
         {columns.map((col, idx) => (
-          <th key={idx} style={{ width: col.width, textAlign: col.align || 'left' }}>
+          <th
+            key={idx}
+            style={{ width: col.width, minWidth: col.width, textAlign: col.align || 'left' }}
+          >
             {col.label}
           </th>
         ))}
@@ -29,6 +32,7 @@ const StyledThead = styled.thead`
     font-weight: ${fontWeight.Medium};
     white-space: nowrap;
     overflow: hidden;
+    max-width: 0;
   }
 
   th:first-child {

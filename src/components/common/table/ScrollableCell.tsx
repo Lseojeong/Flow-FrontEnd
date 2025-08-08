@@ -34,14 +34,17 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
 };
 
 const CellContainer = styled.td<{ $align: string; $width: string }>`
-  width: ${({ $width }) => $width};
-  max-width: ${({ $width }) => $width};
+  width: ${({ $width }) => $width} !important;
+  max-width: ${({ $width }) => $width} !important;
+  min-width: ${({ $width }) => $width} !important;
   text-align: ${({ $align }) => $align};
   padding: 8px 24px;
   color: ${colors.Black};
   font-weight: 400;
   font-size: 14px;
   border-bottom: 1px solid #f2f2f2;
+  flex-shrink: 0;
+  box-sizing: border-box;
 `;
 
 const ScrollableContent = styled.div<{ $align: string }>`

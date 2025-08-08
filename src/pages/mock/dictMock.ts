@@ -1,6 +1,6 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
-import { HistoryFilterData } from '@/components/dash-board/history-filter/HistoryFilter.types';
+import { HistoryMenu } from '@/apis/dash-board/types';
 import { User } from '@/types/usersetting.types';
 import { DepartmentSetting } from '@/types/departmentsetting.types';
 
@@ -210,7 +210,7 @@ export const historyMockData: HistoryData[] = Array(40)
   .fill(null)
   .flatMap(() => baseData);
 
-export const historyFilterMockData: HistoryFilterData[] = [
+export const historyFilterMockData: HistoryMenu[] = [
   {
     menu: '용어사전',
     categoryList: [
