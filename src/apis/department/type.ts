@@ -46,3 +46,11 @@ export interface CreateDepartmentsResponse {
     }>;
   };
 }
+
+export interface DuplicateDepartmentError {
+  code: string;
+  message: string;
+  result: {
+    duplicateDepartmentNames: string[];
+  };
+}

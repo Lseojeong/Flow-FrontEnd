@@ -7,7 +7,6 @@ import DepartmentTag from '@/components/department-setting/department-tag/Depart
 import DepartmentInput from '@/components/department-setting/input/DepartmentInput';
 import { DepartmentModalProps } from './DepartmentModal.types';
 import { useCreateDepartments } from '@/apis/department/mutation';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const MAX_DEPARTMENT_TAGS = 10;
 
@@ -15,7 +14,6 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
   const [departments, setDepartments] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string>('');
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const createMutation = useCreateDepartments();
 
@@ -66,10 +64,28 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
       (window as { showToast?: (_message: string) => void }).showToast?.('부서가 생성되었습니다.');
       onClose();
     } catch (e) {
-      const message =
-        (e as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '부서 생성에 실패했습니다.';
-      setErrorToastMessage(message);
+      const errorResponse = e as {
+        response?: {
+          data?: {
+            code?: string;
+            message?: string;
+            result?: { duplicateDepartmentNames?: string[] };
+          };
+        };
+      };
+      const errorData = errorResponse?.response?.data;
+
+      if (errorData?.code === 'DEPARTMENT400' && errorData?.result?.duplicateDepartmentNames) {
+        const duplicateNames = errorData.result.duplicateDepartmentNames;
+        const message = `다음 부서명이 이미 존재합니다: ${duplicateNames.join(', ')}`;
+        setError(message);
+
+        const filteredDepartments = departments.filter((dept) => !duplicateNames.includes(dept));
+        setDepartments(filteredDepartments);
+      } else {
+        const message = errorData?.message || '부서 생성에 실패했습니다.';
+        setError(message);
+      }
     }
   };
 
@@ -129,12 +145,6 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
           </Button>
         </ModalFooter>
       </ModalContent>
-
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
-      )}
     </ModalOverlay>
   );
 };
@@ -219,19 +229,6 @@ const ModalFooter = styled.div`
   gap: 12px;
   justify-content: center;
   padding: 0 24px 24px 24px;
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1100;
-  pointer-events: none;
 `;
 
 export default DepartmentModal;
