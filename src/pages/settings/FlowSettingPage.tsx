@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -15,44 +15,38 @@ import {
   TestChat,
   SpaceidSelect,
 } from '@/components/flow-setting/index';
-import { SpaceidOption } from '@/components/flow-setting/spae-id/SpaceIdSelect.types';
-import { mockData } from '@/pages/mock/dictMock';
+import { useSpaceList } from '@/apis/spaceid/query';
+import { useFlowSetting } from '@/apis/flow-setting/query';
+import { useUpdateFlowSetting } from '@/apis/flow-setting/mutation';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function FlowSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('flow-settings');
+  const [selectedToken, setSelectedToken] = useState<string>('');
 
-  const [selectedToken, setSelectedToken] = useState<string>('265262');
-  const [spaceOptions, setSpaceOptions] = useState<SpaceidOption[]>([]);
-  const [isLoadingSpaces, setIsLoadingSpaces] = useState(false);
+  const { data: spaceResponse, isLoading: isLoadingSpaces } = useSpaceList();
+
+  const spaceOptions = useMemo(
+    () =>
+      spaceResponse?.result.spaceList.map((space) => ({
+        value: space.spaceId.toString(),
+        label: `${space.spaceName} (${space.spaceId})`,
+      })) || [],
+    [spaceResponse]
+  );
 
   useEffect(() => {
-    const fetchSpaces = async () => {
-      setIsLoadingSpaces(true);
-      try {
-        // TODO: 실제 API 호출로 대체
-        await new Promise((resolve) => setTimeout(resolve, 500));
+    if (spaceOptions.length > 0 && !selectedToken) {
+      setSelectedToken(spaceOptions[0].value);
+    }
+  }, [spaceOptions, selectedToken]);
 
-        const options = mockData.map((space) => ({
-          value: space.spaceId.toString(),
-          label: `${space.spaceName} (${space.spaceId})`,
-        }));
+  const { data: settingResponse, isLoading: isLoadingSettings } = useFlowSetting(
+    selectedToken ? parseInt(selectedToken, 10) : 0
+  );
 
-        setSpaceOptions(options);
-
-        if (options.length > 0) {
-          setSelectedToken(options[0].value);
-        }
-      } catch (error) {
-        console.error('Failed to fetch spaces:', error);
-      } finally {
-        setIsLoadingSpaces(false);
-      }
-    };
-
-    fetchSpaces();
-  }, []);
+  const updateFlowSettingMutation = useUpdateFlowSetting();
 
   const [temperature, setTemperature] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(256);
@@ -60,6 +54,17 @@ export default function FlowSettingPage() {
   const [topP, setTopP] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [isTestLoading, setIsTestLoading] = useState(false);
+
+  useEffect(() => {
+    if (settingResponse?.result) {
+      const { temperature, maxToken, topK, topP, prompt } = settingResponse.result;
+      setTemperature(temperature);
+      setMaxTokens(maxToken);
+      setTopK(topK);
+      setTopP(topP);
+      setPrompt(prompt);
+    }
+  }, [settingResponse]);
 
   const handleTopKChange = (value: number) => {
     setTopK(value);
@@ -70,21 +75,68 @@ export default function FlowSettingPage() {
   };
 
   const handleParameterReset = () => {
-    setTemperature(0.9);
-    setMaxTokens(256);
-    setTopK(5);
-    setTopP(0);
+    if (settingResponse?.result) {
+      const { temperature, maxToken, topK, topP, prompt } = settingResponse.result;
+      setTemperature(temperature);
+      setMaxTokens(maxToken);
+      setTopK(topK);
+      setTopP(topP);
+      setPrompt(prompt);
+    }
   };
 
   const isParameterDefault = () => {
-    return temperature === 0.9 && maxTokens === 256 && topK === 5 && topP === 0;
+    if (!settingResponse?.result) return true;
+    const {
+      temperature: defaultTemp,
+      maxToken: defaultMax,
+      topK: defaultTopK,
+      topP: defaultTopP,
+      prompt: defaultPrompt,
+    } = settingResponse.result;
+    return (
+      temperature === defaultTemp &&
+      maxTokens === defaultMax &&
+      topK === defaultTopK &&
+      topP === defaultTopP &&
+      prompt === defaultPrompt
+    );
+  };
+
+  const handleApply = async () => {
+    if (!selectedToken) return;
+
+    try {
+      await updateFlowSettingMutation.mutateAsync({
+        spaceId: parseInt(selectedToken, 10),
+        data: {
+          temperature,
+          maxToken: maxTokens,
+          topK,
+          topP,
+          prompt,
+        },
+      });
+
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          'Flow 설정이 성공적으로 업데이트되었습니다.'
+        );
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Flow 설정 업데이트에 실패했습니다.';
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(errorMessage);
+      }
+    }
   };
 
   const handleTestRun = async (question: string): Promise<string> => {
     setIsTestLoading(true);
     try {
-      // TODO: 실제 API 호출로 대체
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // 시뮬레이션
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return `프롬프트: "${prompt}"\n\n질문: ${question}\n\n답변: 이것은 테스트 답변입니다. 설정된 파라미터(temperature: ${temperature}, max_tokens: ${maxTokens}, top_k: ${topK}, top_p: ${topP})를 사용하여 생성된 결과입니다.`;
     } catch (error) {
       console.error('Test execution error:', error);
@@ -120,18 +172,31 @@ export default function FlowSettingPage() {
             options={spaceOptions}
             isLoading={isLoadingSpaces}
           >
-            <Button variant="dark" size="medium">
+            <Button
+              variant="dark"
+              size="medium"
+              onClick={handleParameterReset}
+              disabled={isParameterDefault() || isLoadingSettings}
+            >
               초기화
             </Button>
-            <Button variant="primary" size="medium">
-              적용하기
+            <Button
+              variant="primary"
+              size="medium"
+              onClick={handleApply}
+              disabled={updateFlowSettingMutation.isPending || isLoadingSettings}
+            >
+              {updateFlowSettingMutation.isPending ? '적용 중...' : '적용하기'}
             </Button>
           </SpaceidSelect>
 
           <ParameterSection>
             <ParameterHeader>
               <ParameterTitle>파라미터</ParameterTitle>
-              <ParameterResetButton onClick={handleParameterReset} disabled={isParameterDefault()}>
+              <ParameterResetButton
+                onClick={handleParameterReset}
+                disabled={isParameterDefault() || isLoadingSettings}
+              >
                 <ResetIcon />
               </ParameterResetButton>
             </ParameterHeader>
@@ -153,7 +218,7 @@ export default function FlowSettingPage() {
                   min={0}
                   max={1}
                   value={temperature}
-                  onChange={setTemperature}
+                  onChange={isLoadingSettings ? undefined : setTemperature}
                   showValue={true}
                 />
               </SliderItem>
@@ -224,7 +289,11 @@ export default function FlowSettingPage() {
           </ParameterSection>
 
           <PromptSection>
-            <PromptInput value={prompt} onChange={setPrompt} />
+            <PromptInput
+              value={prompt}
+              onChange={setPrompt}
+              defaultValue={settingResponse?.result?.prompt || ''}
+            />
           </PromptSection>
 
           <TestSection>
