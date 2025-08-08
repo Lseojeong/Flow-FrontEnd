@@ -6,7 +6,7 @@ import { FilterIcon } from '@/assets/icons/dash-board/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { HistoryFilterProps, HistoryMenu, Category } from './HistoryFilter.types';
 import { MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
-import { historyFilterMockData } from '@/pages/mock/dictMock';
+import { useHistoryFilterMenu } from '@/apis/dash-board/query';
 
 export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,7 +14,9 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
-  const menuList = historyFilterMockData;
+  const { data: menuData, isLoading, error } = useHistoryFilterMenu();
+
+  const menuList = menuData?.result?.menuList || [];
 
   const handleMenuSelect = (menu: string) => {
     setSelectedMenu(menu);
@@ -90,6 +92,28 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
 
   const isConfirmDisabled = !selectedMenu || !selectedCategory || !selectedFile;
 
+  if (isLoading) {
+    return (
+      <FilterWrapper>
+        <FilterButton disabled>
+          <FilterIcon />
+          <span>필터</span>
+        </FilterButton>
+      </FilterWrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <FilterWrapper>
+        <FilterButton disabled>
+          <FilterIcon />
+          <span>필터</span>
+        </FilterButton>
+      </FilterWrapper>
+    );
+  }
+
   return (
     <FilterWrapper>
       <FilterButton onClick={() => setIsOpen((prev) => !prev)}>
@@ -162,9 +186,15 @@ const FilterButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: ${colors.Normal};
     color: ${colors.Normal};
+  }
+
+  &:disabled {
+    background: ${colors.Light};
+    color: ${colors.BoxText};
+    cursor: not-allowed;
   }
 
   svg {

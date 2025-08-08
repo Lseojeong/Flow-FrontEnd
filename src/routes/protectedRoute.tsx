@@ -7,7 +7,11 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return null;
+  }
 
   if (!isLoggedIn) {
     return <Navigate to="/error/access-denied" replace />;

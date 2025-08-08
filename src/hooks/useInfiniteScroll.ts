@@ -28,23 +28,23 @@ export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
 
     try {
       const response = await fetchFn(cursor);
-      if (response.code.includes('200')) {
+      if (response.code === 'CATEGORY200') {
         const { historyList, pagination, nextCursor } = response.result;
         setData((prev) => [...prev, ...historyList]);
         setCursor(nextCursor);
         setHasMore(!pagination.last && !!nextCursor);
       } else {
-        console.error(' Unexpected response code:', response.code);
+        console.error('Unexpected response code:', response.code);
       }
     } catch (error) {
-      console.error(' Infinite scroll fetch error:', error);
+      console.error('Infinite scroll fetch error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchFn, cursor, hasMore, isLoading]);
+  }, [cursor, hasMore, isLoading, fetchFn]);
 
   useEffect(() => {
-    if (data.length === 0 && !isLoading) {
+    if (cursor === initialCursor && !isLoading) {
       loadMore();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,10 +66,19 @@ export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
     return () => observer.disconnect();
   }, [data, hasMore, isLoading, loadMore]);
 
+  const reset = () => {
+    setData([]);
+    setCursor(initialCursor);
+    setHasMore(true);
+    setIsLoading(false);
+  };
+
   return {
     data,
     observerRef,
     isLoading,
     hasMore,
+    reset,
+    loadMore,
   };
 };
