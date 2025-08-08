@@ -4,6 +4,8 @@ import {
   DepartmentSettingListResponse,
   CreateDepartmentsRequest,
   CreateDepartmentsResponse,
+  UpdateDepartmentRequest,
+  UpdateDepartmentResponse,
 } from './type';
 
 export const getDepartmentList = async (): Promise<DepartmentListResponse> => {
@@ -20,5 +22,12 @@ export const createDepartments = async (
   data: CreateDepartmentsRequest
 ): Promise<CreateDepartmentsResponse> => {
   const res = await axiosInstance.post('/admin/org/depart', data);
+  return res.data;
+};
+
+export const updateDepartment = async (
+  data: UpdateDepartmentRequest
+): Promise<UpdateDepartmentResponse> => {
+  const res = await axiosInstance.put('/admin/org/depart', data);
   return res.data;
 };

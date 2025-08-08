@@ -54,3 +54,18 @@ export interface DuplicateDepartmentError {
     duplicateDepartmentNames: string[];
   };
 }
+
+export interface UpdateDepartmentRequest {
+  departmentId: string;
+  newName: string;
+}
+
+export interface UpdateDepartmentResponse {
+  code: string;
+  message: string;
+  result: {
+    departmentId: string;
+    oldDepartmentName: string;
+    newDepartmentName: string;
+  };
+}

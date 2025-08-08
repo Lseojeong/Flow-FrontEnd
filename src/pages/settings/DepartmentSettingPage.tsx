@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -11,7 +11,9 @@ import { Button } from '@/components/common/button/Button';
 import DepartmentSettingModal from '@/components/department-setting/department-modal/DepartmentModal';
 import { Popup } from '@/components/common/popup/Popup';
 import { useDepartmentSettingList } from '@/apis/department/query';
+import { useUpdateDepartment } from '@/apis/department/mutation';
 import { Loading } from '@/components/common/loading/Loading';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -31,9 +33,11 @@ export default function DepartmentPage() {
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
   const [categoryResolved, setCategoryResolved] = useState(false);
   const [userResolved, setUserResolved] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useDepartmentSettingList();
   const departments = data?.result?.departmentList ?? [];
+  const updateMutation = useUpdateDepartment();
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -41,10 +45,39 @@ export default function DepartmentPage() {
     setEditingName(currentDept.departmentName);
   };
 
-  const handleSave = () => {
-    // TODO: 실제 API 호출로 부서명 수정
-    setEditingIndex(null);
-    setEditingName('');
+  const handleSave = async () => {
+    if (editingIndex === null) return;
+
+    const department = departments[editingIndex];
+    const trimmedName = editingName.trim();
+
+    if (!trimmedName) {
+      // TODO: 에러 처리
+      return;
+    }
+
+    if (trimmedName === department.departmentName) {
+      setEditingIndex(null);
+      setEditingName('');
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        departmentId: department.departmentId,
+        newName: trimmedName,
+      });
+
+      (window as { showToast?: (_message: string) => void }).showToast?.(
+        '부서명이 수정되었습니다.'
+      );
+      setEditingIndex(null);
+      setEditingName('');
+    } catch (e) {
+      const errorResponse = e as { response?: { data?: { message?: string } } };
+      const message = errorResponse?.response?.data?.message || '부서명 수정에 실패했습니다.';
+      setErrorToastMessage(message);
+    }
   };
 
   const handleCancel = () => {
@@ -161,7 +194,7 @@ export default function DepartmentPage() {
           <HeaderSection>
             <PageTitle>부서 설정</PageTitle>
             <DescriptionRow>
-              <Description>Flow의 부서를 설정할 수 있는 어드민 입니다.</Description>
+              <Description>Flow의 부서를 설정할 수 있는 어드민입니다.</Description>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
@@ -196,7 +229,13 @@ export default function DepartmentPage() {
                               autoFocus
                             />
                             <EditButtons>
-                              <SaveButton onClick={handleSave}>저장</SaveButton>
+                              <SaveButton onClick={handleSave} disabled={updateMutation.isPending}>
+                                {updateMutation.isPending ? (
+                                  <Loading size={12} color="white" />
+                                ) : (
+                                  '저장'
+                                )}
+                              </SaveButton>
                               <CancelButton onClick={handleCancel}>취소</CancelButton>
                             </EditButtons>
                           </DepartmentEditCell>
@@ -246,6 +285,12 @@ export default function DepartmentPage() {
         confirmText="삭제"
         disabled={hasWarnings()}
       />
+
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </PageWrapper>
   );
 }
@@ -382,8 +427,13 @@ const SaveButton = styled.button`
   font-weight: ${fontWeight.Medium};
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: ${colors.Normal_active};
+  }
+
+  &:disabled {
+    background-color: ${colors.Disabled};
+    cursor: not-allowed;
   }
 `;
 
@@ -471,4 +521,17 @@ const EmptyCell = styled.td`
 
 const EmptyMessage = styled.p`
   margin-top: 20px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1100;
+  pointer-events: none;
 `;
