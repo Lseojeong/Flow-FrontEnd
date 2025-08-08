@@ -185,7 +185,9 @@ export default function FlowSettingPage() {
               variant="primary"
               size="medium"
               onClick={handleApply}
-              disabled={updateFlowSettingMutation.isPending || isLoadingSettings}
+              disabled={
+                isParameterDefault() || isLoadingSettings || updateFlowSettingMutation.isPending
+              }
             >
               {updateFlowSettingMutation.isPending ? (
                 <Loading size={14} color="white" />
