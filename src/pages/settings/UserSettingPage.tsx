@@ -11,7 +11,8 @@ import DepartmentSelect from '@/components/common/department/DepartmentSelect';
 import { Button } from '@/components/common/button/Button';
 import UserModal from '@/components/user-settiing/user-modal/UserModal';
 import { Popup } from '@/components/common/popup/Popup';
-import { MOCK_DEPARTMENTS, mockUsers } from '@/pages/mock/dictMock';
+import { useUserSetting } from '@/apis/user/query';
+import { Loading } from '@/components/common/loading/Loading';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -24,28 +25,38 @@ const columns = [
 
 export default function UserSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState('user-settings');
-  const [users, setUsers] = useState(mockUsers);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingDepartment, setEditingDepartment] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
+  const { data, isLoading, error, refetch } = useUserSetting();
+
+  const users =
+    data?.result?.departmentList.flatMap((dept) =>
+      dept.admin.map((admin) => ({
+        id: admin.adminId,
+        nickname: admin.name,
+        departmentName: dept.departmentName,
+        createdAt: new Date(admin.createdAt).toLocaleDateString('ko-KR'),
+      }))
+    ) ?? [];
+
+  const departmentOptions =
+    data?.result?.departmentList.map((dept) => ({
+      departmentId: dept.departmentName,
+      departmentName: dept.departmentName,
+    })) ?? [];
+
   const handleEdit = (index: number) => {
     setEditingIndex(index);
-    const currentDept = users[index].departmentName;
-    const deptOption = MOCK_DEPARTMENTS.find((dept) => dept.departmentName === currentDept);
-    setEditingDepartment(deptOption?.departmentId || '');
+    const currentUser = users[index];
+    setEditingDepartment(currentUser.departmentName);
   };
 
-  const handleSave = (index: number) => {
-    const updatedUsers = [...users];
-    const selectedDept = MOCK_DEPARTMENTS.find((dept) => dept.departmentId === editingDepartment);
-    updatedUsers[index] = {
-      ...updatedUsers[index],
-      departmentName: selectedDept?.departmentName || users[index].departmentName,
-    };
-    setUsers(updatedUsers);
+  const handleSave = () => {
+    // TODO: 실제 API 호출로 부서 수정
     setEditingIndex(null);
     setEditingDepartment('');
   };
@@ -62,7 +73,8 @@ export default function UserSettingPage() {
 
   const handleConfirmDelete = () => {
     if (userToDelete) {
-      setUsers(users.filter((user) => user.id !== userToDelete));
+      // TODO: 실제 API 호출로 사용자 삭제
+      console.log('사용자 삭제:', userToDelete);
       setUserToDelete(null);
     }
     setIsDeletePopupOpen(false);
@@ -82,6 +94,52 @@ export default function UserSettingPage() {
     console.log('부서:', department);
     // TODO: 실제 초대 로직 구현
   };
+
+  if (isLoading) {
+    return (
+      <PageWrapper>
+        <SideBarWrapper>
+          <SideBar
+            logoSymbol={symbolTextLogo}
+            menuItems={menuItems}
+            activeMenuId={activeMenuId}
+            onMenuClick={setActiveMenuId}
+          />
+        </SideBarWrapper>
+        <Content>
+          <ContentWrapper>
+            <LoadingContainer>
+              <Loading size={24} color={colors.Normal} />
+              <LoadingText>사용자 목록을 불러오는 중...</LoadingText>
+            </LoadingContainer>
+          </ContentWrapper>
+        </Content>
+      </PageWrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageWrapper>
+        <SideBarWrapper>
+          <SideBar
+            logoSymbol={symbolTextLogo}
+            menuItems={menuItems}
+            activeMenuId={activeMenuId}
+            onMenuClick={setActiveMenuId}
+          />
+        </SideBarWrapper>
+        <Content>
+          <ContentWrapper>
+            <ErrorMessage>
+              {'사용자 목록을 불러오는데 실패했습니다.'}
+              <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
+            </ErrorMessage>
+          </ContentWrapper>
+        </Content>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
@@ -111,47 +169,55 @@ export default function UserSettingPage() {
             <TableLayout>
               <TableHeader columns={columns} />
               <tbody>
-                {users.map((user, index) => (
-                  <TableRow key={index}>
-                    <td style={{ width: '200px', textAlign: 'center' }}>
-                      {user.id}({user.nickname})
-                    </td>
-                    <td style={{ width: '300px', textAlign: 'center' }}>
-                      {editingIndex === index ? (
-                        <DepartmentEditCell>
-                          <StyledDepartmentSelect>
-                            <DepartmentSelect
-                              options={MOCK_DEPARTMENTS}
-                              value={editingDepartment}
-                              onChange={(value) => setEditingDepartment(value || '')}
-                              showAllOption={false}
-                            />
-                          </StyledDepartmentSelect>
-                          <EditButtons>
-                            <SaveButton onClick={() => handleSave(index)}>저장</SaveButton>
-                            <CancelButton onClick={handleCancel}>취소</CancelButton>
-                          </EditButtons>
-                        </DepartmentEditCell>
-                      ) : (
-                        <DepartmentCell onClick={() => handleEdit(index)}>
-                          {user.departmentName}
-                          <ArrowIcon />
-                        </DepartmentCell>
-                      )}
-                    </td>
-                    <td style={{ width: '200px', textAlign: 'center' }}>{user.createdAt}</td>
-                    <td style={{ width: '100px', textAlign: 'center' }}>
-                      <ActionButtons>
-                        <ActionButton onClick={() => handleEdit(index)}>
-                          <EditIcon />
-                        </ActionButton>
-                        <ActionButton onClick={() => handleDelete(user.id)}>
-                          <DeleteIcon />
-                        </ActionButton>
-                      </ActionButtons>
-                    </td>
-                  </TableRow>
-                ))}
+                {users.length === 0 ? (
+                  <EmptyRow>
+                    <EmptyCell colSpan={columns.length}>
+                      <EmptyMessage>등록된 관리자가 없습니다.</EmptyMessage>
+                    </EmptyCell>
+                  </EmptyRow>
+                ) : (
+                  users.map((user, index) => (
+                    <TableRow key={index}>
+                      <td style={{ width: '200px', textAlign: 'center' }}>
+                        {user.id}({user.nickname})
+                      </td>
+                      <td style={{ width: '300px', textAlign: 'center' }}>
+                        {editingIndex === index ? (
+                          <DepartmentEditCell>
+                            <StyledDepartmentSelect>
+                              <DepartmentSelect
+                                options={departmentOptions}
+                                value={editingDepartment}
+                                onChange={(value) => setEditingDepartment(value || '')}
+                                showAllOption={false}
+                              />
+                            </StyledDepartmentSelect>
+                            <EditButtons>
+                              <SaveButton onClick={handleSave}>저장</SaveButton>
+                              <CancelButton onClick={handleCancel}>취소</CancelButton>
+                            </EditButtons>
+                          </DepartmentEditCell>
+                        ) : (
+                          <DepartmentCell onClick={() => handleEdit(index)}>
+                            {user.departmentName}
+                            <ArrowIcon />
+                          </DepartmentCell>
+                        )}
+                      </td>
+                      <td style={{ width: '200px', textAlign: 'center' }}>{user.createdAt}</td>
+                      <td style={{ width: '100px', textAlign: 'center' }}>
+                        <ActionButtons>
+                          <ActionButton onClick={() => handleEdit(index)}>
+                            <EditIcon />
+                          </ActionButton>
+                          <ActionButton onClick={() => handleDelete(user.id)}>
+                            <DeleteIcon />
+                          </ActionButton>
+                        </ActionButtons>
+                      </td>
+                    </TableRow>
+                  ))
+                )}
               </tbody>
             </TableLayout>
           </TableSection>
@@ -331,4 +397,60 @@ const DepartmentCell = styled.div`
   svg {
     color: ${colors.BoxText};
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin-top: 30%;
+`;
+
+const LoadingText = styled.p`
+  font-size: 18px;
+  color: ${colors.BoxText};
+`;
+
+const ErrorMessage = styled.div`
+  font-size: 18px;
+  color: ${colors.BoxText};
+  text-align: center;
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30%;
+`;
+
+const RetryButton = styled.button`
+  padding: 8px 16px;
+  background-color: ${colors.Normal};
+  color: ${colors.White};
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: ${fontWeight.Medium};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${colors.Normal_active};
+  }
+`;
+
+const EmptyRow = styled.tr`
+  height: 100px;
+`;
+
+const EmptyCell = styled.td`
+  text-align: center;
+  color: ${colors.BoxText};
+  font-size: 16px;
+`;
+
+const EmptyMessage = styled.p`
+  margin-top: 20px;
 `;
