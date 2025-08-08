@@ -29,7 +29,6 @@ export const postAdminLogin = async (data: { adminId: string; password: string }
   const res = await axiosInstance.post('/admin/login', data);
   const { accessToken, csrfToken } = res.data.result;
 
-  localStorage.setItem('accessToken', accessToken);
   localStorage.setItem('csrfToken', csrfToken);
 
   return res.data.result;
@@ -45,8 +44,6 @@ export const refreshToken = async () => {
 export const postLogout = async () => {
   const res = await axiosInstance.post('/admin/logout');
 
-  // 로컬스토리지 토큰 제거
-  localStorage.removeItem('accessToken');
   localStorage.removeItem('csrfToken');
 
   return res.data;
