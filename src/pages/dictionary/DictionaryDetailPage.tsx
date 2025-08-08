@@ -24,7 +24,8 @@ import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedFilesData } from '@/pages/mock/dictMock';
+import { getAllDictCategories } from '@/apis/dictcategory/api';
+import type { DictCategory } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -67,8 +68,30 @@ export default function DictionaryDetailPage() {
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
   const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
-    fetchFn: (page, size) => getPaginatedFilesData(page, size),
-    pageSize: 5,
+    fetchFn: async (cursor) => {
+      const response = await getAllDictCategories(cursor);
+      const res = response.data;
+
+      const categoryList = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
+        ...item,
+        status: {
+          completed: item.status?.completed ?? 0,
+          processing: item.status?.processing ?? 0,
+          fail: item.status?.fail ?? 0,
+        },
+      }));
+
+      const pagination = res?.result?.pagination ?? { last: true };
+
+      return {
+        code: res.code,
+        result: {
+          historyList: categoryList,
+          pagination,
+          nextCursor: res?.result?.nextCursor,
+        },
+      };
+    },
   });
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);

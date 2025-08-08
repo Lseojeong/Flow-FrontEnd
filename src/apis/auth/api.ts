@@ -27,6 +27,10 @@ export const verifyInvitationToken = async (invitationToken: string) => {
 // 로그인
 export const postAdminLogin = async (data: { adminId: string; password: string }) => {
   const res = await axiosInstance.post('/admin/login', data);
+  const { accessToken, csrfToken } = res.data.result;
+
+  localStorage.setItem('csrfToken', csrfToken);
+
   return res.data.result;
 };
 
@@ -39,6 +43,9 @@ export const refreshToken = async () => {
 // 로그아웃
 export const postLogout = async () => {
   const res = await axiosInstance.post('/admin/logout');
+
+  localStorage.removeItem('csrfToken');
+
   return res.data;
 };
 
