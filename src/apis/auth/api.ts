@@ -27,8 +27,7 @@ export const verifyInvitationToken = async (invitationToken: string) => {
 // 로그인
 export const postAdminLogin = async (data: { adminId: string; password: string }) => {
   const res = await axiosInstance.post('/admin/login', data);
-  const { accessToken, csrfToken } = res.data.result;
-
+  const { csrfToken } = res.data.result;
   localStorage.setItem('csrfToken', csrfToken);
 
   return res.data.result;
