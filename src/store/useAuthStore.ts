@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAdminProfile, postLogout } from '@/apis/auth/api';
+import { getAdminProfile, postLogout, refreshToken } from '@/apis/auth/api';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -25,7 +25,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await getAdminProfile();
       set({ isLoggedIn: true });
     } catch {
-      set({ isLoggedIn: false });
+      try {
+        await refreshToken();
+        await getAdminProfile();
+        set({ isLoggedIn: true });
+      } catch {
+        set({ isLoggedIn: false });
+      }
     } finally {
       set({ isLoading: false, hasChecked: true });
     }
@@ -35,7 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await postLogout?.();
     } finally {
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('csrfToken');
       set({ isLoggedIn: false, hasChecked: false });
     }
   },
