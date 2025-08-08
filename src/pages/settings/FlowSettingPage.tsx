@@ -9,6 +9,7 @@ import { Button } from '@/components/common/button/Button';
 import { InformationIcon } from '@/assets/icons/settings/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { Loading } from '@/components/common/loading/Loading';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 import {
   Parameter,
   Tooltip,
@@ -55,6 +56,7 @@ export default function FlowSettingPage() {
   const [topP, setTopP] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [isTestLoading, setIsTestLoading] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (settingResponse?.result) {
@@ -128,9 +130,7 @@ export default function FlowSettingPage() {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         'Flow 설정 업데이트에 실패했습니다.';
-      if ((window as { showToast?: (_message: string) => void }).showToast) {
-        (window as { showToast?: (_message: string) => void }).showToast!(errorMessage);
-      }
+      setErrorToastMessage(errorMessage);
     }
   };
 
@@ -307,6 +307,11 @@ export default function FlowSettingPage() {
           <Footer />
         </ContentWrapper>
       </Content>
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </PageWrapper>
   );
 }
@@ -462,4 +467,17 @@ const InfoIcon = styled.div`
 
 const Footer = styled.footer`
   height: 40px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;

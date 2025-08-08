@@ -39,8 +39,8 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   };
 
   const getCounterColor = (length: number) => {
-    if (length >= 290) return COUNTER_COLORS.CRITICAL; // 290자 이상
-    if (length >= 250) return COUNTER_COLORS.WARNING; // 250자 이상
+    if (length >= 290) return COUNTER_COLORS.CRITICAL;
+    if (length >= 250) return COUNTER_COLORS.WARNING;
     return COUNTER_COLORS.NORMAL;
   };
 
