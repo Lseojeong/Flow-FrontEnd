@@ -8,6 +8,7 @@ import Divider from '@/components/common/divider/Divider';
 import { Button } from '@/components/common/button/Button';
 import { InformationIcon } from '@/assets/icons/settings/index';
 import { ResetIcon } from '@/assets/icons/common/index';
+import { Loading } from '@/components/common/loading/Loading';
 import {
   Parameter,
   Tooltip,
@@ -186,7 +187,11 @@ export default function FlowSettingPage() {
               onClick={handleApply}
               disabled={updateFlowSettingMutation.isPending || isLoadingSettings}
             >
-              {updateFlowSettingMutation.isPending ? '적용 중...' : '적용하기'}
+              {updateFlowSettingMutation.isPending ? (
+                <Loading size={14} color="white" />
+              ) : (
+                '적용하기'
+              )}
             </Button>
           </SpaceidSelect>
 

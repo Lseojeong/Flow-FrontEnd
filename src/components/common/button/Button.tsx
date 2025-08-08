@@ -155,7 +155,8 @@ const StyledButton = styled.button<{
   ${({ $size }) => getSizeStyles($size)}
 
   &:disabled {
-    background-color: ${colors.Disabled};
+    background-color: ${({ $variant }) =>
+      $variant === 'dark' ? colors.DarkDisabled : colors.Disabled};
     cursor: not-allowed;
   }
 `;
