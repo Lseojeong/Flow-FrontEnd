@@ -11,7 +11,7 @@ import DepartmentSelect from '@/components/common/department/DepartmentSelect';
 import { Button } from '@/components/common/button/Button';
 import UserModal from '@/components/user-settiing/user-modal/UserModal';
 import { Popup } from '@/components/common/popup/Popup';
-import { useUserSetting } from '@/apis/user/query';
+import { useUserSetting, useChangeAdminDepartment, useDepartmentList } from '@/apis/user/query';
 import { Loading } from '@/components/common/loading/Loading';
 import { formatDateTime } from '@/utils/formatDateTime';
 
@@ -33,6 +33,8 @@ export default function UserSettingPage() {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useUserSetting();
+  const changeDepartmentMutation = useChangeAdminDepartment();
+  const { data: departmentData } = useDepartmentList();
 
   const users =
     data?.result?.departmentList.flatMap((dept) =>
@@ -45,10 +47,16 @@ export default function UserSettingPage() {
     ) ?? [];
 
   const departmentOptions =
-    data?.result?.departmentList.map((dept) => ({
-      departmentId: dept.departmentName,
-      departmentName: dept.departmentName,
-    })) ?? [];
+    data?.result?.departmentList.map((dept) => {
+      // 부서 이름으로 ID 찾기 (실제 필드명 사용)
+      const departmentId = departmentData?.result?.departmentList.find(
+        (d) => d.departmentName === dept.departmentName
+      )?.departmentId;
+      return {
+        departmentId: departmentId || '',
+        departmentName: dept.departmentName,
+      };
+    }) ?? [];
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -56,10 +64,38 @@ export default function UserSettingPage() {
     setEditingDepartment(currentUser.departmentName);
   };
 
-  const handleSave = () => {
-    // TODO: 실제 API 호출로 부서 수정
-    setEditingIndex(null);
-    setEditingDepartment('');
+  const handleSave = async () => {
+    if (editingIndex === null) return;
+
+    const selectedUser = users[editingIndex];
+
+    const selectedDepartment = departmentOptions.find(
+      (option) => option.departmentName === editingDepartment
+    );
+
+    if (!selectedDepartment) {
+      alert('선택된 부서 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!selectedDepartment.departmentId) {
+      alert('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    try {
+      await changeDepartmentMutation.mutateAsync({
+        adminId: selectedUser.id,
+        newDepartmentId: selectedDepartment.departmentId,
+      });
+
+      // 상태 초기화 및 목록 재조회
+      setEditingIndex(null);
+      setEditingDepartment('');
+    } catch (error) {
+      console.error('부서 변경 실패:', error);
+      alert('부서 변경에 실패했습니다.');
+    }
   };
 
   const handleCancel = () => {
@@ -187,7 +223,10 @@ export default function UserSettingPage() {
                           <DepartmentEditCell>
                             <StyledDepartmentSelect>
                               <DepartmentSelect
-                                options={departmentOptions}
+                                options={departmentOptions.map(({ departmentName }) => ({
+                                  departmentId: departmentName, // 이름을 ID로 사용
+                                  departmentName: departmentName,
+                                }))}
                                 value={editingDepartment}
                                 onChange={(value) => setEditingDepartment(value || '')}
                                 showAllOption={false}
