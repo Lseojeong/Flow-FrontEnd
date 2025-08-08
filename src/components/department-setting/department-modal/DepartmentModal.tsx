@@ -6,6 +6,8 @@ import FlatDivider from '@/components/common/divider/FlatDivider';
 import DepartmentTag from '@/components/department-setting/department-tag/DepartmentTag';
 import DepartmentInput from '@/components/department-setting/input/DepartmentInput';
 import { DepartmentModalProps } from './DepartmentModal.types';
+import { useCreateDepartments } from '@/apis/department/mutation';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const MAX_DEPARTMENT_TAGS = 10;
 
@@ -13,6 +15,9 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
   const [departments, setDepartments] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string>('');
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
+
+  const createMutation = useCreateDepartments();
 
   const handleAddDepartment = () => {
     const trimmedValue = inputValue.trim();
@@ -54,9 +59,18 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit(departments);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      await createMutation.mutateAsync({ departmentList: departments });
+      onSubmit(departments);
+      (window as { showToast?: (_message: string) => void }).showToast?.('부서가 생성되었습니다.');
+      onClose();
+    } catch (e) {
+      const message =
+        (e as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '부서 생성에 실패했습니다.';
+      setErrorToastMessage(message);
+    }
   };
 
   const handleClose = () => {
@@ -108,12 +122,19 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
             variant="primary"
             onClick={handleSubmit}
             size="medium"
-            disabled={departments.length === 0}
+            disabled={departments.length === 0 || createMutation.isPending}
+            isLoading={createMutation.isPending}
           >
             적용
           </Button>
         </ModalFooter>
       </ModalContent>
+
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </ModalOverlay>
   );
 };
@@ -198,6 +219,19 @@ const ModalFooter = styled.div`
   gap: 12px;
   justify-content: center;
   padding: 0 24px 24px 24px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1100;
+  pointer-events: none;
 `;
 
 export default DepartmentModal;

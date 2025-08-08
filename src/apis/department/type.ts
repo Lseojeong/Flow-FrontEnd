@@ -31,3 +31,18 @@ export interface DepartmentSettingListResponse {
     }>;
   };
 }
+
+export interface CreateDepartmentsRequest {
+  departmentList: string[];
+}
+
+export interface CreateDepartmentsResponse {
+  code: string;
+  message: string;
+  result: {
+    createdDepartments: Array<{
+      id: string;
+      name: string;
+    }>;
+  };
+}
