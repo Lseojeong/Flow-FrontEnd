@@ -1,14 +1,8 @@
 export interface Department {
   departmentId: string;
   departmentName: string;
-}
-
-export interface DepartmentListResponse {
-  code: string;
-  message: string;
-  result: {
-    departmentList: Department[];
-  };
+  adminCount: number;
+  categoryCount: number;
 }
 
 export interface DepartmentSetting {
@@ -39,20 +33,7 @@ export interface CreateDepartmentsRequest {
 export interface CreateDepartmentsResponse {
   code: string;
   message: string;
-  result: {
-    createdDepartments: Array<{
-      id: string;
-      name: string;
-    }>;
-  };
-}
-
-export interface DuplicateDepartmentError {
-  code: string;
-  message: string;
-  result: {
-    duplicateDepartmentNames: string[];
-  };
+  result: string;
 }
 
 export interface UpdateDepartmentRequest {
@@ -68,4 +49,30 @@ export interface UpdateDepartmentResponse {
     oldDepartmentName: string;
     newDepartmentName: string;
   };
+}
+
+export interface DeleteDepartmentRequest {
+  departmentId: string;
+}
+
+export interface DeleteDepartmentResponse {
+  code: string;
+  message: string;
+  result: {
+    deletedDepartmentId: string;
+  };
+}
+
+export interface DuplicateDepartmentError {
+  code: string;
+  message: string;
+  result: {
+    duplicateDepartmentNames: string[];
+  };
+}
+
+export interface DepartmentListResponse {
+  code: string;
+  message: string;
+  result: string;
 }

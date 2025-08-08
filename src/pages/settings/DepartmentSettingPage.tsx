@@ -11,7 +11,7 @@ import { Button } from '@/components/common/button/Button';
 import DepartmentSettingModal from '@/components/department-setting/department-modal/DepartmentModal';
 import { Popup } from '@/components/common/popup/Popup';
 import { useDepartmentSettingList } from '@/apis/department/query';
-import { useUpdateDepartment } from '@/apis/department/mutation';
+import { useUpdateDepartment, useDeleteDepartment } from '@/apis/department/mutation';
 import { Loading } from '@/components/common/loading/Loading';
 import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
@@ -31,13 +31,13 @@ export default function DepartmentPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
-  const [categoryResolved, setCategoryResolved] = useState(false);
-  const [userResolved, setUserResolved] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useDepartmentSettingList();
   const departments = data?.result?.departmentList ?? [];
   const updateMutation = useUpdateDepartment();
+  const deleteMutation = useDeleteDepartment();
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
@@ -52,7 +52,7 @@ export default function DepartmentPage() {
     const trimmedName = editingName.trim();
 
     if (!trimmedName) {
-      // TODO: 에러 처리
+      setErrorToastMessage('부서명을 입력해주세요.');
       return;
     }
 
@@ -87,41 +87,72 @@ export default function DepartmentPage() {
 
   const handleDelete = (departmentId: string) => {
     setDepartmentToDelete(departmentId);
-    setCategoryResolved(false);
-    setUserResolved(false);
+    setDeleteError(null);
     setIsDeletePopupOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (departmentToDelete) {
-      // TODO: 실제 API 호출로 부서 삭제
-      console.log('부서 삭제:', departmentToDelete);
-      setDepartmentToDelete(null);
+      try {
+        await deleteMutation.mutateAsync({ departmentId: departmentToDelete });
+        (window as { showToast?: (_message: string) => void }).showToast?.(
+          '부서가 삭제되었습니다.'
+        );
+        setDepartmentToDelete(null);
+        setDeleteError(null);
+        refetch();
+      } catch (e) {
+        const errorResponse = e as {
+          response?: {
+            status?: number;
+            data?: { code?: string; message?: string };
+          };
+        };
+        const errorData = errorResponse?.response?.data;
+        const status = errorResponse?.response?.status;
+
+        if (status === 400) {
+          let message = '부서 삭제에 실패했습니다.';
+
+          if (errorData?.code === 'DEPARTMENT_IS_IN_USE_BY_ADMIN') {
+            message = '관리자가 소속된 부서는 삭제할 수 없습니다.';
+          } else if (errorData?.code === 'DEPARTMENT_IS_IN_USE_BY_CATEGORY') {
+            message = '카테고리에 연결된 부서는 삭제할 수 없습니다.';
+          } else if (errorData?.message) {
+            message = errorData.message;
+          }
+
+          setDeleteError(message);
+          return;
+        } else {
+          const message = errorData?.message || '부서 삭제에 실패했습니다.';
+          setErrorToastMessage(message);
+          setIsDeletePopupOpen(false);
+          return;
+        }
+      }
     }
     setIsDeletePopupOpen(false);
   };
 
   const handleCancelDelete = () => {
     setDepartmentToDelete(null);
-    setCategoryResolved(false);
-    setUserResolved(false);
+    setDeleteError(null);
     setIsDeletePopupOpen(false);
   };
 
   const getWarningMessages = () => {
     const messages = [] as string[];
-    if (!categoryResolved) {
-      messages.push('연결된 카테고리를 수정하거나 삭제하세요');
-      return messages;
+
+    if (deleteError) {
+      messages.push(deleteError);
     }
-    if (!userResolved) {
-      messages.push('연결된 사용자를 수정하거나 삭제하세요');
-    }
+
     return messages;
   };
 
   const hasWarnings = () => {
-    return !categoryResolved || !userResolved;
+    return deleteError !== null;
   };
 
   const handleInviteClick = () => {
@@ -267,16 +298,14 @@ export default function DepartmentPage() {
           </TableSection>
         </ContentWrapper>
       </Content>
-
       <DepartmentSettingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
       />
-
       <Popup
         isOpen={isDeletePopupOpen}
-        title="관리자 부서 삭제"
+        title="부서 삭제"
         message="정말로 관리자 부서를 삭제하겠습니까?"
         warningMessages={getWarningMessages()}
         onClose={handleCancelDelete}

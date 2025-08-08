@@ -1,12 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createDepartments, updateDepartment } from './api';
-import type { CreateDepartmentsRequest, UpdateDepartmentRequest } from './type';
+import { createDepartments, updateDepartment, deleteDepartment } from './api';
 
 export const useCreateDepartments = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateDepartmentsRequest) => createDepartments(data),
+    mutationFn: createDepartments,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departmentSettingList'] });
       queryClient.invalidateQueries({ queryKey: ['departmentList'] });
@@ -18,7 +17,19 @@ export const useUpdateDepartment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateDepartmentRequest) => updateDepartment(data),
+    mutationFn: updateDepartment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departmentSettingList'] });
+      queryClient.invalidateQueries({ queryKey: ['departmentList'] });
+    },
+  });
+};
+
+export const useDeleteDepartment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteDepartment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departmentSettingList'] });
       queryClient.invalidateQueries({ queryKey: ['departmentList'] });
