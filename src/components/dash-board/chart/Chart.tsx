@@ -44,6 +44,8 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
         color: colors.BoxText,
         fontSize: 12,
         fontWeight: 500,
+        interval: 0,
+        rotate: 45,
       },
       axisLine: {
         show: true,
@@ -135,7 +137,7 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
       right: 48,
       top: 40,
       bottom: 40,
-      containLabel: false,
+      containLabel: true,
     },
     graphic: noData
       ? [
