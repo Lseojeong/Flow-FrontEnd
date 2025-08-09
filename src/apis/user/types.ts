@@ -1,4 +1,5 @@
 export interface Admin {
+  id: string;
   adminId: string;
   name: string;
   createdAt: string;

@@ -39,7 +39,8 @@ export default function UserSettingPage() {
   const users =
     data?.result?.departmentList.flatMap((dept) =>
       dept.admin.map((admin) => ({
-        id: admin.adminId,
+        id: admin.id,
+        adminId: admin.adminId,
         nickname: admin.name,
         departmentName: dept.departmentName,
         createdAt: admin.createdAt,
@@ -85,7 +86,7 @@ export default function UserSettingPage() {
 
     try {
       await changeDepartmentMutation.mutateAsync({
-        adminId: selectedUser.id,
+        adminId: selectedUser.adminId,
         newDepartmentId: selectedDepartment.departmentId,
       });
 
