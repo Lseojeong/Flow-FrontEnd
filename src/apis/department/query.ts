@@ -10,9 +10,9 @@ export const useDepartmentList = () => {
     queryKey: ['departmentList'],
     queryFn: async () => {
       const response = await getDepartmentList();
-      const departments = response.result?.departmentList || [];
+      const departments = response.data?.result?.departmentList || [];
       setDepartments(departments);
-      return response;
+      return response.data;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
