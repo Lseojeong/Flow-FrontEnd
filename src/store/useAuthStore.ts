@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { getAdminProfile, postLogout } from '@/apis/auth/api';
-import type { AdminProfile } from '@/apis/auth/types';
+import { getAdminProfile, postLogout, postAdminLogin } from '@/apis/auth/api';
+import type { AdminProfile, LoginRequest } from '@/apis/auth/types';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -10,6 +10,7 @@ interface AuthState {
   setIsLoggedIn: (_value: boolean) => void;
   setProfile: (_profile: AdminProfile | null) => void;
   checkLoginStatus: () => Promise<void>;
+  login: (_data: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -33,6 +34,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoggedIn: false, profile: null });
     } finally {
       set({ isLoading: false, hasChecked: true });
+    }
+  },
+
+  login: async (data: LoginRequest) => {
+    set({ isLoading: true });
+
+    try {
+      // 1. 로그인 API 호출 (CSRF 토큰 설정 포함)
+      await postAdminLogin(data);
+
+      // 2. 로그인 성공 후 프로필 조회
+      const profile = await getAdminProfile();
+
+      // 3. 상태 업데이트
+      set({
+        isLoggedIn: true,
+        profile,
+        hasChecked: true,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoggedIn: false,
+        profile: null,
+        hasChecked: true,
+        isLoading: false,
+      });
+      throw error; // 에러를 다시 던져서 컴포넌트에서 처리할 수 있도록
     }
   },
 
