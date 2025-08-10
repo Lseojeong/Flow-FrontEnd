@@ -111,8 +111,8 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
           })}
         </MenuList>
       </MenuWrapper>
-
       <LogoutWrapper>
+        <Divider />
         <LogoutButton
           onClick={async () => {
             setIsLoggingOut(true);
@@ -229,17 +229,18 @@ const LogoutWrapper = styled.div`
 const LogoutButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   width: 100%;
-  padding: 12px 0 24px 32px;
+  padding: 12px;
   color: ${colors.Dark_active};
-  font-size: 18px;
   font-weight: ${fontWeight.Medium};
   cursor: pointer;
   transition: color 0.2s;
   outline: none;
   border: none;
   background: transparent;
+  font-size: 14px;
 
   & .menu-icon {
     width: 20px;
@@ -256,4 +257,15 @@ const LogoutButton = styled.button`
     color: ${colors.BoxText};
     cursor: not-allowed;
   }
+  svg {
+    width: 8px;
+    height: 8px;
+  }
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: ${colors.GridLine};
+  margin-bottom: 20px;
 `;
