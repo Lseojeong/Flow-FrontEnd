@@ -9,10 +9,12 @@ interface PublicRouteProps {
 export const PublicRoute = ({ children }: PublicRouteProps) => {
   const { isLoggedIn, isLoading } = useAuthStore();
 
-  if (isLoading) return null;
-
   if (isLoggedIn) {
     return <Navigate to="/dictionary" replace />;
+  }
+
+  if (isLoading && typeof window !== 'undefined' && window.location.pathname !== '/') {
+    return null;
   }
 
   return children;

@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loading } from '@/components/common/loading/Loading';
 import { colors } from '@/styles/index';
@@ -27,7 +28,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isLoggedIn) {
-    return null;
+    const csrfToken = localStorage.getItem('csrfToken');
+    if (!csrfToken) {
+      return <Navigate to="/" replace />;
+    }
+    return <Navigate to="/error/access-denied" replace />;
   }
 
   return <>{children}</>;
