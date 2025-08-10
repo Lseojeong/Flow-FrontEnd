@@ -31,25 +31,15 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('Login attempt with:', {
-      adminId: adminIdField.value,
-      password: passwordField.value,
-    });
-    console.log('Current isError state:', isError);
-
     try {
       await login({
         adminId: adminIdField.value,
         password: passwordField.value,
       });
-      console.log('Login successful');
       setIsError(false);
       navigate('/dictionary');
-    } catch (error) {
-      console.error('Login error:', error);
-      console.log('Setting isError to true');
+    } catch {
       setIsError(true);
-      console.log('isError after set:', isError);
     }
   };
 
@@ -135,12 +125,9 @@ const ErrorMessage = styled.div`
   width: 370px;
   color: ${colors.MainRed};
   font-size: 12px;
-  text-align: center;
+  text-align: right;
   margin-bottom: 16px;
   padding: 8px;
-  background-color: rgba(255, 0, 0, 0.1);
-  border-radius: 4px;
-  border: 1px solid ${colors.MainRed};
 `;
 
 const Spacer = styled.div`
