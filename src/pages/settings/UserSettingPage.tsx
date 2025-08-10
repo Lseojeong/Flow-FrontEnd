@@ -217,7 +217,7 @@ export default function UserSettingPage() {
                   users.map((user, index) => (
                     <TableRow key={index}>
                       <td style={{ width: '200px', textAlign: 'center' }}>
-                        {user.id}({user.nickname})
+                        {user.adminId}({user.nickname})
                       </td>
                       <td style={{ width: '300px', textAlign: 'center' }}>
                         {editingIndex === index ? (
@@ -246,7 +246,7 @@ export default function UserSettingPage() {
                         )}
                       </td>
                       <td style={{ width: '200px', textAlign: 'center' }}>
-                        {formatDateTime(user.createdAt)}
+                        {user.createdAt ? formatDateTime(user.createdAt) : '-'}
                       </td>
                       <td style={{ width: '100px', textAlign: 'center' }}>
                         <ActionButtons>
