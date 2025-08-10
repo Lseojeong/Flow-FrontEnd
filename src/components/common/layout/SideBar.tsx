@@ -21,17 +21,27 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { logout, profile } = useAuthStore();
+
+  // 권한 기반 메뉴 필터링
+  const filteredMenuItems = menuItems.filter((item) => {
+    // 설정 메뉴는 ROOT 권한만 접근 가능
+    if (item.id === 'settings') {
+      return profile?.permission === 'ROOT';
+    }
+    // 다른 메뉴는 모든 권한에서 접근 가능
+    return true;
+  });
 
   useEffect(() => {
-    const activeItem = menuItems.find((item) =>
+    const activeItem = filteredMenuItems.find((item) =>
       item.subMenuItems?.some((subItem) => subItem.id === activeMenuId)
     );
 
     if (activeItem && openDropdownId !== activeItem.id) {
       setOpenDropdownId(activeItem.id);
     }
-  }, [activeMenuId, menuItems, openDropdownId]);
+  }, [activeMenuId, filteredMenuItems, openDropdownId]);
 
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
@@ -58,7 +68,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
       </LogoWrapper>
       <MenuWrapper>
         <MenuList>
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isOpen = openDropdownId === item.id;
             const isActive = activeMenuId === item.id;
@@ -102,7 +112,6 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
         </MenuList>
       </MenuWrapper>
 
-      {/* 로그아웃 메뉴 */}
       <LogoutWrapper>
         <LogoutButton
           onClick={async () => {
@@ -112,7 +121,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
           disabled={isLoggingOut}
         >
           <LogoutIcon className="menu-icon" />
-          {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+          로그아웃
         </LogoutButton>
       </LogoutWrapper>
     </SideBarContainer>

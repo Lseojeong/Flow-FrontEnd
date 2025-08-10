@@ -21,6 +21,7 @@ import DepartmentSettingPage from '@/pages/settings/DepartmentSettingPage';
 import AccessDeniedPage from '@/pages/error/AccessDeniedPage';
 
 import { ProtectedRoute } from './protectedRoute';
+import { AuthorizedRoute } from './authorizedRoute';
 
 const routes: RouteObject[] = [
   {
@@ -114,7 +115,9 @@ const routes: RouteObject[] = [
     path: '/settings/flow',
     element: (
       <ProtectedRoute>
-        <FlowSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <FlowSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },
@@ -122,7 +125,9 @@ const routes: RouteObject[] = [
     path: '/settings/user',
     element: (
       <ProtectedRoute>
-        <UserSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <UserSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },
@@ -130,7 +135,9 @@ const routes: RouteObject[] = [
     path: '/settings/department',
     element: (
       <ProtectedRoute>
-        <DepartmentSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <DepartmentSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },
