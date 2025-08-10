@@ -1,89 +1,139 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '@/apis/env';
 
-export const axiosInstance = axios.create({
-  baseURL: ENV.API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-  timeout: 5000,
-  responseType: 'json',
-});
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+    _skipAuthRefresh?: boolean;
+  }
+}
 
-// 요청 인터셉터: CSRF 토큰 자동 주입
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const csrfToken = localStorage.getItem('csrfToken');
-    if (csrfToken) {
-      config.headers = applyHeader(config.headers, 'X-CSRF-Token', csrfToken);
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+const AUTH_EXCLUDED_PATHS = [
+  '/admin/login',
+  '/admin/signup',
+  '/admin/signup/check-id',
+  '/admin/signup/token',
+  '/admin/refresh',
+  '/admin/logout',
+] as const;
 
-// refresh 전용 axios (인터셉터 비적용, 순수 호출용)
-const refreshAxios = axios.create({
+const isAuthExcluded = (url?: string) => {
+  if (!url) return false;
+  return AUTH_EXCLUDED_PATHS.some((path) => url.startsWith(path));
+};
+
+export const axiosInstance: AxiosInstance = axios.create({
   baseURL: ENV.API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
-  timeout: 5000,
+  timeout: 10000,
   responseType: 'json',
 });
 
-// 헤더 설정 유틸 (Axios v1의 AxiosHeaders | 객체 모두 지원)
-function applyHeader(
-  headers: InternalAxiosRequestConfig['headers'] | unknown,
-  key: string,
-  value: string
-): InternalAxiosRequestConfig['headers'] {
-  if (
-    headers &&
-    typeof headers === 'object' &&
-    'set' in headers &&
-    typeof (headers as { set: (_k: string, _v: string) => void }).set === 'function'
-  ) {
-    (headers as { set: (_k: string, _v: string) => void }).set(key, value);
-    return headers as InternalAxiosRequestConfig['headers'];
+const refreshAxios: AxiosInstance = axios.create({
+  baseURL: ENV.API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
+  timeout: 10000,
+});
+
+const getCsrfToken = () => localStorage.getItem('csrfToken');
+const setCsrfToken = (token: string | null) => {
+  if (!token) {
+    localStorage.removeItem('csrfToken');
+  } else {
+    localStorage.setItem('csrfToken', token);
   }
+};
 
-  const base = (headers && typeof headers === 'object' ? headers : {}) as Record<string, unknown>;
-  const merged = { ...base, [key]: value } as Record<string, string>;
-  return merged as unknown as InternalAxiosRequestConfig['headers'];
-}
+axiosInstance.interceptors.request.use((config) => {
+  const csrf = getCsrfToken();
+  if (csrf) {
+    config.headers.set?.('X-CSRF-Token', csrf);
+  }
+  return config;
+});
 
-// 응답 인터셉터: 401 처리 → refresh → 원 요청 재시도
+let isRefreshing = false;
+let pendingQueue: {
+  resolve: (_value?: unknown) => void;
+  reject: (_reason?: unknown) => void;
+  config: InternalAxiosRequestConfig;
+}[] = [];
+
+const processQueue = (error: unknown, token: string | null) => {
+  pendingQueue.forEach(({ resolve, reject, config }) => {
+    if (error) {
+      reject(error);
+      return;
+    }
+    if (token) {
+      config.headers = config.headers ?? {};
+      (config.headers as Record<string, string>)['X-CSRF-Token'] = token;
+    }
+    resolve(axiosInstance(config));
+  });
+  pendingQueue = [];
+};
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
+    const originalConfig = error.config as InternalAxiosRequestConfig | undefined;
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const res = await refreshAxios.post('/admin/refresh');
-        const newCsrfToken: string | undefined = res.data?.result?.csrfToken;
-
-        if (newCsrfToken) {
-          localStorage.setItem('csrfToken', newCsrfToken);
-
-          // 원 요청 헤더 갱신 후 재시도 (defaults는 요청 인터셉터에서 LocalStorage로 커버)
-          originalRequest.headers = applyHeader(
-            originalRequest.headers,
-            'X-CSRF-Token',
-            newCsrfToken
-          );
-
-          return axiosInstance(originalRequest);
-        }
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
-      }
+    const status = error.response?.status;
+    if (!originalConfig || originalConfig._retry || status !== 401) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    if (isAuthExcluded(originalConfig.url)) {
+      return Promise.reject(error);
+    }
+
+    originalConfig._retry = true;
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        pendingQueue.push({ resolve, reject, config: originalConfig });
+      });
+    }
+
+    isRefreshing = true;
+
+    try {
+      const refreshRes = await refreshAxios.post<{
+        code: string;
+        message: string;
+        result: { accessToken?: string; csrfToken: string };
+      }>('/admin/refresh');
+
+      const newCsrf = refreshRes.data?.result?.csrfToken;
+      if (!newCsrf) {
+        throw new Error('No csrfToken on refresh response');
+      }
+
+      setCsrfToken(newCsrf);
+
+      processQueue(null, newCsrf);
+
+      originalConfig.headers = originalConfig.headers ?? {};
+      (originalConfig.headers as Record<string, string>)['X-CSRF-Token'] = newCsrf;
+
+      return axiosInstance(originalConfig);
+    } catch (refreshErr) {
+      console.error('Token refresh failed:', refreshErr);
+      processQueue(refreshErr, null);
+      setCsrfToken(null);
+
+      if (typeof window !== 'undefined') {
+        if (!window.location.pathname.includes('/')) {
+          window.location.href = '/';
+        }
+      }
+
+      return Promise.reject(refreshErr);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );

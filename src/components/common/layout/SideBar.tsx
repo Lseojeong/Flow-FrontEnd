@@ -3,7 +3,9 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
+import { LogoutIcon } from '@/assets/icons/side-bar/index';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * @example
@@ -17,7 +19,9 @@ import { useNavigate } from 'react-router-dom';
 
 const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
 
   useEffect(() => {
     const activeItem = menuItems.find((item) =>
@@ -97,6 +101,20 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
           })}
         </MenuList>
       </MenuWrapper>
+
+      {/* 로그아웃 메뉴 */}
+      <LogoutWrapper>
+        <LogoutButton
+          onClick={async () => {
+            setIsLoggingOut(true);
+            await logout();
+          }}
+          disabled={isLoggingOut}
+        >
+          <LogoutIcon className="menu-icon" />
+          {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+        </LogoutButton>
+      </LogoutWrapper>
     </SideBarContainer>
   );
 };
@@ -189,5 +207,44 @@ const SubMenuItem = styled.li<{ $active?: boolean }>`
   outline: none;
   &:hover {
     color: ${colors.Normal};
+  }
+`;
+
+const LogoutWrapper = styled.div`
+  margin-top: auto;
+  margin-bottom: 40px;
+  margin-left: 40px;
+  width: calc(100% - 80px);
+`;
+
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 0 24px 32px;
+  color: ${colors.Dark_active};
+  font-size: 18px;
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+  transition: color 0.2s;
+  outline: none;
+  border: none;
+  background: transparent;
+
+  & .menu-icon {
+    width: 20px;
+    height: 20px;
+    color: inherit;
+    -webkit-user-drag: none;
+  }
+
+  &:hover:not(:disabled) {
+    color: ${colors.Light_active};
+  }
+
+  &:disabled {
+    color: ${colors.BoxText};
+    cursor: not-allowed;
   }
 `;

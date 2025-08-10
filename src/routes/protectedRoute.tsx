@@ -1,26 +1,38 @@
-// src/routes/ProtectedRoute.tsx
-import React, { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { ReactNode } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Loading } from '@/components/common/loading/Loading';
+import { colors } from '@/styles/index';
 
 interface ProtectedRouteProps {
-  children: React.ReactElement;
+  children: ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isLoggedIn, isLoading, checkLoginStatus } = useAuthStore();
+  const { isLoggedIn, isLoading, hasChecked } = useAuthStore();
 
-  useEffect(() => {
-    checkLoginStatus();
-  }, [checkLoginStatus]);
-
-  if (isLoading) {
-    return null;
+  if (isLoading || !hasChecked) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: colors.background,
+        }}
+      >
+        <Loading size={24} color={colors.Normal} />
+      </div>
+    );
   }
 
   if (!isLoggedIn) {
-    return <Navigate to="/error/access-denied" replace />;
+    // 즉시 리다이렉트
+    if (typeof window !== 'undefined') {
+      window.location.replace('/');
+    }
+    return null;
   }
 
-  return children;
+  return <>{children}</>;
 };

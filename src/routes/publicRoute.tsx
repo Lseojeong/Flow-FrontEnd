@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -7,11 +7,7 @@ interface PublicRouteProps {
 }
 
 export const PublicRoute = ({ children }: PublicRouteProps) => {
-  const { isLoggedIn, isLoading, checkLoginStatus } = useAuthStore();
-
-  useEffect(() => {
-    checkLoginStatus();
-  }, [checkLoginStatus]);
+  const { isLoggedIn, isLoading } = useAuthStore();
 
   if (isLoading) return null;
 
