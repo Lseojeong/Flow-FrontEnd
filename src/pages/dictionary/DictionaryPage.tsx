@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -17,7 +17,12 @@ import Divider from '@/components/common/divider/Divider';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDictCategories, createDictCategory } from '@/apis/dictcategory/api';
+import {
+  getAllDictCategories,
+  createDictCategory,
+  deleteDictCategories,
+  updateDictCategory,
+} from '@/apis/dictcategory/api';
 import type { DictCategory } from '@/apis/dictcategory/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -47,12 +52,11 @@ export default function DictionaryPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
-    id: number;
+    id: string;
     name: string;
     description: string;
   } | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
-
   const rowKeyOf = (cat: DictCategory, idx: number) => String(cat.id ?? `row-${idx}-${cat.name}`);
 
   const {
@@ -63,28 +67,33 @@ export default function DictionaryPage() {
     loadMore,
   } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
     fetchFn: async (cursor) => {
-      const response = await getAllDictCategories(cursor);
-      const res = response.data;
+      const res = await getAllDictCategories(cursor);
 
-      const categoryList: DictCategory[] = (res?.result?.categoryList ?? []).map(
-        (item: DictCategory) => ({
-          ...item,
-          status: {
-            completed: item.status?.completed ?? 0,
-            processing: item.status?.processing ?? 0,
-            fail: item.status?.fail ?? 0,
-          },
+      type GetAllDictCategoriesResponse = {
+        code: string;
+        message: string;
+        result: {
+          categoryList: DictCategory[];
+          pagination: { last: boolean };
+          nextCursor?: string;
+        };
+      };
+
+      const data = res.data as GetAllDictCategoriesResponse;
+
+      const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map(
+        (c: DictCategory) => ({
+          ...c,
+          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
         })
       );
 
-      const pagination = res?.result?.pagination ?? { last: true };
-
       return {
-        code: res.code,
+        code: data.code,
         result: {
           historyList: categoryList,
-          pagination,
-          nextCursor: res?.result?.nextCursor,
+          pagination: data.result?.pagination ?? { last: true },
+          nextCursor: data.result?.nextCursor,
         },
       };
     },
@@ -94,11 +103,23 @@ export default function DictionaryPage() {
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
+  const isDateInRange = useCallback(
+    (dateStr: string) => {
+      if (!startDate && !endDate) return true;
+      const date = new Date(dateStr);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+      return (!start || date >= start) && (!end || date <= end);
+    },
+    [startDate, endDate]
+  );
+
   const filteredCategories = useMemo(() => {
-    return categories.filter((category) =>
-      category.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
+    const kw = debouncedSearchKeyword.toLowerCase();
+    return categories.filter(
+      (c) => c.name.toLowerCase().includes(kw) && isDateInRange(c.lastModifiedDate)
     );
-  }, [categories, debouncedSearchKeyword]);
+  }, [categories, debouncedSearchKeyword, isDateInRange]);
 
   const selectedCount = filteredCategories.filter(
     (cat, idx) => !!checkedItems[rowKeyOf(cat, idx)]
@@ -123,13 +144,13 @@ export default function DictionaryPage() {
     setCheckedItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     const category = categories.find((cat) => cat.id === id);
     if (category) {
       setEditingCategory({
         id: category.id,
         name: category.name,
-        description: category.description,
+        description: category.description ?? '',
       });
       setIsEditModalOpen(true);
     }
@@ -143,7 +164,7 @@ export default function DictionaryPage() {
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
     try {
       const res = await createDictCategory(data);
-      if (res.data.code === 'CATEGORY201' || res.data.code === '201') {
+      if (res.data.code === 'CATEGORY200' || res.data.code === '200') {
         (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
         setIsCategoryModalOpen(false);
         reset();
@@ -156,16 +177,61 @@ export default function DictionaryPage() {
     }
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedCount === 0) return;
-    console.log(
-      '선택된 카테고리 삭제:',
-      Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
-    );
-    setCheckedItems({});
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        '선택한 카테고리가 삭제되었습니다.'
+  const handleDeleteSelected = async () => {
+    const selected = filteredCategories.filter((cat, idx) => checkedItems[rowKeyOf(cat, idx)]);
+    if (selected.length === 0) return;
+
+    const ids = selected.map((cat) => cat.id);
+
+    try {
+      const res = await deleteDictCategories(ids);
+
+      if (res.status === 200 || res.data.code === '200') {
+        (window as { showToast?: (_: string) => void }).showToast?.(
+          '선택한 카테고리를 삭제했습니다.'
+        );
+
+        setCheckedItems({});
+
+        reset();
+        await loadMore();
+      } else {
+        console.error('카테고리 삭제 실패:', res.data);
+        (window as { showToast?: (_: string) => void }).showToast?.('삭제에 실패했습니다.');
+      }
+    } catch (e) {
+      console.error('카테고리 삭제 에러:', e);
+      (window as { showToast?: (_: string) => void }).showToast?.(
+        '삭제 요청 중 오류가 발생했습니다.'
+      );
+    }
+  };
+
+  const handleUpdateCategory = async (payload: { name: string; description: string }) => {
+    if (!editingCategory) return;
+
+    try {
+      const res = await updateDictCategory(editingCategory.id, payload);
+
+      const code = (res as { data?: { code?: string } }).data?.code;
+      if (code === 'COMMON200' || code === 'CATEGORY200' || code === '200') {
+        (window as Window & { showToast?: (_m: string) => void }).showToast?.(
+          '카테고리가 수정되었습니다.'
+        );
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+        reset();
+        await loadMore();
+      } else {
+        console.error('카테고리 수정 실패:', res);
+        (window as Window & { showToast?: (_m: string) => void }).showToast?.(
+          '수정에 실패했습니다.'
+        );
+      }
+    } catch (e) {
+      console.error('카테고리 수정 에러:', e);
+      (window as Window & { showToast?: (_m: string) => void }).showToast?.(
+        '수정 요청 중 오류가 발생했습니다.'
       );
     }
   };
@@ -346,14 +412,7 @@ export default function DictionaryPage() {
         <DictCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSubmit={() => {
-            if ((window as { showToast?: (_message: string) => void }).showToast) {
-              (window as { showToast?: (_message: string) => void }).showToast!(
-                '카테고리가 수정되었습니다.'
-              );
-            }
-            setIsEditModalOpen(false);
-          }}
+          onSubmit={handleUpdateCategory}
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
         />

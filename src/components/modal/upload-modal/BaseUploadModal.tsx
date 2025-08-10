@@ -11,7 +11,13 @@ import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants
 interface BaseUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  onSubmit: (_data: {
+    file: File;
+    fileName: string;
+    description: string;
+    version: string;
+    fileUrl: string;
+  }) => void;
   title: string;
   fileType: 'csv' | 'pdf';
   downloadLink?: string;
@@ -31,6 +37,7 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState('');
   const [fileError, setFileError] = useState<string>('');
+  const [fileUrl, setFileUrl] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -38,23 +45,28 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
     } else {
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
   const handleConfirm = () => {
+    console.log('✅ 업로드 버튼 클릭됨');
+    if (!file) return;
+
     onSubmit({
-      title: file!.name,
+      file,
+      fileName: file.name,
       description: description.trim(),
       version,
+      fileUrl,
     });
 
     setFile(null);
     setDescription('');
     setVersion('');
     setFileError('');
+    setFileUrl('');
     onClose();
 
     setTimeout(() => {
@@ -68,6 +80,10 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     setFileError('');
+
+    // 파일 URL 자동 생성
+    const localUrl = URL.createObjectURL(selectedFile);
+    setFileUrl(localUrl);
   };
 
   const handleVersionSelect = (ver: string) => {

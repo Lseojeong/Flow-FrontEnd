@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+// src/pages/faq/FaqDetailPage.tsx
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -15,18 +16,23 @@ import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
 
+import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
+import type { Department } from '@/components/common/department/Department.types';
+
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
 import { StatusItemData } from '@/components/common/status/Status.types';
-import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
-import DepartmentTagList from '@/components/common/department/DepartmentTagList';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDictCategories } from '@/apis/dictcategory/api';
-import type { DictCategory } from '@/pages/mock/dictMock';
+
+// ✅ FAQ 단일 조회 API만 사용
+import { getFaqCategoryById } from '@/apis/faq/api';
+import type { FaqCategory } from '@/apis/faq/types';
+
+// 파일 디테일 패널 타입만 맞추기 위한 임포트(목데이터 아님, 타입만 사용)
+import type { DictFile } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -58,8 +64,13 @@ interface EditTargetFile {
 }
 
 export default function FaqDetailPage() {
-  const { faqId } = useParams();
+  const { faqId = '' } = useParams();
 
+  // 상세 전용 상태
+  const [category, setCategory] = useState<FaqCategory | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 파일 관련(아직 API 미연결, UI 유지용)
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
@@ -68,110 +79,92 @@ export default function FaqDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
-  const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
-    fetchFn: async (cursor) => {
-      const response = await getAllDictCategories(cursor);
-      const res = response.data;
+  // ✅ 단일 조회만 호출
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getFaqCategoryById(faqId);
+        // API 반환 구조에 맞춰 result 우선 사용
+        const data = (res.data?.result ?? res.data) as FaqCategory;
+        if (!mounted) return;
+        setCategory({
+          ...data,
+          lastModifiedDate: data.lastModifiedDate ?? (data.lastModifier ?? '').slice(0, 10),
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [faqId]);
 
-      const categoryList = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
-        ...item,
-        status: {
-          completed: item.status?.completed ?? 0,
-          processing: item.status?.processing ?? 0,
-          fail: item.status?.fail ?? 0,
-        },
-      }));
+  // 포함 부서(DepartmentTagList가 기대하는 타입으로 매핑)
+  const departmentsForTag = useMemo<Department[]>(() => {
+    const list = category?.departmentList ?? [];
+    return list.map((name) => ({
+      departmentId: name,
+      departmentName: name,
+    }));
+  }, [category?.departmentList]);
 
-      const pagination = res?.result?.pagination ?? { last: true };
-
-      return {
-        code: res.code,
-        result: {
-          historyList: categoryList,
-          pagination,
-          nextCursor: res?.result?.nextCursor,
-        },
-      };
-    },
-  });
-
+  // 파일 리스트는 아직 API 미연결이라 빈 배열 유지
+  const files: DictFile[] = [];
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-
-  const detailData = dictMockData.find((item) => item.id.toString() === faqId);
-
   const filteredFiles = useMemo(() => {
-    if (!detailData) return [];
-    return detailData.files.filter((file) =>
-      file.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
-    );
-  }, [detailData, debouncedSearchKeyword]);
+    const kw = debouncedSearchKeyword.toLowerCase();
+    return files.filter((f) => f.name.toLowerCase().includes(kw));
+  }, [files, debouncedSearchKeyword]);
 
-  if (!detailData) {
-    return <NoData>데이터가 없습니다.</NoData>;
-  }
+  if (loading) return <NoData>로딩 중…</NoData>;
+  if (!category) return <NoData>데이터가 없습니다.</NoData>;
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: detailData.status.completed },
-    { type: 'Processing', count: detailData.status.processing },
-    { type: 'Fail', count: detailData.status.fail },
+    { type: 'Completed', count: category.status?.completed ?? 0 },
+    { type: 'Processing', count: category.status?.processing ?? 0 },
+    { type: 'Fail', count: category.status?.fail ?? 0 },
   ];
 
+  // 핸들러들 (UI 유지용)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
-
-  const handleFileClick = (file: DictFile) => {
-    setSelectedFile(file);
-  };
-
+  const handleFileClick = (file: DictFile) => setSelectedFile(file);
   const handleEditFile = (file: DictFile) => {
-    setEditTargetFile({
-      title: file.name,
-      version: file.version,
-    });
+    setEditTargetFile({ title: file.name, version: file.version });
     setIsEditModalOpen(true);
   };
-
   const handleDeleteFile = (fileName: string) => {
     setTargetFileName(fileName);
     setIsDeletePopupOpen(true);
   };
-
   const handleDeleteConfirm = () => {
     setIsDeletePopupOpen(false);
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        `${targetFileName} 파일이 삭제되었습니다.`
-      );
-    }
+    (window as { showToast?: (_m: string) => void }).showToast?.(
+      `${targetFileName} 파일이 삭제되었습니다.`
+    );
   };
-
   const handleEditModalClose = () => {
     setIsEditModalOpen(false);
     setEditTargetFile(null);
   };
-
   const handleEditModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
-    }
+    (window as { showToast?: (_m: string) => void }).showToast?.('파일이 수정되었습니다.');
     setIsEditModalOpen(false);
     setEditTargetFile(null);
   };
-
   const handleUploadModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 등록되었습니다.');
-    }
+    (window as { showToast?: (_m: string) => void }).showToast?.('파일이 등록되었습니다.');
     setIsCsvModalOpen(false);
   };
+  const handleFileDetailClose = () => setSelectedFile(null);
 
-  const handleFileDetailClose = () => {
-    setSelectedFile(null);
-  };
-
-  const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
-    <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
+  const renderFileRow = (file: DictFile, index: number) => (
+    <TableRow key={`file-${file.id}`}>
       <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
         {index + 1}
       </td>
@@ -234,20 +227,10 @@ export default function FaqDetailPage() {
     </EmptyRow>
   );
 
-  const renderFileList = () => {
-    if (searchKeyword.trim().length > 0) {
-      return filteredFiles.length === 0
-        ? renderEmptyState()
-        : filteredFiles.map((file, index) => renderFileRow(file, index));
-    }
-
-    return paginatedFiles.length === 0
+  const renderFileList = () =>
+    (searchKeyword.trim() ? filteredFiles : files).length === 0
       ? renderEmptyState()
-      : paginatedFiles.map((file, index) => {
-          const isLast = index === paginatedFiles.length - 1;
-          return renderFileRow(file, index, isLast);
-        });
-  };
+      : (searchKeyword.trim() ? filteredFiles : files).map((f, i) => renderFileRow(f, i));
 
   return (
     <PageWrapper>
@@ -263,14 +246,15 @@ export default function FaqDetailPage() {
       <Content>
         <ContentWrapper>
           <HeaderSection>
-            <PageTitle>{detailData.name}</PageTitle>
+            <PageTitle>{category.name}</PageTitle>
             <DescriptionRow>
-              <Description>{detailData.description}</Description>
+              <Description>{category.description ?? '-'}</Description>
               <Button onClick={() => setIsCsvModalOpen(true)} size="small" variant="primary">
                 + 데이터 등록
               </Button>
             </DescriptionRow>
           </HeaderSection>
+
           <Divider />
 
           <InfoBox>
@@ -301,22 +285,23 @@ export default function FaqDetailPage() {
 
             <InfoItemColumn>
               <Label>등록일:</Label>
-              <Value>{detailData.registeredDate}</Value>
+              <Value>{(category.createdAt ?? '').slice(0, 10) || '-'}</Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정일:</Label>
-              <Value>{detailData.lastModified}</Value>
+              <Value>{(category.lastModifiedDate ?? '').slice(0, 10) || '-'}</Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정자:</Label>
-              <Value>{detailData.lastEditor}</Value>
+              <Value>{category.lastModifier ?? category.lastEditor ?? '-'}</Value>
             </InfoItemColumn>
+
             <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
               <Label>포함 부서:</Label>
               <Value>
-                <DepartmentTagList departments={detailData.departments} />
+                <DepartmentTagList departments={departmentsForTag} />
               </Value>
             </InfoItemColumn>
           </InfoBox>
@@ -498,7 +483,6 @@ const SectionTitle = styled.h3`
 
 const DownloadIconWrapper = styled.div`
   color: ${colors.BoxText};
-
   &:hover {
     svg {
       color: ${colors.Normal};
@@ -523,12 +507,10 @@ const ActionButton = styled.button`
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.2s;
-
   svg {
     color: ${colors.BoxText};
     transition: color 0.2s;
   }
-
   &:hover svg {
     color: ${colors.Normal};
   }
@@ -569,7 +551,6 @@ const StyledLink = styled.div`
   color: inherit;
   text-decoration: none;
   cursor: pointer;
-
   &:hover {
     color: ${colors.Normal};
   }
@@ -585,7 +566,6 @@ const TableScrollWrapper = styled.div`
 const TableHeaderSection = styled.div`
   background-color: ${colors.Normal};
   color: white;
-
   thead {
     tr {
       th {

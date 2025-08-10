@@ -1,17 +1,18 @@
-export interface DictCategoryStatus {
+export interface FaqCategoryStatus {
   total: number;
   completed: number;
   processing: number;
   fail: number;
 }
 
-export interface DictCategory {
+export interface FaqCategory {
   id: string; // UUID
   name: string;
   description?: string;
-  status: DictCategoryStatus;
+  status: FaqCategoryStatus;
   documentCount: number;
   lastModifiedDate: string;
+  departmentList?: string[];
   createdAt?: string;
   updatedAt?: string;
   registeredDate?: string;

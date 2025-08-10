@@ -1,16 +1,16 @@
-import { getAllDictCategories } from './api';
-import type { DictCategory } from './types';
+import { getAllFaqCategories } from './api';
+import type { FaqCategory } from './types';
 
-const loadedIdSet = new Set<string>();
+const loadedFaqIdSet = new Set<string>();
 
-export const fetchDictCategories = async (cursor?: string) => {
-  const res = await getAllDictCategories(cursor);
+export const fetchFaqCategories = async (cursor?: string) => {
+  const res = await getAllFaqCategories(cursor ?? new Date().toISOString());
 
   type Resp = {
     code: string;
     message: string;
     result: {
-      categoryList: DictCategory[];
+      categoryList: FaqCategory[];
       pagination: { last: boolean };
       nextCursor?: string;
     };
@@ -20,8 +20,8 @@ export const fetchDictCategories = async (cursor?: string) => {
 
   const dedupedList = (data.result?.categoryList ?? []).filter((cat) => {
     if (!cat.id) return true;
-    if (loadedIdSet.has(cat.id)) return false;
-    loadedIdSet.add(cat.id);
+    if (loadedFaqIdSet.has(cat.id)) return false;
+    loadedFaqIdSet.add(cat.id);
     return true;
   });
 

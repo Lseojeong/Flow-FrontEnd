@@ -13,7 +13,6 @@ import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
-import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors, fontWeight } from '@/styles/index';
 import DocsCategoryModal from '@/components/modal/category-modal/DocsCategoryModal';
@@ -21,8 +20,8 @@ import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCa
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
-import type { DictCategory } from '@/pages/mock/dictMock';
+import { getAllDocsCategories, createDocsCategory } from '@/apis/docs/api';
+import type { DocsCategory } from '@/apis/docs/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -51,7 +50,7 @@ export default function DocsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
@@ -65,11 +64,42 @@ export default function DocsPage() {
     data: categories,
     observerRef,
     isLoading,
-  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: getPaginatedCategoriesData,
-  });
+    reset,
+    loadMore,
+  } = useInfiniteScroll<DocsCategory, HTMLTableRowElement>({
+    fetchFn: async (cursor) => {
+      const res = await getAllDocsCategories(cursor);
 
-  const existingCategoryNames = dictMockData.map((item) => item.name);
+      type GetAllDocsCategoriesResponse = {
+        code: string;
+        message: string;
+        result: {
+          categoryList: DocsCategory[];
+          pagination: { last: boolean };
+          nextCursor?: string;
+        };
+      };
+
+      const data = res.data as GetAllDocsCategoriesResponse;
+
+      const categoryList: DocsCategory[] = (data.result?.categoryList ?? []).map(
+        (c: DocsCategory) => ({
+          ...c,
+          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+        })
+      );
+
+      return {
+        code: data.code,
+        result: {
+          historyList: categoryList,
+          pagination: data.result?.pagination ?? { last: true },
+          nextCursor: data.result?.nextCursor,
+        },
+      };
+    },
+  });
+  const existingCategoryNames = categories.map((item) => item.name);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
@@ -78,15 +108,14 @@ export default function DocsPage() {
       if (!startDate && !endDate) return true;
       const date = new Date(dateStr);
       const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
+      const end = endDate ? new Date(endDate + 'T23:59:59.999') : null;
       return (!start || date >= start) && (!end || date <= end);
     };
 
     return categories.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase());
       const matchesDept =
-        !selectedDepartment ||
-        item.departments?.some((d) => d.departmentName === selectedDepartment);
+        !selectedDepartment || (item.departmentList ?? []).includes(selectedDepartment);
       const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
       return matchesName && matchesDept && matchesDate;
     });
@@ -100,7 +129,7 @@ export default function DocsPage() {
     if (isAllSelected) {
       setCheckedItems({});
     } else {
-      const newChecked: Record<number, boolean> = {};
+      const newChecked: Record<string, boolean> = {};
       filteredCategories.forEach((cat) => {
         newChecked[cat.id] = true;
       });
@@ -108,21 +137,26 @@ export default function DocsPage() {
     }
   };
 
-  const toggleCheckItem = (id: number) => {
+  const toggleCheckItem = (id: string) => {
     setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleEdit = (id: number) => {
-    const category = dictMockData.find((cat) => cat.id === id);
-    if (category) {
-      setEditingCategory({
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        departments: category.departments ?? [],
-      });
-      setIsEditModalOpen(true);
-    }
+  const handleEdit = (id: string) => {
+    const category = categories.find((cat) => cat.id === id);
+    if (!category) return;
+    const departments =
+      (category as { departmentList?: string[] }).departmentList?.map((name) => ({
+        departmentId: name,
+        departmentName: name,
+      })) ?? [];
+
+    setEditingCategory({
+      id: Number.NaN as unknown as number,
+      name: category.name,
+      description: category.description ?? '',
+      departments,
+    });
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteSelected = () => {
@@ -140,10 +174,27 @@ export default function DocsPage() {
     }
   };
 
-  const handleRegisterCategory = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        '카테고리가 등록되었습니다.'
+  const handleRegisterCategory = async (data: { name: string; description: string }) => {
+    try {
+      const res = await createDocsCategory({
+        name: data.name,
+        description: data.description,
+        departmentIdList: [],
+      });
+
+      if (res.data.code === 'COMMON200') {
+        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+        setIsCategoryModalOpen(false);
+        reset();
+        await loadMore();
+      } else {
+        console.error('카테고리 등록 실패:', res.data);
+        (window as { showToast?: (_: string) => void }).showToast?.('등록에 실패했습니다.');
+      }
+    } catch (e) {
+      console.error('카테고리 등록 에러:', e);
+      (window as { showToast?: (_: string) => void }).showToast?.(
+        '등록 요청 중 오류가 발생했습니다.'
       );
     }
   };
@@ -171,7 +222,10 @@ export default function DocsPage() {
     ...TABLE_COLUMNS,
   ];
 
-  const renderTableRow = (category: DictCategory, index: number) => {
+  const renderTableRow = (
+    category: DocsCategory & { departments?: { departmentId: string; departmentName: string }[] },
+    index: number
+  ) => {
     const isChecked = !!checkedItems[category.id];
     const isLast = index === filteredCategories.length - 1;
 
@@ -222,7 +276,14 @@ export default function DocsPage() {
           maxWidth={CELL_WIDTHS.DEPARTMENTS}
           align="left"
         >
-          <DepartmentTagList departments={category.departments ?? []} />
+          <DepartmentTagList
+            departments={
+              (category as { departmentList?: string[] }).departmentList?.map((name) => ({
+                departmentId: name,
+                departmentName: name,
+              })) ?? []
+            }
+          />
         </ScrollableCell>
         <td
           style={{

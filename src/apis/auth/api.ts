@@ -12,6 +12,10 @@ export const postAdminSignup = async (data: {
   return res.data;
 };
 
+export interface RefreshTokenResponse {
+  csrfToken?: string;
+}
+
 // ID 중복 확인
 export const checkAdminIdExists = async (id: string) => {
   const res = await axiosInstance.get(`/admin/signup/check-id/${id}`);

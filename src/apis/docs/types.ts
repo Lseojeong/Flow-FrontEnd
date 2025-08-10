@@ -1,20 +1,20 @@
-export interface DictCategoryStatus {
+export interface DocsCategoryStatus {
   total: number;
   completed: number;
   processing: number;
   fail: number;
 }
 
-export interface DictCategory {
-  id: string; // UUID
+export interface DocsCategory {
+  id: string;
   name: string;
   description?: string;
-  status: DictCategoryStatus;
+  status: DocsCategoryStatus;
   documentCount: number;
+  departmentList?: string[];
   lastModifiedDate: string;
   createdAt?: string;
   updatedAt?: string;
-  registeredDate?: string;
   lastModifier?: string;
   lastEditor?: string;
 }

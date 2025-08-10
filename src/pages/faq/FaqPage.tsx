@@ -13,7 +13,6 @@ import SideBar from '@/components/common/layout/SideBar';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
-import { dictMockData } from '@/pages/mock/dictMock';
 import Divider from '@/components/common/divider/Divider';
 import { colors, fontWeight } from '@/styles/index';
 import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
@@ -21,8 +20,8 @@ import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCate
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getPaginatedCategoriesData } from '@/pages/mock/dictMock';
-import type { DictCategory } from '@/pages/mock/dictMock';
+import { getAllFaqCategories, createFaqCategory, deleteFaqCategories } from '@/apis/faq/api';
+import type { FaqCategory } from '@/apis/faq/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -51,7 +50,7 @@ export default function FaqPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
@@ -65,34 +64,110 @@ export default function FaqPage() {
     data: categories,
     observerRef,
     isLoading,
-  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: getPaginatedCategoriesData,
+    reset,
+  } = useInfiniteScroll<FaqCategory, HTMLTableRowElement>({
+    fetchFn: async (cursor) => {
+      const res = await getAllFaqCategories(cursor);
+
+      type FaqCategoryStatus = {
+        total: number;
+        completed: number;
+        processing: number;
+        fail: number;
+      };
+
+      type StatusLower = { total?: number; completed?: number; processing?: number; fail?: number };
+      type StatusUpper = { Total?: number; Completed?: number; Processing?: number; Fail?: number };
+
+      type FaqCategoryApiItem = Omit<FaqCategory, 'status' | 'lastModifiedDate'> & {
+        status?: StatusLower;
+        fileStatus?: StatusLower | StatusUpper;
+        lastModifiedDate?: string;
+      };
+
+      type GetAllFaqCategoriesResponse = {
+        code: string;
+        message: string;
+        result: {
+          categoryList: FaqCategoryApiItem[];
+          pagination: { last: boolean };
+          nextCursor?: string;
+        };
+      };
+
+      const data = res.data as GetAllFaqCategoriesResponse;
+
+      const normalizeStatus = (item: FaqCategoryApiItem): FaqCategoryStatus => {
+        const raw = item.status ?? item.fileStatus;
+
+        if (raw && ('completed' in raw || 'processing' in raw || 'fail' in raw || 'total' in raw)) {
+          const r = raw as StatusLower;
+          const completed = Number(r.completed ?? 0);
+          const processing = Number(r.processing ?? 0);
+          const fail = Number(r.fail ?? 0);
+          const total = Number(r.total ?? completed + processing + fail);
+          return { total, completed, processing, fail };
+        }
+
+        if (raw && ('Completed' in raw || 'Processing' in raw || 'Fail' in raw || 'Total' in raw)) {
+          const r = raw as StatusUpper;
+          const completed = Number(r.Completed ?? 0);
+          const processing = Number(r.Processing ?? 0);
+          const fail = Number(r.Fail ?? 0);
+          const total = Number(r.Total ?? completed + processing + fail);
+          return { total, completed, processing, fail };
+        }
+
+        return { total: 0, completed: 0, processing: 0, fail: 0 };
+      };
+
+      const normalizeDate = (c: FaqCategoryApiItem): string =>
+        (c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '').slice(0, 10);
+
+      const categoryList: FaqCategory[] = (data.result?.categoryList ?? []).map((c) => ({
+        ...c,
+        status: normalizeStatus(c),
+        lastModifiedDate: normalizeDate(c),
+      }));
+
+      return {
+        code: data.code,
+        result: {
+          historyList: categoryList,
+          pagination: data.result?.pagination ?? { last: true },
+          nextCursor: data.result?.nextCursor,
+        },
+      };
+    },
   });
 
-  const existingCategoryNames = dictMockData.map((item) => item.name);
+  const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
   const filteredCategories = useMemo(() => {
     const isDateInRange = (dateStr: string) => {
       if (!startDate && !endDate) return true;
+      if (!dateStr) return false;
       const date = new Date(dateStr);
       const start = startDate ? new Date(startDate) : null;
       const end = endDate ? new Date(endDate) : null;
       return (!start || date >= start) && (!end || date <= end);
     };
 
+    const normDate = (c: FaqCategory) =>
+      ((c.lastModifiedDate || c.updatedAt || c.createdAt || '') + '').replace(/\./g, '-');
+
     return categories.filter((item) => {
       const matchesName = item.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase());
       const matchesDept =
-        !selectedDepartment ||
-        item.departments?.some((d) => d.departmentName === selectedDepartment);
-      const matchesDate = isDateInRange(item.lastModifiedDate.replace(/\./g, '-'));
+        !selectedDepartment || (item.departmentList ?? []).includes(selectedDepartment);
+      const matchesDate = isDateInRange(normDate(item));
       return matchesName && matchesDept && matchesDate;
     });
   }, [categories, debouncedSearchKeyword, selectedDepartment, startDate, endDate]);
 
-  const selectedCount = filteredCategories.filter((cat) => checkedItems[cat.id]).length;
+  const selectedCount = filteredCategories.filter((cat) => !!checkedItems[cat.id]).length;
   const isAllSelected =
     selectedCount === filteredCategories.length && filteredCategories.length > 0;
 
@@ -100,50 +175,121 @@ export default function FaqPage() {
     if (isAllSelected) {
       setCheckedItems({});
     } else {
-      const newChecked: Record<number, boolean> = {};
+      const next: Record<string, boolean> = {};
       filteredCategories.forEach((cat) => {
-        newChecked[cat.id] = true;
+        next[cat.id] = true;
       });
-      setCheckedItems(newChecked);
+      setCheckedItems(next);
     }
   };
 
-  const toggleCheckItem = (id: number) => {
+  const toggleCheckItem = (id: string) => {
     setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleEdit = (id: number) => {
-    const category = dictMockData.find((cat) => cat.id === id);
-    if (category) {
-      setEditingCategory({
-        id: category.id,
-        name: category.name,
-        description: category.description,
-        departments: category.departments ?? [],
-      });
-      setIsEditModalOpen(true);
+  const handleEdit = (id: string) => {
+    const category = categories.find((cat) => cat.id === id);
+    if (!category) return;
+    const departments =
+      (category as { departmentList?: string[] }).departmentList?.map((name) => ({
+        departmentId: name,
+        departmentName: name,
+      })) ?? [];
+
+    setEditingCategory({
+      id: Number.NaN as unknown as number,
+      name: category.name,
+      description: category.description ?? '',
+      departments,
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteSelected = async () => {
+    const selectedIds = Object.keys(checkedItems).filter((id) => checkedItems[id]);
+    if (selectedIds.length === 0) {
+      (window as { showToast?: (_: string) => void }).showToast!('삭제할 카테고리를 선택하세요.');
+      return;
+    }
+
+    try {
+      const res = await deleteFaqCategories(selectedIds);
+      const ok =
+        (res.status >= 200 && res.status < 300) ||
+        res.data?.code === 'FAQ200' ||
+        res.data?.code === 'CATEGORY200' ||
+        res.data?.code === '200';
+
+      if (ok) {
+        (window as { showToast?: (_: string) => void }).showToast!(
+          '선택한 카테고리를 삭제했습니다.'
+        );
+        setCheckedItems({});
+        reset();
+      } else {
+        console.error('카테고리 삭제 실패:', res.data);
+        (window as { showToast?: (_: string) => void }).showToast!('삭제에 실패했습니다.');
+      }
+    } catch (e) {
+      console.error('카테고리 삭제 에러:', e);
+      (window as { showToast?: (_: string) => void }).showToast!(
+        '삭제 요청 중 오류가 발생했습니다.'
+      );
     }
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedCount > 0) {
-      console.log(
-        '선택된 카테고리 삭제:',
-        Object.keys(checkedItems).filter((key) => checkedItems[Number(key)])
-      );
-      setCheckedItems({});
-      if ((window as { showToast?: (_message: string) => void }).showToast) {
+  const handleRegisterCategory = async (form: {
+    name: string;
+    description?: string;
+    departments: string[] | { departmentId: string }[];
+  }) => {
+    try {
+      if (existingCategoryNames.includes(form.name.trim())) {
         (window as { showToast?: (_message: string) => void }).showToast!(
-          '선택한 카테고리가 삭제되었습니다.'
+          '이미 존재하는 카테고리명입니다.'
+        );
+        return;
+      }
+
+      const depIds =
+        Array.isArray(form.departments) &&
+        form.departments.length > 0 &&
+        typeof form.departments[0] === 'object'
+          ? (form.departments as { departmentId: string }[]).map((d) => d.departmentId)
+          : (form.departments as string[]);
+
+      const payload = {
+        name: form.name.trim(),
+        description: form.description?.trim() || undefined,
+        departmentList: depIds.map((id) => ({ id })),
+      };
+
+      const res = await createFaqCategory(payload);
+
+      const ok =
+        (res.status >= 200 && res.status < 300) ||
+        res.data?.code === 'CATEGORY200' ||
+        res.data?.code === 'FAQ200' ||
+        res.data?.code === '200';
+
+      if (ok) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '카테고리가 등록되었습니다.'
+        );
+        setIsCategoryModalOpen(false);
+        if (typeof reset === 'function') {
+          await reset();
+        }
+      } else {
+        console.error('카테고리 등록 실패:', res.data);
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          '카테고리 등록에 실패했습니다.'
         );
       }
-    }
-  };
-
-  const handleRegisterCategory = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
+    } catch (e) {
+      console.error('카테고리 등록 에러:', e);
       (window as { showToast?: (_message: string) => void }).showToast!(
-        '카테고리가 등록되었습니다.'
+        '카테고리 등록 중 오류가 발생했습니다.'
       );
     }
   };
@@ -171,7 +317,7 @@ export default function FaqPage() {
     ...TABLE_COLUMNS,
   ];
 
-  const renderTableRow = (category: DictCategory, index: number) => {
+  const renderTableRow = (category: FaqCategory, index: number) => {
     const isChecked = !!checkedItems[category.id];
     const isLast = index === filteredCategories.length - 1;
 
@@ -222,7 +368,14 @@ export default function FaqPage() {
           maxWidth={CELL_WIDTHS.DEPARTMENTS}
           align="left"
         >
-          <DepartmentTagList departments={category.departments ?? []} />
+          <DepartmentTagList
+            departments={
+              (category as { departmentList?: string[] }).departmentList?.map((name) => ({
+                departmentId: name,
+                departmentName: name,
+              })) ?? []
+            }
+          />
         </ScrollableCell>
         <td
           style={{
