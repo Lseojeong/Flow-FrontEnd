@@ -30,8 +30,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const profile = await getAdminProfile();
       set({ isLoggedIn: true, profile });
-    } catch {
-      set({ isLoggedIn: false, profile: null });
+    } catch (error) {
+      console.warn('Profile check failed:', error);
+      set({
+        isLoggedIn: false,
+        profile: null,
+        isLoading: false,
+        hasChecked: true,
+      });
     } finally {
       set({ isLoading: false, hasChecked: true });
     }
@@ -68,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     // 즉시 UI 상태 변경
     localStorage.removeItem('csrfToken');
-    set({ isLoggedIn: false, hasChecked: false, profile: null, isLoading: false });
+    set({ isLoggedIn: false, hasChecked: true, profile: null, isLoading: false });
 
     // 백그라운드에서 서버 로그아웃 호출 (에러 무시)
     try {
@@ -77,9 +83,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.warn('Logout API call failed:', error);
     }
 
-    // 즉시 리다이렉트
+    // 즉시 홈페이지로 리다이렉트
     if (typeof window !== 'undefined') {
-      window.location.replace('/');
+      window.location.href = '/';
     }
   },
 }));

@@ -27,10 +27,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isLoggedIn) {
-    // 즉시 리다이렉트
-    if (typeof window !== 'undefined') {
-      window.location.replace('/');
-    }
     return null;
   }
 
