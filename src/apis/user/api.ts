@@ -4,6 +4,8 @@ import {
   ChangeAdminDepartmentRequest,
   ChangeAdminDepartmentResponse,
   DepartmentListResponse,
+  InviteAdminRequest,
+  InviteAdminResponse,
 } from './types';
 
 export const getUserSetting = async (): Promise<UserSettingResponse> => {
@@ -20,5 +22,10 @@ export const changeAdminDepartment = async (
   data: ChangeAdminDepartmentRequest
 ): Promise<ChangeAdminDepartmentResponse> => {
   const res = await axiosInstance.put('/admin/org/depart/change', data);
+  return res.data;
+};
+
+export const inviteAdmin = async (data: InviteAdminRequest[]): Promise<InviteAdminResponse> => {
+  const res = await axiosInstance.post('/admin/org/invite', data);
   return res.data;
 };

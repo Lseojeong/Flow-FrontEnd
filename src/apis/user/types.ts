@@ -47,3 +47,24 @@ export interface ChangeAdminDepartmentResponse {
     newDepartmentName: string;
   };
 }
+
+export interface InviteAdminRequest {
+  email: string;
+  departmentId: string;
+}
+
+export interface InviteAdminResponse {
+  code: string;
+  message: string;
+  result: string;
+}
+
+export interface InviteAdminErrorResponse {
+  code: string;
+  message: string;
+  result: {
+    email: string;
+    departmentName: string;
+    departmentId: string;
+  }[];
+}

@@ -293,6 +293,7 @@ export default function UserSettingPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
+        departmentOptions={departmentOptions}
       />
 
       <Popup
