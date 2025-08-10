@@ -49,7 +49,6 @@ export default function UserSettingPage() {
 
   const departmentOptions =
     data?.result?.departmentList.map((dept) => {
-      // 부서 이름으로 ID 찾기 (실제 필드명 사용)
       const departmentId = departmentData?.result?.departmentList.find(
         (d) => d.departmentName === dept.departmentName
       )?.departmentId;
@@ -75,27 +74,50 @@ export default function UserSettingPage() {
     );
 
     if (!selectedDepartment) {
-      alert('선택된 부서 정보를 찾을 수 없습니다.');
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast('선택된 부서 정보를 찾을 수 없습니다.');
+      }
       return;
     }
 
     if (!selectedDepartment.departmentId) {
-      alert('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
     try {
-      await changeDepartmentMutation.mutateAsync({
-        adminId: selectedUser.adminId,
+      const response = await changeDepartmentMutation.mutateAsync({
+        id: selectedUser.id,
         newDepartmentId: selectedDepartment.departmentId,
       });
 
-      // 상태 초기화 및 목록 재조회
-      setEditingIndex(null);
-      setEditingDepartment('');
-    } catch (error) {
-      console.error('부서 변경 실패:', error);
-      alert('부서 변경에 실패했습니다.');
+      if (response?.code === 'COMMON200') {
+        setEditingIndex(null);
+        setEditingDepartment('');
+        refetch();
+        if (typeof window !== 'undefined' && window.showToast) {
+          window.showToast('부서가 성공적으로 변경되었습니다.');
+        }
+      } else {
+        const errorMessage =
+          (response?.result as { id?: string })?.id ||
+          response?.message ||
+          '부서 변경에 실패했습니다.';
+        if (typeof window !== 'undefined' && window.showToast) {
+          window.showToast(errorMessage);
+        }
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { result?: { id?: string }; message?: string } } })
+          ?.response?.data?.result?.id ||
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '부서 변경에 실패했습니다.';
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast(errorMessage);
+      }
     }
   };
 
@@ -225,7 +247,7 @@ export default function UserSettingPage() {
                             <StyledDepartmentSelect>
                               <DepartmentSelect
                                 options={departmentOptions.map(({ departmentName }) => ({
-                                  departmentId: departmentName, // 이름을 ID로 사용
+                                  departmentId: departmentName,
                                   departmentName: departmentName,
                                 }))}
                                 value={editingDepartment}

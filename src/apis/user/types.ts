@@ -33,7 +33,7 @@ export interface DepartmentListResponse {
 }
 
 export interface ChangeAdminDepartmentRequest {
-  adminId: string;
+  id: string;
   newDepartmentId: string;
 }
 
