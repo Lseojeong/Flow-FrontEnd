@@ -259,6 +259,15 @@ export const chartData = [
   { date: '2025-01-08', count: 800 },
   { date: '2025-01-09', count: 900 },
   { date: '2025-01-10', count: 1000 },
+  { date: '2025-01-01', count: 100 },
+  { date: '2025-01-02', count: 200 },
+  { date: '2025-01-03', count: 300 },
+  { date: '2025-01-04', count: 100 },
+  { date: '2025-01-05', count: 500 },
+  { date: '2025-01-06', count: 600 },
+  { date: '2025-01-07', count: 100 },
+  { date: '2025-01-08', count: 800 },
+  { date: '2025-01-09', count: 900 },
 ];
 
 export const mockApiResponse = {
