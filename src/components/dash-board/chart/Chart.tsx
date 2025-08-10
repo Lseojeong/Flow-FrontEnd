@@ -4,16 +4,36 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 
 interface ChartProps {
-  data: { date: string; count: number }[];
+  data: { date?: string; time?: string; count?: number; requests?: number }[];
+  isLoading?: boolean;
 }
 
 export const Chart: React.FC<ChartProps> = ({ data }) => {
-  const noData = data.length === 0;
+  const chartData = data.map((item) => ({
+    date:
+      item.date ||
+      (item.time
+        ? new Date(item.time.replace('Z', '')).toLocaleString('ko-KR', {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })
+        : ''),
+    count: item.count || item.requests || 0,
+  }));
+
+  console.log('Chart data:', data);
+  console.log('Chart chartData:', chartData);
+
+  const noData = chartData.length === 0;
 
   const option = {
     animation: true,
-    animationDuration: 1000,
+    animationDuration: 800,
     animationEasing: 'cubicOut',
+    animationDelay: (idx: number) => idx * 80,
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -38,7 +58,7 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
     },
     xAxis: {
       type: 'category',
-      data: data.map((d) => d.date),
+      data: chartData.map((d) => d.date),
       boundaryGap: false,
       axisLabel: {
         color: colors.BoxText,
@@ -129,14 +149,14 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
             shadowOffsetY: 0,
           },
         },
-        data: data.map((d) => d.count),
+        data: chartData.map((d) => d.count),
       },
     ],
     grid: {
       left: 48,
       right: 48,
       top: 40,
-      bottom: 40,
+      bottom: 2,
       containLabel: true,
     },
     graphic: noData
@@ -160,6 +180,7 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
       <ChartTitle>요청량</ChartTitle>
       <ChartWrapper>
         <ReactECharts
+          key={JSON.stringify(chartData)}
           option={option}
           style={{ height: 360, width: '100%' }}
           opts={{ renderer: 'canvas' }}
