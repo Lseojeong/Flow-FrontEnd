@@ -5,4 +5,6 @@ export interface PromptInputProps {
   maxLength?: number;
   label?: string;
   defaultValue?: string;
+  onReset?: () => void;
+  isDefault?: boolean;
 }

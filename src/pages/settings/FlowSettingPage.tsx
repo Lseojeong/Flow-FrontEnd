@@ -78,7 +78,7 @@ export default function FlowSettingPage() {
     setTopP(value);
   };
 
-  const handleParameterReset = () => {
+  const handleReset = () => {
     if (settingResponse?.result) {
       const { temperature, maxToken, topK, topP, prompt } = settingResponse.result;
       setTemperature(temperature);
@@ -96,15 +96,18 @@ export default function FlowSettingPage() {
       maxToken: defaultMax,
       topK: defaultTopK,
       topP: defaultTopP,
-      prompt: defaultPrompt,
     } = settingResponse.result;
     return (
       temperature === defaultTemp &&
       maxTokens === defaultMax &&
       topK === defaultTopK &&
-      topP === defaultTopP &&
-      prompt === defaultPrompt
+      topP === defaultTopP
     );
+  };
+
+  const isPromptDefault = () => {
+    if (!settingResponse?.result) return true;
+    return prompt === settingResponse.result.prompt;
   };
 
   const handleApply = async () => {
@@ -133,6 +136,10 @@ export default function FlowSettingPage() {
         'Flow 설정 업데이트에 실패했습니다.';
       setErrorToastMessage(errorMessage);
     }
+  };
+
+  const isAllDefault = () => {
+    return isParameterDefault() && isPromptDefault();
   };
 
   const handleTestRun = async (question: string): Promise<string> => {
@@ -194,8 +201,8 @@ export default function FlowSettingPage() {
             <Button
               variant="dark"
               size="medium"
-              onClick={handleParameterReset}
-              disabled={isParameterDefault() || isLoadingSettings}
+              onClick={handleReset}
+              disabled={isAllDefault() || isLoadingSettings}
             >
               초기화
             </Button>
@@ -203,9 +210,7 @@ export default function FlowSettingPage() {
               variant="primary"
               size="medium"
               onClick={handleApply}
-              disabled={
-                isParameterDefault() || isLoadingSettings || updateFlowSettingMutation.isPending
-              }
+              disabled={isAllDefault() || isLoadingSettings || updateFlowSettingMutation.isPending}
             >
               {updateFlowSettingMutation.isPending ? (
                 <Loading size={14} color="white" />
@@ -219,8 +224,8 @@ export default function FlowSettingPage() {
             <ParameterHeader>
               <ParameterTitle>파라미터</ParameterTitle>
               <ParameterResetButton
-                onClick={handleParameterReset}
-                disabled={isParameterDefault() || isLoadingSettings}
+                onClick={handleReset}
+                disabled={isAllDefault() || isLoadingSettings}
               >
                 <ResetIcon />
               </ParameterResetButton>
@@ -318,6 +323,8 @@ export default function FlowSettingPage() {
               value={prompt}
               onChange={setPrompt}
               defaultValue={settingResponse?.result?.prompt || ''}
+              onReset={handleReset}
+              isDefault={isPromptDefault()}
             />
           </PromptSection>
 
