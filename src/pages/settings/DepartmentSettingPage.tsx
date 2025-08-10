@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -10,7 +10,10 @@ import { EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { Button } from '@/components/common/button/Button';
 import DepartmentSettingModal from '@/components/department-setting/department-modal/DepartmentModal';
 import { Popup } from '@/components/common/popup/Popup';
-import { mockDepartments } from '@/pages/mock/dictMock';
+import { useDepartmentSettingList } from '@/apis/department/query';
+import { useUpdateDepartment, useDeleteDepartment } from '@/apis/department/mutation';
+import { Loading } from '@/components/common/loading/Loading';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -23,30 +26,58 @@ const columns = [
 
 export default function DepartmentPage() {
   const [activeMenuId, setActiveMenuId] = useState('department-settings');
-  const [departments, setDepartments] = useState(mockDepartments);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
-  const [categoryResolved, setCategoryResolved] = useState(false);
-  const [userResolved, setUserResolved] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
+
+  const { data, isLoading, error, refetch } = useDepartmentSettingList();
+  const departments = data?.result?.departmentList ?? [];
+  const updateMutation = useUpdateDepartment();
+  const deleteMutation = useDeleteDepartment();
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
     const currentDept = departments[index];
-    setEditingName(currentDept.name);
+    setEditingName(currentDept.departmentName);
   };
 
-  const handleSave = (index: number) => {
-    const updatedDepartments = [...departments];
-    updatedDepartments[index] = {
-      ...updatedDepartments[index],
-      name: editingName,
-    };
-    setDepartments(updatedDepartments);
-    setEditingIndex(null);
-    setEditingName('');
+  const handleSave = async () => {
+    if (editingIndex === null) return;
+
+    const department = departments[editingIndex];
+    const trimmedName = editingName.trim();
+
+    if (!trimmedName) {
+      setErrorToastMessage('부서명을 입력해주세요.');
+      return;
+    }
+
+    if (trimmedName === department.departmentName) {
+      setEditingIndex(null);
+      setEditingName('');
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        departmentId: department.departmentId,
+        newName: trimmedName,
+      });
+
+      (window as { showToast?: (_message: string) => void }).showToast?.(
+        '부서명이 수정되었습니다.'
+      );
+      setEditingIndex(null);
+      setEditingName('');
+    } catch (e) {
+      const errorResponse = e as { response?: { data?: { message?: string } } };
+      const message = errorResponse?.response?.data?.message || '부서명 수정에 실패했습니다.';
+      setErrorToastMessage(message);
+    }
   };
 
   const handleCancel = () => {
@@ -56,40 +87,72 @@ export default function DepartmentPage() {
 
   const handleDelete = (departmentId: string) => {
     setDepartmentToDelete(departmentId);
-    setCategoryResolved(false);
-    setUserResolved(false);
+    setDeleteError(null);
     setIsDeletePopupOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (departmentToDelete) {
-      setDepartments(departments.filter((dept) => dept.id !== departmentToDelete));
-      setDepartmentToDelete(null);
+      try {
+        await deleteMutation.mutateAsync({ departmentId: departmentToDelete });
+        (window as { showToast?: (_message: string) => void }).showToast?.(
+          '부서가 삭제되었습니다.'
+        );
+        setDepartmentToDelete(null);
+        setDeleteError(null);
+        refetch();
+      } catch (e) {
+        const errorResponse = e as {
+          response?: {
+            status?: number;
+            data?: { code?: string; message?: string };
+          };
+        };
+        const errorData = errorResponse?.response?.data;
+        const status = errorResponse?.response?.status;
+
+        if (status === 400) {
+          let message = '부서 삭제에 실패했습니다.';
+
+          if (errorData?.code === 'DEPARTMENT_IS_IN_USE_BY_ADMIN') {
+            message = '관리자가 소속된 부서는 삭제할 수 없습니다.';
+          } else if (errorData?.code === 'DEPARTMENT_IS_IN_USE_BY_CATEGORY') {
+            message = '카테고리에 연결된 부서는 삭제할 수 없습니다.';
+          } else if (errorData?.message) {
+            message = errorData.message;
+          }
+
+          setDeleteError(message);
+          return;
+        } else {
+          const message = errorData?.message || '부서 삭제에 실패했습니다.';
+          setErrorToastMessage(message);
+          setIsDeletePopupOpen(false);
+          return;
+        }
+      }
     }
     setIsDeletePopupOpen(false);
   };
 
   const handleCancelDelete = () => {
     setDepartmentToDelete(null);
-    setCategoryResolved(false);
-    setUserResolved(false);
+    setDeleteError(null);
     setIsDeletePopupOpen(false);
   };
 
   const getWarningMessages = () => {
-    const messages = [];
-    if (!categoryResolved) {
-      messages.push('연결된 카테고리를 수정하거나 삭제하세요');
-      return messages;
+    const messages = [] as string[];
+
+    if (deleteError) {
+      messages.push(deleteError);
     }
-    if (!userResolved) {
-      messages.push('연결된 사용자를 수정하거나 삭제하세요');
-    }
+
     return messages;
   };
 
   const hasWarnings = () => {
-    return !categoryResolved || !userResolved;
+    return deleteError !== null;
   };
 
   const handleInviteClick = () => {
@@ -100,6 +163,52 @@ export default function DepartmentPage() {
     console.log('설정할 부서들:', departments);
     // TODO: 실제 부서 설정 로직 구현
   };
+
+  if (isLoading) {
+    return (
+      <PageWrapper>
+        <SideBarWrapper>
+          <SideBar
+            logoSymbol={symbolTextLogo}
+            menuItems={menuItems}
+            activeMenuId={activeMenuId}
+            onMenuClick={setActiveMenuId}
+          />
+        </SideBarWrapper>
+        <Content>
+          <ContentWrapper>
+            <LoadingContainer>
+              <Loading size={24} color={colors.Normal} />
+              <LoadingText>부서 목록을 불러오는 중...</LoadingText>
+            </LoadingContainer>
+          </ContentWrapper>
+        </Content>
+      </PageWrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageWrapper>
+        <SideBarWrapper>
+          <SideBar
+            logoSymbol={symbolTextLogo}
+            menuItems={menuItems}
+            activeMenuId={activeMenuId}
+            onMenuClick={setActiveMenuId}
+          />
+        </SideBarWrapper>
+        <Content>
+          <ContentWrapper>
+            <ErrorMessage>
+              {'부서 목록을 불러오는데 실패했습니다.'}
+              <RetryButton onClick={() => refetch()}>다시 시도</RetryButton>
+            </ErrorMessage>
+          </ContentWrapper>
+        </Content>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
@@ -116,7 +225,7 @@ export default function DepartmentPage() {
           <HeaderSection>
             <PageTitle>부서 설정</PageTitle>
             <DescriptionRow>
-              <Description>Flow의 부서를 설정할 수 있는 어드민 입니다.</Description>
+              <Description>Flow의 부서를 설정할 수 있는 어드민입니다.</Description>
             </DescriptionRow>
           </HeaderSection>
           <Divider />
@@ -129,62 +238,74 @@ export default function DepartmentPage() {
             <TableLayout>
               <TableHeader columns={columns} />
               <tbody>
-                {departments.map((department, index) => (
-                  <TableRow key={index}>
-                    <td style={{ width: '300px', textAlign: 'center' }}>
-                      {editingIndex === index ? (
-                        <DepartmentEditCell>
-                          <NameInput
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSave(index);
-                              if (e.key === 'Escape') handleCancel();
-                            }}
-                            autoFocus
-                          />
-                          <EditButtons>
-                            <SaveButton onClick={() => handleSave(index)}>저장</SaveButton>
-                            <CancelButton onClick={handleCancel}>취소</CancelButton>
-                          </EditButtons>
-                        </DepartmentEditCell>
-                      ) : (
-                        <DepartmentCell>{department.name}</DepartmentCell>
-                      )}
-                    </td>
-                    <td style={{ width: '300px', textAlign: 'center' }}>
-                      {department.managerCount}명
-                    </td>
-                    <td style={{ width: '300px', textAlign: 'center' }}>
-                      {department.categoryCount}건
-                    </td>
-                    <td style={{ width: '100px', textAlign: 'center' }}>
-                      <ActionButtons>
-                        <ActionButton onClick={() => handleEdit(index)}>
-                          <EditIcon />
-                        </ActionButton>
-                        <ActionButton onClick={() => handleDelete(department.id)}>
-                          <DeleteIcon />
-                        </ActionButton>
-                      </ActionButtons>
-                    </td>
-                  </TableRow>
-                ))}
+                {departments.length === 0 ? (
+                  <EmptyRow>
+                    <EmptyCell colSpan={columns.length}>
+                      <EmptyMessage>등록된 부서가 없습니다.</EmptyMessage>
+                    </EmptyCell>
+                  </EmptyRow>
+                ) : (
+                  departments.map((department, index) => (
+                    <TableRow key={department.departmentId}>
+                      <td style={{ width: '300px', textAlign: 'center' }}>
+                        {editingIndex === index ? (
+                          <DepartmentEditCell>
+                            <NameInput
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSave();
+                                if (e.key === 'Escape') handleCancel();
+                              }}
+                              autoFocus
+                            />
+                            <EditButtons>
+                              <SaveButton onClick={handleSave} disabled={updateMutation.isPending}>
+                                {updateMutation.isPending ? (
+                                  <Loading size={12} color="white" />
+                                ) : (
+                                  '저장'
+                                )}
+                              </SaveButton>
+                              <CancelButton onClick={handleCancel}>취소</CancelButton>
+                            </EditButtons>
+                          </DepartmentEditCell>
+                        ) : (
+                          <DepartmentCell>{department.departmentName}</DepartmentCell>
+                        )}
+                      </td>
+                      <td style={{ width: '300px', textAlign: 'center' }}>
+                        {department.adminCount}명
+                      </td>
+                      <td style={{ width: '300px', textAlign: 'center' }}>
+                        {department.categoryCount}건
+                      </td>
+                      <td style={{ width: '100px', textAlign: 'center' }}>
+                        <ActionButtons>
+                          <ActionButton onClick={() => handleEdit(index)}>
+                            <EditIcon />
+                          </ActionButton>
+                          <ActionButton onClick={() => handleDelete(department.departmentId)}>
+                            <DeleteIcon />
+                          </ActionButton>
+                        </ActionButtons>
+                      </td>
+                    </TableRow>
+                  ))
+                )}
               </tbody>
             </TableLayout>
           </TableSection>
         </ContentWrapper>
       </Content>
-
       <DepartmentSettingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleModalSubmit}
       />
-
       <Popup
         isOpen={isDeletePopupOpen}
-        title="관리자 부서 삭제"
+        title="부서 삭제"
         message="정말로 관리자 부서를 삭제하겠습니까?"
         warningMessages={getWarningMessages()}
         onClose={handleCancelDelete}
@@ -193,6 +314,12 @@ export default function DepartmentPage() {
         confirmText="삭제"
         disabled={hasWarnings()}
       />
+
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </PageWrapper>
   );
 }
@@ -329,8 +456,13 @@ const SaveButton = styled.button`
   font-weight: ${fontWeight.Medium};
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: ${colors.Normal_active};
+  }
+
+  &:disabled {
+    background-color: ${colors.Disabled};
+    cursor: not-allowed;
   }
 `;
 
@@ -362,4 +494,73 @@ const DepartmentCell = styled.div`
   svg {
     color: ${colors.BoxText};
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin-top: 30%;
+`;
+
+const LoadingText = styled.p`
+  font-size: 18px;
+  color: ${colors.BoxText};
+`;
+
+const ErrorMessage = styled.div`
+  font-size: 18px;
+  color: ${colors.BoxText};
+  text-align: center;
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30%;
+`;
+
+const RetryButton = styled.button`
+  padding: 8px 16px;
+  background-color: ${colors.Normal};
+  color: ${colors.White};
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: ${fontWeight.Medium};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${colors.Normal_active};
+  }
+`;
+
+const EmptyRow = styled.tr`
+  height: 100px; /* Adjust as needed */
+`;
+
+const EmptyCell = styled.td`
+  text-align: center;
+  color: ${colors.BoxText};
+  font-size: 16px;
+`;
+
+const EmptyMessage = styled.p`
+  margin-top: 20px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1100;
+  pointer-events: none;
 `;
