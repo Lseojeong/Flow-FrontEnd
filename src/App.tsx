@@ -12,16 +12,14 @@ import { useLocation } from 'react-router-dom';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
-  const { checkLoginStatus, logout } = useAuthStore();
+  const { checkLoginStatus } = useAuthStore();
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '/login') {
-      logout();
-      return;
+    if (location.pathname !== '/') {
+      checkLoginStatus();
     }
-    checkLoginStatus();
-  }, [location.pathname, checkLoginStatus, logout]);
+  }, [location.pathname, checkLoginStatus]);
 
   return (
     <>

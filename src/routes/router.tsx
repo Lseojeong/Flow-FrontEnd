@@ -3,6 +3,7 @@ import { RouteObject } from 'react-router-dom';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import SigninPage from '@/pages/auth/SigninPage';
+import { PublicRoute } from './publicRoute';
 
 import DictionaryPage from '@/pages/dictionary/DictionaryPage';
 import DictionaryDetailPage from '@/pages/dictionary/DictionaryDetailPage';
@@ -24,14 +25,18 @@ import { ProtectedRoute } from './protectedRoute';
 const routes: RouteObject[] = [
   {
     path: '/',
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
   },
   {
     path: '/signin',
     element: (
-      <ProtectedRoute>
+      <PublicRoute>
         <SigninPage />
-      </ProtectedRoute>
+      </PublicRoute>
     ),
   },
   {
