@@ -6,6 +6,7 @@ import FlatDivider from '@/components/common/divider/FlatDivider';
 import DepartmentTag from '@/components/department-setting/department-tag/DepartmentTag';
 import DepartmentInput from '@/components/department-setting/input/DepartmentInput';
 import { DepartmentModalProps } from './DepartmentModal.types';
+import { useCreateDepartments } from '@/apis/department/mutation';
 
 const MAX_DEPARTMENT_TAGS = 10;
 
@@ -13,6 +14,8 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
   const [departments, setDepartments] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [error, setError] = useState<string>('');
+
+  const createMutation = useCreateDepartments();
 
   const handleAddDepartment = () => {
     const trimmedValue = inputValue.trim();
@@ -54,9 +57,36 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit(departments);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      await createMutation.mutateAsync({ departmentList: departments });
+      onSubmit(departments);
+      (window as { showToast?: (_message: string) => void }).showToast?.('부서가 생성되었습니다.');
+      onClose();
+    } catch (e) {
+      const errorResponse = e as {
+        response?: {
+          data?: {
+            code?: string;
+            message?: string;
+            result?: { duplicateDepartmentNames?: string[] };
+          };
+        };
+      };
+      const errorData = errorResponse?.response?.data;
+
+      if (errorData?.code === 'DEPARTMENT400' && errorData?.result?.duplicateDepartmentNames) {
+        const duplicateNames = errorData.result.duplicateDepartmentNames;
+        const message = `다음 부서명이 이미 존재합니다: ${duplicateNames.join(', ')}`;
+        setError(message);
+
+        const filteredDepartments = departments.filter((dept) => !duplicateNames.includes(dept));
+        setDepartments(filteredDepartments);
+      } else {
+        const message = errorData?.message || '부서 생성에 실패했습니다.';
+        setError(message);
+      }
+    }
   };
 
   const handleClose = () => {
@@ -108,7 +138,8 @@ const DepartmentModal: React.FC<DepartmentModalProps> = ({ isOpen, onClose, onSu
             variant="primary"
             onClick={handleSubmit}
             size="medium"
-            disabled={departments.length === 0}
+            disabled={departments.length === 0 || createMutation.isPending}
+            isLoading={createMutation.isPending}
           >
             적용
           </Button>
