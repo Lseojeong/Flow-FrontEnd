@@ -68,3 +68,9 @@ export interface InviteAdminErrorResponse {
     departmentId: string;
   }[];
 }
+
+export interface DeleteAdminResponse {
+  code: string;
+  message: string;
+  result: Record<string, never>;
+}

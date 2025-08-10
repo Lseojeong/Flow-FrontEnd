@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUserSetting, changeAdminDepartment, getDepartmentList, inviteAdmin } from './api';
+import {
+  getUserSetting,
+  changeAdminDepartment,
+  getDepartmentList,
+  inviteAdmin,
+  deleteAdmin,
+} from './api';
 
 export const useUserSetting = () => {
   return useQuery({
@@ -39,6 +45,17 @@ export const useInviteAdmin = () => {
 
   return useMutation({
     mutationFn: inviteAdmin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSetting'] });
+    },
+  });
+};
+
+export const useDeleteAdmin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteAdmin,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userSetting'] });
     },

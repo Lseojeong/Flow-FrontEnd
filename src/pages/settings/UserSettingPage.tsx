@@ -11,9 +11,15 @@ import DepartmentSelect from '@/components/common/department/DepartmentSelect';
 import { Button } from '@/components/common/button/Button';
 import UserModal from '@/components/user-settiing/user-modal/UserModal';
 import { Popup } from '@/components/common/popup/Popup';
-import { useUserSetting, useChangeAdminDepartment, useDepartmentList } from '@/apis/user/query';
+import {
+  useUserSetting,
+  useChangeAdminDepartment,
+  useDepartmentList,
+  useDeleteAdmin,
+} from '@/apis/user/query';
 import { Loading } from '@/components/common/loading/Loading';
 import { formatDateTime } from '@/utils/formatDateTime';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -31,9 +37,11 @@ export default function UserSettingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useUserSetting();
   const changeDepartmentMutation = useChangeAdminDepartment();
+  const deleteAdminMutation = useDeleteAdmin();
   const { data: departmentData } = useDepartmentList();
 
   const users =
@@ -74,16 +82,12 @@ export default function UserSettingPage() {
     );
 
     if (!selectedDepartment) {
-      if (typeof window !== 'undefined' && window.showToast) {
-        window.showToast('선택된 부서 정보를 찾을 수 없습니다.');
-      }
+      setErrorToastMessage('선택된 부서 정보를 찾을 수 없습니다.');
       return;
     }
 
     if (!selectedDepartment.departmentId) {
-      if (typeof window !== 'undefined' && window.showToast) {
-        window.showToast('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
-      }
+      setErrorToastMessage('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
       return;
     }
 
@@ -105,9 +109,7 @@ export default function UserSettingPage() {
           (response?.result as { id?: string })?.id ||
           response?.message ||
           '부서 변경에 실패했습니다.';
-        if (typeof window !== 'undefined' && window.showToast) {
-          window.showToast(errorMessage);
-        }
+        setErrorToastMessage(errorMessage);
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -115,9 +117,7 @@ export default function UserSettingPage() {
           ?.response?.data?.result?.id ||
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '부서 변경에 실패했습니다.';
-      if (typeof window !== 'undefined' && window.showToast) {
-        window.showToast(errorMessage);
-      }
+      setErrorToastMessage(errorMessage);
     }
   };
 
@@ -131,13 +131,30 @@ export default function UserSettingPage() {
     setIsDeletePopupOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (userToDelete) {
-      // TODO: 실제 API 호출로 사용자 삭제
-      console.log('사용자 삭제:', userToDelete);
-      setUserToDelete(null);
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const response = await deleteAdminMutation.mutateAsync(userToDelete);
+
+      if (response?.code === 'COMMON200') {
+        if (typeof window !== 'undefined' && window.showToast) {
+          window.showToast('관리자가 성공적으로 탈퇴되었습니다.');
+        }
+        setUserToDelete(null);
+        refetch();
+      } else {
+        const errorMessage = response?.message || '관리자 탈퇴에 실패했습니다.';
+        setErrorToastMessage(errorMessage);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '관리자 탈퇴에 실패했습니다.';
+      setErrorToastMessage(errorMessage);
+    } finally {
+      setIsDeletePopupOpen(false);
     }
-    setIsDeletePopupOpen(false);
   };
 
   const handleCancelDelete = () => {
@@ -305,6 +322,11 @@ export default function UserSettingPage() {
         cancelText="취소"
         confirmText="탈퇴"
       />
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </PageWrapper>
   );
 }
@@ -519,4 +541,11 @@ const EmptyCell = styled.td`
 
 const EmptyMessage = styled.p`
   margin-top: 20px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
 `;
