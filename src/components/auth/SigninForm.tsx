@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo/index';
@@ -108,7 +108,7 @@ export function SigninForm({ invitationToken }: SigninFormProps) {
     }
   };
 
-  const getPasswordCheckErrorMessage = () => {
+  const getPasswordCheckErrorMessage = useMemo(() => {
     if (passwordCheckField.value.trim() === '') {
       return passwordCheckField.errorMessage;
     }
@@ -116,23 +116,43 @@ export function SigninForm({ invitationToken }: SigninFormProps) {
       return '* 비밀번호가 일치하지 않습니다.';
     }
     return '';
-  };
+  }, [
+    passwordCheckField.value,
+    passwordCheckField.errorMessage,
+    passwordCheckField.isBlurred,
+    passwordField.value,
+  ]);
 
-  const isDisabled =
-    nameField.value.trim() === '' ||
-    adminIdField.value.trim() === '' ||
-    passwordField.value.trim() === '' ||
-    passwordCheckField.value.trim() === '' ||
-    nameField.errorMessage !== '' ||
-    adminIdField.errorMessage !== '' ||
-    passwordField.errorMessage !== '' ||
-    (passwordCheckField.isBlurred &&
-      passwordCheckField.value.trim() !== '' &&
-      passwordCheckField.value !== passwordField.value) ||
-    !nameField.isBlurred ||
-    !adminIdField.isBlurred ||
-    !passwordField.isBlurred ||
-    !passwordCheckField.isBlurred;
+  const isDisabled = useMemo(() => {
+    return (
+      nameField.value.trim() === '' ||
+      adminIdField.value.trim() === '' ||
+      passwordField.value.trim() === '' ||
+      passwordCheckField.value.trim() === '' ||
+      nameField.errorMessage !== '' ||
+      adminIdField.errorMessage !== '' ||
+      passwordField.errorMessage !== '' ||
+      (passwordCheckField.isBlurred &&
+        passwordCheckField.value.trim() !== '' &&
+        passwordCheckField.value !== passwordField.value) ||
+      !nameField.isBlurred ||
+      !adminIdField.isBlurred ||
+      !passwordField.isBlurred ||
+      !passwordCheckField.isBlurred
+    );
+  }, [
+    nameField.value,
+    nameField.errorMessage,
+    nameField.isBlurred,
+    adminIdField.value,
+    adminIdField.errorMessage,
+    adminIdField.isBlurred,
+    passwordField.value,
+    passwordField.errorMessage,
+    passwordField.isBlurred,
+    passwordCheckField.value,
+    passwordCheckField.isBlurred,
+  ]);
 
   return (
     <Card>
@@ -196,7 +216,7 @@ export function SigninForm({ invitationToken }: SigninFormProps) {
           value={passwordCheckField.value}
           onChange={passwordCheckField.onChange}
           onBlur={handlePasswordCheckBlur}
-          error={getPasswordCheckErrorMessage()}
+          error={getPasswordCheckErrorMessage}
         />
         <Button size="large" type="submit" disabled={isDisabled}>
           완료
