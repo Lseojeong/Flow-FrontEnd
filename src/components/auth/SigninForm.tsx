@@ -100,6 +100,11 @@ export function SigninForm({ invitationToken }: SigninFormProps) {
         passwordCheck: passwordCheckField.value,
         invitationToken,
       });
+
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast('회원가입이 완료되었습니다.');
+      }
+
       navigate('/');
     } catch {
       setSubmitError(
