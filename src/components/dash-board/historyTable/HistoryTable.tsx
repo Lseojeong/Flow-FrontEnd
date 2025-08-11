@@ -25,6 +25,24 @@ export const HistoryTable: React.FC = () => {
 
   const fetchHistory = useCallback(
     async (cursor?: string) => {
+      const hasValidParams = !!(
+        (menu && menu.trim() !== '') ||
+        (category && category.trim() !== '') ||
+        files.length > 0 ||
+        (startDate && startDate.trim() !== '' && endDate && endDate.trim() !== '')
+      );
+
+      if (!hasValidParams) {
+        return {
+          code: 'COMMON200',
+          message: '성공',
+          result: {
+            historyList: [],
+            pagination: { isLast: true },
+          },
+        };
+      }
+
       return getHistory({
         menu: menu || undefined,
         category: category || undefined,
@@ -58,7 +76,12 @@ export const HistoryTable: React.FC = () => {
   >({
     fetchFn: fetchHistory,
     queryKey: ['history', menu, category, ...files, startDate, endDate],
-    enabled: !!(menu || category || files.length > 0 || (startDate && endDate)),
+    enabled: !!(
+      (menu && menu.trim() !== '') ||
+      (category && category.trim() !== '') ||
+      files.length > 0 ||
+      (startDate && startDate.trim() !== '' && endDate && endDate.trim() !== '')
+    ),
   });
 
   const columns = [

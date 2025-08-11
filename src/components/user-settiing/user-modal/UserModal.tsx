@@ -8,7 +8,6 @@ import UserTag from '@/components/user-settiing/tag/UserTag';
 import { UserModalProps, EmailTagData, ValidationErrors } from './UserModal.types';
 import FlatDivider from '@/components/common/divider/FlatDivider';
 import { useInviteAdmin } from '@/apis/user/query';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const MAX_EMAIL_TAGS = 10;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -23,8 +22,7 @@ const UserModal: React.FC<UserModalProps> = ({
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [emailTags, setEmailTags] = useState<EmailTagData[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const inviteAdminMutation = useInviteAdmin();
 
   React.useEffect(() => {
@@ -139,7 +137,9 @@ const UserModal: React.FC<UserModalProps> = ({
       );
 
       if (!selectedDepartmentData || !selectedDepartmentData.departmentId) {
-        setSubmitError('부서 정보를 찾을 수 없습니다.');
+        if (typeof window !== 'undefined' && window.showErrorToast) {
+          window.showErrorToast('부서 정보를 찾을 수 없습니다.');
+        }
         return;
       }
 
@@ -159,14 +159,15 @@ const UserModal: React.FC<UserModalProps> = ({
         setSelectedDepartment(null);
         setEmailTags([]);
         setErrors({});
-        setSubmitError(null);
+
         onClose();
       } else {
         const errorMessage = response?.message || '초대에 실패했습니다.';
-        setSubmitError(errorMessage);
+        if (typeof window !== 'undefined' && window.showErrorToast) {
+          window.showErrorToast(errorMessage);
+        }
       }
     } catch (error: unknown) {
-      console.error('초대 실패:', error);
       const errorResponse = error as {
         response?: {
           data?: {
@@ -200,7 +201,9 @@ const UserModal: React.FC<UserModalProps> = ({
         displayMessage = errorMessage;
       }
 
-      setSubmitError(displayMessage);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(displayMessage);
+      }
     }
   };
 
@@ -209,7 +212,7 @@ const UserModal: React.FC<UserModalProps> = ({
     setSelectedDepartment(null);
     setEmailTags([]);
     setErrors({});
-    setSubmitError(null);
+
     onClose();
   };
 
@@ -249,7 +252,9 @@ const UserModal: React.FC<UserModalProps> = ({
                 />
                 {errors.department && <ErrorMessage>{errors.department}</ErrorMessage>}
               </DepartmentSection>
-              <InviteButton onClick={handleAddEmail}>초대</InviteButton>
+              <InviteButton onClick={handleAddEmail} disabled={inviteAdminMutation.isPending}>
+                초대
+              </InviteButton>
             </InputRow>
           </FormSection>
 
@@ -264,7 +269,6 @@ const UserModal: React.FC<UserModalProps> = ({
               />
             ))}
           </TagsSection>
-          {submitError && <ErrorMessage>{submitError}</ErrorMessage>}
         </ModalBody>
 
         <ModalFooter>
@@ -277,16 +281,12 @@ const UserModal: React.FC<UserModalProps> = ({
             size="medium"
             type="submit"
             disabled={isSubmitDisabled}
+            isLoading={inviteAdminMutation.isPending}
           >
             등록
           </Button>
         </ModalFooter>
       </ModalContent>
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
-      )}
     </ModalOverlay>
   );
 };
@@ -376,6 +376,11 @@ const InviteButton = styled.button`
   &:hover {
     background: ${colors.Normal_hover};
   }
+
+  &:disabled {
+    background: rgba(15, 66, 157, 0.5);
+    cursor: not-allowed;
+  }
 `;
 
 const ErrorMessage = styled.div`
@@ -397,13 +402,6 @@ const ModalFooter = styled.div`
   gap: 12px;
   justify-content: center;
   padding: 0 24px 24px 24px;
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 9999;
 `;
 
 export default UserModal;

@@ -13,7 +13,6 @@ import { Popup } from '@/components/common/popup/Popup';
 import { useDepartmentSettingList } from '@/apis/department/query';
 import { useUpdateDepartment, useDeleteDepartment } from '@/apis/department/mutation';
 import { Loading } from '@/components/common/loading/Loading';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -32,7 +31,6 @@ export default function DepartmentPage() {
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useDepartmentSettingList();
   const departments = data?.result?.departmentList ?? [];
@@ -52,7 +50,9 @@ export default function DepartmentPage() {
     const trimmedName = editingName.trim();
 
     if (!trimmedName) {
-      setErrorToastMessage('부서명을 입력해주세요.');
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast('부서명을 입력해주세요.');
+      }
       return;
     }
 
@@ -76,7 +76,9 @@ export default function DepartmentPage() {
     } catch (e) {
       const errorResponse = e as { response?: { data?: { message?: string } } };
       const message = errorResponse?.response?.data?.message || '부서명 수정에 실패했습니다.';
-      setErrorToastMessage(message);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(message);
+      }
     }
   };
 
@@ -126,7 +128,9 @@ export default function DepartmentPage() {
           return;
         } else {
           const message = errorData?.message || '부서 삭제에 실패했습니다.';
-          setErrorToastMessage(message);
+          if (typeof window !== 'undefined' && window.showErrorToast) {
+            window.showErrorToast(message);
+          }
           setIsDeletePopupOpen(false);
           return;
         }
@@ -159,9 +163,9 @@ export default function DepartmentPage() {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (departments: string[]) => {
-    console.log('설정할 부서들:', departments);
-    // TODO: 실제 부서 설정 로직 구현
+  const handleModalSubmit = () => {
+    setIsModalOpen(false);
+    refetch();
   };
 
   if (isLoading) {
@@ -314,12 +318,6 @@ export default function DepartmentPage() {
         confirmText="삭제"
         disabled={hasWarnings()}
       />
-
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
-      )}
     </PageWrapper>
   );
 }
@@ -550,17 +548,4 @@ const EmptyCell = styled.td`
 
 const EmptyMessage = styled.p`
   margin-top: 20px;
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 1100;
-  pointer-events: none;
 `;

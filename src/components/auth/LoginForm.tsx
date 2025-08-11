@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo';
@@ -22,11 +22,19 @@ export function LoginForm() {
 
   const [isError, setIsError] = useState(false);
 
-  const isDisabled =
-    adminIdField.value.trim() === '' ||
-    passwordField.value.trim() === '' ||
-    adminIdField.errorMessage !== '' ||
-    passwordField.errorMessage !== '';
+  const isDisabled = useMemo(() => {
+    return (
+      adminIdField.value.trim() === '' ||
+      passwordField.value.trim() === '' ||
+      adminIdField.errorMessage !== '' ||
+      passwordField.errorMessage !== ''
+    );
+  }, [
+    adminIdField.value,
+    adminIdField.errorMessage,
+    passwordField.value,
+    passwordField.errorMessage,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +132,7 @@ const Form = styled.form`
 const ErrorMessage = styled.div`
   width: 370px;
   color: ${colors.MainRed};
-  font-size: 12px;
+  font-size: 10px;
   text-align: right;
   margin-bottom: 16px;
   padding: 8px;
