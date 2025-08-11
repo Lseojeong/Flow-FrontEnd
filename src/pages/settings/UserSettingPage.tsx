@@ -166,10 +166,9 @@ export default function UserSettingPage() {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (emails: string[], department: string) => {
-    console.log('초대할 이메일:', emails);
-    console.log('부서:', department);
-    // TODO: 실제 초대 로직 구현
+  const handleModalSubmit = () => {
+    setIsModalOpen(false);
+    refetch();
   };
 
   if (isLoading) {
