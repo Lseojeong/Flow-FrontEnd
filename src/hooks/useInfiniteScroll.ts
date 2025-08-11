@@ -66,7 +66,7 @@ export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
     setCursor(undefined);
     seenKeysRef.current.clear();
     isFetchingRef.current = false;
-    hasInitialLoadedRef.current = false; // ✅ 이거 추가
+    hasInitialLoadedRef.current = false;
 
     setIsLoading(true);
     try {

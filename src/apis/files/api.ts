@@ -7,11 +7,11 @@ export interface CreatePresignedUrlBody {
   fileSize: number;
   folderType: FolderType;
   organizationId: string;
-  contentType?: string; // Content-Type 추가
+  contentType?: string;
 }
 
 export interface CreatePresignedUrlResult {
-  fileUrl: string;
+  fileUrl: string; // presigned PUT URL
   fileKey: string;
 }
 
@@ -21,27 +21,11 @@ export interface CreatePresignedUrlResponse {
   result: CreatePresignedUrlResult;
 }
 
-export const createPresignedUrl = (body: CreatePresignedUrlBody) =>
-  axiosInstance.post<CreatePresignedUrlResponse>('/admin/files/url', body);
-
-export const PUBLIC_OBJECT_BASE =
-  'https://objectstorage.kr-central-2.kakaocloud.com/v1/8b70d156b8334e4fb16a680a47e8dc79/flow-file-bucket/';
-
-export function extractFileKeyFromPresignedUrl(presignedUrl: string): string {
-  try {
-    const url = new URL(presignedUrl);
-    const marker = '/flow-file-bucket/';
-    const idx = url.pathname.indexOf(marker);
-    if (idx === -1) return '';
-    return url.pathname.substring(idx + marker.length);
-  } catch {
-    return '';
-  }
-}
-
-export function buildPublicUrlFromKey(fileKey: string): string {
-  return `${PUBLIC_OBJECT_BASE}${fileKey}`;
-}
+// Presigned URL 발급 API
+export const createPresignedUrl = (body: CreatePresignedUrlBody) => {
+  console.log('[API 요청] Presigned URL 발급', body);
+  return axiosInstance.post<CreatePresignedUrlResponse>('/admin/files/url', body);
+};
 
 // 확장자 → Content-Type 매핑
 function getContentTypeByExt(fileName: string): string {
@@ -51,15 +35,25 @@ function getContentTypeByExt(fileName: string): string {
   return 'application/octet-stream';
 }
 
+// Presigned URL 기반 Public URL 생성 (쿼리스트링 제거)
+export function buildPublicUrlFromPresigned(presignedUrl: string): string {
+  try {
+    const urlObj = new URL(presignedUrl);
+    urlObj.search = ''; // ? 이후 제거
+    return urlObj.toString();
+  } catch {
+    return presignedUrl;
+  }
+}
+
+// Presigned URL에 PUT 업로드
 export const putFileToPresignedUrl = async (url: string, file: File, contentType?: string) => {
   console.log('=== putFileToPresignedUrl 호출됨 ===');
-  console.log('업로드 URL:', url);
-  console.log('파일 정보:', {
-    name: file.name,
-    size: file.size,
-    type: file.type,
+  console.log('PUT 업로드 URL:', url);
+  console.log('PUT 요청 헤더:', {
+    'Content-Type': contentType || file.type || 'application/octet-stream',
   });
-  console.log('Content-Type:', contentType || file.type || 'application/octet-stream');
+  console.log('PUT 업로드 파일 정보:', { name: file.name, size: file.size, type: file.type });
 
   const res = await fetch(url, {
     method: 'PUT',
@@ -84,6 +78,7 @@ export interface UploadViaPresignedArgs {
   file: File;
   folderType: FolderType;
   organizationId: string;
+  categoryId?: string;
   fileName?: string;
   contentType?: string;
 }
@@ -92,8 +87,10 @@ export interface UploadViaPresignedResult {
   presignedPutUrl: string;
   fileKey: string;
   publicUrl: string;
+  originalFileName: string;
 }
 
+// presigned URL 발급 + 파일 업로드
 export async function uploadViaPresigned({
   file,
   folderType,
@@ -102,51 +99,136 @@ export async function uploadViaPresigned({
   contentType,
 }: UploadViaPresignedArgs): Promise<UploadViaPresignedResult> {
   console.log('=== uploadViaPresigned 시작 ===');
-  console.log('파라미터:', { file, folderType, organizationId, fileName, contentType });
 
-  try {
-    const name =
-      fileName ||
-      (file instanceof File
-        ? file.name
-        : (() => {
-            throw new Error('fileName is required for Blob');
-          })());
+  const rawName =
+    fileName ||
+    (file instanceof File
+      ? file.name
+      : (() => {
+          throw new Error('fileName is required for Blob');
+        })());
+  const name = rawName.split(/[/\\]/).pop() || rawName;
+  const mime = contentType || getContentTypeByExt(name);
 
-    // Content-Type 결정 (인자 우선, 없으면 확장자 기반)
-    const mime = contentType || getContentTypeByExt(name);
-    console.log('[1] 결정된 MIME 타입:', mime);
+  console.log('[1] Presigned URL 발급 요청 데이터:', {
+    fileName: name,
+    fileSize: file.size,
+    folderType,
+    organizationId,
+    contentType: mime,
+  });
 
-    // presigned URL 발급 시 Content-Type 포함
-    console.log('[2] Presigned URL 발급 요청 시작');
-    const uuidFile = `${crypto.randomUUID()}_${name}`;
+  // presigned URL 발급
+  const presigned = await createPresignedUrl({
+    fileName: name,
+    fileSize: file.size,
+    folderType,
+    organizationId,
+    contentType: mime,
+  });
 
-    const presigned = await createPresignedUrl({
-      fileName: uuidFile,
-      fileSize: file.size,
-      folderType,
-      organizationId,
-      contentType: mime,
-    });
-    console.log('[3] Presigned URL 발급 결과:', presigned.data);
+  console.log('[1-응답] Presigned URL 발급 성공:', presigned.data);
 
-    const { fileUrl: presignedPutUrl } = presigned.data.result;
-    console.log('[4] Presigned PUT URL:', presignedPutUrl);
+  const presignedPutUrl = presigned.data.result.fileUrl;
+  const fileKey = presigned.data.result.fileKey;
 
-    console.log('[5] 파일 PUT 업로드 시작');
-    await putFileToPresignedUrl(presignedPutUrl, file, mime);
+  console.log('[2] Presigned URL:', presignedPutUrl);
 
-    console.log('[6] fileKey 추출 시작');
-    const fileKey = extractFileKeyFromPresignedUrl(presignedPutUrl);
-    console.log('[7] 추출된 fileKey:', fileKey);
+  // presigned URL로 PUT 업로드
+  console.log('[3] 파일 PUT 업로드 시작');
+  await putFileToPresignedUrl(presignedPutUrl, file, mime);
 
-    const publicUrl = buildPublicUrlFromKey(fileKey);
-    console.log('[8] Public URL:', publicUrl);
+  // Public URL 생성
+  const publicUrl = buildPublicUrlFromPresigned(presignedPutUrl);
+  console.log('[4] Public URL 생성 완료:', publicUrl);
+  console.log('=== uploadViaPresigned 완료 ===');
 
-    console.log('=== uploadViaPresigned 완료 ===');
-    return { presignedPutUrl, fileKey, publicUrl };
-  } catch (error) {
-    console.error('❌ [ERROR] uploadViaPresigned 실패:', error);
-    throw error; // 호출부에서도 캐치 가능하도록 다시 던짐
+  return {
+    presignedPutUrl,
+    fileKey,
+    publicUrl,
+    originalFileName: name,
+  };
+}
+
+export interface RegisterFileBody {
+  categoryId: string;
+  fileKey: string;
+  fileName: string;
+}
+
+export const registerFileByFolderType = (folderType: FolderType, body: RegisterFileBody) => {
+  let endpoint = '';
+  switch (folderType) {
+    case 'dict':
+      endpoint = '/admin/dict/files';
+      break;
+    case 'docs':
+      endpoint = '/admin/docs/files';
+      break;
+    case 'faqs':
+      endpoint = '/admin/faqs/files';
+      break;
+    default:
+      throw new Error(`folderType ${folderType}는 지원되지 않습니다.`);
   }
+  console.log(`[API 요청] ${folderType} 파일 등록`, body);
+  return axiosInstance.post(endpoint, body);
+};
+
+export interface UploadAndRegisterArgs extends UploadViaPresignedArgs {
+  categoryId: string; // ✅ 필수
+}
+
+// 업로드 후 DB 등록까지
+export async function uploadAndRegisterFile({
+  file,
+  folderType,
+  organizationId,
+  categoryId,
+  fileName,
+  contentType,
+}: UploadAndRegisterArgs) {
+  console.log('=== uploadAndRegisterFile 시작 ===');
+
+  if (!categoryId) {
+    throw new Error('categoryId가 없습니다. 업로드 전에 카테고리를 선택하세요.');
+  }
+
+  // 1. presigned URL 발급 + 업로드
+  const { fileKey, publicUrl, presignedPutUrl } = await uploadViaPresigned({
+    file,
+    folderType,
+    organizationId,
+    fileName,
+    contentType,
+  });
+
+  // 2. 파일명 추출
+  const cleanFileName = (() => {
+    try {
+      const urlObj = new URL(presignedPutUrl);
+      urlObj.search = '';
+      return decodeURIComponent(urlObj.pathname.split('/').pop() || file.name);
+    } catch {
+      return file.name;
+    }
+  })();
+
+  console.log('[추출된 파일명]', cleanFileName);
+
+  // 3. DB 등록 (folderType별 API 자동 선택)
+  const dbRes = await registerFileByFolderType(folderType, {
+    categoryId,
+    fileKey,
+    fileName: cleanFileName,
+  });
+
+  console.log('[3] DB 등록 완료:', dbRes.data);
+
+  return {
+    publicUrl,
+    fileKey,
+    dbResponse: dbRes.data,
+  };
 }

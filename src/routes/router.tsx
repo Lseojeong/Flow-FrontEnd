@@ -3,6 +3,7 @@ import { RouteObject } from 'react-router-dom';
 
 import LoginPage from '@/pages/auth/LoginPage';
 import SigninPage from '@/pages/auth/SigninPage';
+import { PublicRoute } from './publicRoute';
 
 import DictionaryPage from '@/pages/dictionary/DictionaryPage';
 import DictionaryDetailPage from '@/pages/dictionary/DictionaryDetailPage';
@@ -20,18 +21,23 @@ import DepartmentSettingPage from '@/pages/settings/DepartmentSettingPage';
 import AccessDeniedPage from '@/pages/error/AccessDeniedPage';
 
 import { ProtectedRoute } from './protectedRoute';
+import { AuthorizedRoute } from './authorizedRoute';
 
 const routes: RouteObject[] = [
   {
     path: '/',
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
   },
   {
     path: '/signin',
     element: (
-      <ProtectedRoute>
+      <PublicRoute>
         <SigninPage />
-      </ProtectedRoute>
+      </PublicRoute>
     ),
   },
   {
@@ -109,7 +115,9 @@ const routes: RouteObject[] = [
     path: '/settings/flow',
     element: (
       <ProtectedRoute>
-        <FlowSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <FlowSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },
@@ -117,7 +125,9 @@ const routes: RouteObject[] = [
     path: '/settings/user',
     element: (
       <ProtectedRoute>
-        <UserSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <UserSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },
@@ -125,7 +135,9 @@ const routes: RouteObject[] = [
     path: '/settings/department',
     element: (
       <ProtectedRoute>
-        <DepartmentSettingPage />
+        <AuthorizedRoute requiredPermission="ROOT">
+          <DepartmentSettingPage />
+        </AuthorizedRoute>
       </ProtectedRoute>
     ),
   },

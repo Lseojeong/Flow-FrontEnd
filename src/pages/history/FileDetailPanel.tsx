@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styled from 'styled-components';
-import { DictFile, getPaginatedHistoryData } from '@/pages/mock/dictMock';
-import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import DownloadIcon from '@/assets/icons/common/download.svg?react';
 import ArrowIcon from '@/assets/icons/common/arrow.svg?react';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { colors, fontWeight } from '@/styles';
+import type { FileItem } from '@/types/dictionary';
+
+import { getDictFileHistories, searchDictFileHistories } from '@/apis/dictcategory_detail/api';
+import type { DictFileHistory } from '@/apis/dictcategory_detail/api';
 
 interface Props {
-  file: DictFile;
+  file: FileItem;
   onClose: () => void;
 }
 
@@ -28,17 +31,16 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
-  const isDateInRange = (dateStr: string) => {
-    if (!startDate && !endDate) return true;
-    const date = new Date(dateStr);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    return (!start || date >= start) && (!end || date <= end);
-  };
+  const rangeKey = `${startDate ?? ''}|${endDate ?? ''}`;
+  const debouncedRangeKey = useDebounce(rangeKey, DEBOUNCE_DELAY);
+
+  const startDateRef = useRef<string | null>(null);
+  const endDateRef = useRef<string | null>(null);
+
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-
     return () => {
       document.body.style.overflow = 'auto';
     };
@@ -49,13 +51,75 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
     setEndDate(end);
   };
 
-  const { data: historyList, observerRef } = useInfiniteScroll<HistoryData, HTMLTableRowElement>({
-    fetchFn: getPaginatedHistoryData,
-  });
+  useEffect(() => {
+    const [s, e] = debouncedRangeKey.split('|');
+    startDateRef.current = s || null;
+    endDateRef.current = e || null;
+  }, [debouncedRangeKey]);
 
-  const filteredHistory = historyList.filter((item) =>
-    isDateInRange(item.timeStamp.replace(/\./g, '-'))
+  const formatDateForApi = (date: string | null, addOneDay = false) => {
+    if (!date) return undefined;
+    const d = new Date(date);
+    if (addOneDay) d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+
+  const fetchHistory = useCallback(
+    async (cursor?: string) => {
+      const s = formatDateForApi(startDate);
+      const e = formatDateForApi(endDate, true);
+
+      if (s || e) {
+        const res = await searchDictFileHistories(file.id, {
+          startDate: s,
+          endDate: e,
+          cursor,
+        });
+        return {
+          code: res.data.code,
+          result: {
+            historyList: res.data.result.historyList,
+            pagination: res.data.result.pagination,
+            nextCursor: res.data.result.nextCursor,
+          },
+        };
+      } else {
+        const res = await getDictFileHistories(file.id, cursor);
+        return {
+          code: res.data.code,
+          result: {
+            historyList: res.data.result.historyList,
+            pagination: res.data.result.pagination,
+            nextCursor: res.data.result.nextCursor,
+          },
+        };
+      }
+    },
+    [file.id, startDate, endDate]
   );
+
+  const {
+    data: historyList,
+    observerRef,
+    reset,
+    loadMore,
+  } = useInfiniteScroll<DictFileHistory, HTMLTableRowElement>({
+    fetchFn: fetchHistory,
+  });
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (!startDate && !endDate) return;
+
+    reset();
+
+    const t = setTimeout(() => loadMore(), 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file.id, debouncedRangeKey]);
 
   return (
     <Wrapper>
@@ -76,22 +140,26 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
         <TableWrapper>
           <TableLayout>
             <tbody>
-              {filteredHistory.map((item, index) => {
+              {historyList.map((item, index) => {
                 const isLast = index === historyList.length - 1;
                 return (
-                  <TableRow key={index} ref={isLast ? observerRef : undefined}>
+                  <TableRow key={`${item.version}-${index}`} ref={isLast ? observerRef : undefined}>
                     <td style={{ width: '100px', minWidth: '100px' }}>{item.version}</td>
                     <ScrollableCell maxWidth="135px" align="left">
                       {item.fileName}
                     </ScrollableCell>
-                    <td style={{ width: '90px', minWidth: '90px' }}>{item.modifier}</td>
-                    <td style={{ width: '183px', minWidth: '183px' }}>{item.timeStamp}</td>
+                    <td style={{ width: '90px', minWidth: '90px' }}>{item.lastModifierName}</td>
+                    <td style={{ width: '183px', minWidth: '183px' }}>
+                      {item.timestamp?.replace('T', ' ').slice(0, 16)}
+                    </td>
                     <td style={{ width: '80px', minWidth: '80px' }}>{item.work}</td>
                     <ScrollableCell maxWidth="160px" align="left">
                       {item.description}
                     </ScrollableCell>
                     <td style={{ width: '84px', minWidth: '84px', textAlign: 'center' }}>
-                      <DownloadIcon />
+                      <a href={item.fileUrl} download>
+                        <DownloadIcon />
+                      </a>
                     </td>
                   </TableRow>
                 );

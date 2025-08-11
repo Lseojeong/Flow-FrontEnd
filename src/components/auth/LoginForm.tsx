@@ -6,12 +6,11 @@ import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 import { useNavigate } from 'react-router-dom';
-import { postAdminLogin } from '@/apis/auth/api';
 import { useAuthStore } from '@/store/useAuthStore';
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const setIsLoggedIn = useAuthStore((state) => state.setIsLoggedIn);
+  const login = useAuthStore((state) => state.login);
 
   const adminIdField = useFormField({
     validations: [{ validate: (v) => v.trim() !== '', message: '* 아이디를 입력해주세요.' }],
@@ -33,15 +32,13 @@ export function LoginForm() {
     e.preventDefault();
 
     try {
-      await postAdminLogin({
+      await login({
         adminId: adminIdField.value,
         password: passwordField.value,
       });
       setIsError(false);
-      setIsLoggedIn(true);
       navigate('/dictionary');
-    } catch (error) {
-      console.error(error);
+    } catch {
       setIsError(true);
     }
   };
@@ -127,9 +124,10 @@ const Form = styled.form`
 const ErrorMessage = styled.div`
   width: 370px;
   color: ${colors.MainRed};
-  font-size: 10px;
+  font-size: 12px;
   text-align: right;
   margin-bottom: 16px;
+  padding: 8px;
 `;
 
 const Spacer = styled.div`

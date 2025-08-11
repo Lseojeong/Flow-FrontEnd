@@ -17,6 +17,8 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   maxLength = 300,
   label = '프롬프트',
   defaultValue,
+  onReset,
+  isDefault,
 }) => {
   const [internalValue, setInternalValue] = useState(value || '');
   const [isFocused, setIsFocused] = useState(false);
@@ -45,9 +47,13 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   };
 
   const handleReset = () => {
-    const resetValue = defaultValue || '';
-    setInternalValue(resetValue);
-    onChange?.(resetValue);
+    if (onReset) {
+      onReset();
+    } else {
+      const resetValue = defaultValue || '';
+      setInternalValue(resetValue);
+      onChange?.(resetValue);
+    }
   };
 
   return (
@@ -56,7 +62,9 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         <Label>{label}</Label>
         <ResetButton
           onClick={handleReset}
-          disabled={!currentValue || currentValue === defaultValue}
+          disabled={
+            isDefault !== undefined ? isDefault : !currentValue || currentValue === defaultValue
+          }
         >
           <ResetIcon />
         </ResetButton>

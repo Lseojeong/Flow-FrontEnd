@@ -1,5 +1,6 @@
 import { getDictCategoryFiles, searchDictCategoryFiles } from './api';
 import type { DictCategoryFile, FileListResult } from './types';
+import { useQuery } from '@tanstack/react-query';
 
 const loadedFileIdSetMap = new Map<string, Set<string>>();
 const keyOf = (categoryId: string, keyword?: string) => `${categoryId}::${keyword ?? ''}`;
@@ -50,4 +51,17 @@ export const fetchDictCategoryFiles = async (
           : undefined),
     },
   };
+};
+
+export const useDictCategoryFiles = (
+  categoryId: string,
+  opts?: { cursor?: string; keyword?: string }
+) => {
+  return useQuery({
+    queryKey: ['dictCategoryFiles', categoryId, opts?.cursor, opts?.keyword],
+    queryFn: () => fetchDictCategoryFiles(categoryId, opts),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
 };

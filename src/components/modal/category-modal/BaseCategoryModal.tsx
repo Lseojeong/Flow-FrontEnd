@@ -7,6 +7,7 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 import axios, { AxiosError } from 'axios';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServerDuplicate, setIsServerDuplicate] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
@@ -89,11 +91,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
       });
 
       handleClose();
-
-      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
-      setTimeout(() => {
-        w.showToast?.(CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE, 'success');
-      }, MODAL_STYLE.TOAST_DELAY);
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const data = (err as AxiosError<ErrorBody>)?.response?.data;
@@ -103,11 +100,11 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         if (code === 'CATEGORY400' || msg.includes('중복')) {
           setIsServerDuplicate(true);
           setErrorType('serverDuplicate');
+          setIsSubmitting(false);
           return;
         }
       }
-      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
-      w.showToast?.('등록에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
+      setErrorToastMessage('등록에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -161,6 +158,12 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
               </Button>
             </ButtonRow>
           </ModalBox>
+
+          {errorToastMessage && (
+            <ErrorToastWrapper>
+              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+            </ErrorToastWrapper>
+          )}
         </Overlay>
       )}
     </>
@@ -213,4 +216,17 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP};
   margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;

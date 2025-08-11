@@ -1,8 +1,8 @@
 export interface DictCategoryStatus {
   total: number;
-  completed: number;
-  processing: number;
-  fail: number;
+  Completed: number;
+  Processing: number;
+  Fail: number;
 }
 
 export interface DictCategory {

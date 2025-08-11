@@ -13,6 +13,7 @@ interface Props {
     description: string;
     version: string;
   }) => Promise<void>;
+  onSuccess?: () => void;
 }
 
 export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }) => {
@@ -21,17 +22,12 @@ export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }
     description: string;
     version: string;
   }) => {
-    console.log('=== handlePresignedSubmit 실행됨 ===');
-    console.log('전달된 데이터:', data);
-
     try {
       const { publicUrl } = await uploadViaPresigned({
         file: data.file,
         folderType: 'dict',
         organizationId: '550e8400-e29b-41d4-a716-446655440001',
       });
-
-      console.log('업로드 완료 Public URL:', publicUrl);
 
       await createDictCategoryFile(categoryId!, {
         fileUrl: publicUrl,
@@ -40,10 +36,12 @@ export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }
         version: data.version,
       });
 
-      console.log('DB 등록 완료');
       onClose();
-    } catch (err) {
-      console.error('파일 업로드 실패', err);
+    } catch {
+      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
+        '파일 업로드 또는 DB 등록 중 오류가 발생했습니다.',
+        'error'
+      );
     }
   };
 

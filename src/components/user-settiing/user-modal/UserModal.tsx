@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { Button } from '@/components/common/button/Button';
@@ -6,17 +6,25 @@ import DepartmentSelect from '@/components/common/department/DepartmentSelect';
 import EmailInput from '@/components/user-settiing/input/EmailInput';
 import UserTag from '@/components/user-settiing/tag/UserTag';
 import { UserModalProps, EmailTagData, ValidationErrors } from './UserModal.types';
-import { MOCK_DEPARTMENTS } from '@/pages/mock/dictMock';
 import FlatDivider from '@/components/common/divider/FlatDivider';
+import { useInviteAdmin } from '@/apis/user/query';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const MAX_EMAIL_TAGS = 10;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const UserModal: React.FC<UserModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  departmentOptions = [],
+}) => {
   const [emailInput, setEmailInput] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [emailTags, setEmailTags] = useState<EmailTagData[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
+  const inviteAdminMutation = useInviteAdmin();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -97,7 +105,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
     }
 
     const departmentName =
-      MOCK_DEPARTMENTS.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
+      departmentOptions.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
 
     const newTag: EmailTagData = {
       id: Date.now().toString(),
@@ -121,13 +129,45 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = () => {
-    const emails = emailTags.map((tag) => tag.email);
-    const department =
-      MOCK_DEPARTMENTS.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
+  const handleSubmit = async () => {
+    try {
+      const emails = emailTags.map((tag) => tag.email);
+      const department =
+        departmentOptions.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
 
-    onSubmit(emails, department);
-    handleClose();
+      const selectedDepartmentData = departmentOptions.find(
+        (d) => d.departmentId === selectedDepartment
+      );
+
+      if (!selectedDepartmentData || !selectedDepartmentData.departmentId) {
+        setErrorToastMessage('부서 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      const inviteData = emails.map((email) => ({
+        email,
+        departmentId: selectedDepartmentData.departmentId,
+      }));
+
+      const response = await inviteAdminMutation.mutateAsync(inviteData);
+
+      if (response?.code === 'COMMON200') {
+        if (typeof window !== 'undefined' && window.showToast) {
+          window.showToast('관리자 초대가 성공적으로 완료되었습니다.');
+        }
+        onSubmit(emails, department);
+        handleClose();
+      } else {
+        const errorMessage = response?.message || '초대에 실패했습니다.';
+        setErrorToastMessage(errorMessage);
+      }
+    } catch (error: unknown) {
+      console.error('초대 실패:', error);
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '초대에 실패했습니다.';
+      setErrorToastMessage(errorMessage);
+    }
   };
 
   const handleClose = () => {
@@ -138,7 +178,9 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
     onClose();
   };
 
-  const isSubmitDisabled = emailTags.length === 0 || !selectedDepartment;
+  const isSubmitDisabled = useMemo(() => {
+    return emailTags.length === 0 || !selectedDepartment;
+  }, [emailTags.length, selectedDepartment]);
 
   if (!isOpen) return null;
 
@@ -165,7 +207,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
               <DepartmentSection>
                 <Label>부서</Label>
                 <DepartmentSelect
-                  options={MOCK_DEPARTMENTS}
+                  options={departmentOptions}
                   value={selectedDepartment}
                   onChange={handleDepartmentChange}
                   showAllOption={false}
@@ -204,6 +246,11 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSubmit }) => {
           </Button>
         </ModalFooter>
       </ModalContent>
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </ModalOverlay>
   );
 };
@@ -314,6 +361,13 @@ const ModalFooter = styled.div`
   gap: 12px;
   justify-content: center;
   padding: 0 24px 24px 24px;
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
 `;
 
 export default UserModal;

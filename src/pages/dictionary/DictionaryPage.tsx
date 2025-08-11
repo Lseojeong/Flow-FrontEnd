@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -14,6 +14,7 @@ import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { DeleteIcon, EditIcon } from '@/assets/icons/common/index';
 import { colors, fontWeight } from '@/styles/index';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 import Divider from '@/components/common/divider/Divider';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
@@ -56,55 +57,49 @@ export default function DictionaryPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
     description: string;
   } | null>(null);
   const rowKeyOf = (cat: DictCategory, idx: number) => String(cat.id ?? `row-${idx}-${cat.name}`);
+  const debouncedStartDate = useDebounce(startDate, DEBOUNCE_DELAY);
+  const debouncedEndDate = useDebounce(endDate, DEBOUNCE_DELAY);
 
-  const isSearching = !!(debouncedSearchKeyword || startDate || endDate);
+  const isSearching = !!(debouncedSearchKeyword || debouncedStartDate || debouncedEndDate);
 
   const fetchFn = useCallback(
     async (cursor?: string) => {
+      let data;
+      const formatStartDate = (dateStr?: string | null) =>
+        dateStr ? dateStr.slice(0, 10) : undefined;
+      const formatEndDate = (dateStr?: string | null) => {
+        if (!dateStr) return undefined;
+        const date = new Date(dateStr);
+        date.setDate(date.getDate() + 1);
+        return date.toISOString().slice(0, 10);
+      };
+
       if (isSearching) {
         const searchParams: SearchParams = {
           keyword: debouncedSearchKeyword || undefined,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
+          startDate: formatStartDate(debouncedStartDate),
+          endDate: formatEndDate(debouncedEndDate),
           cursor: cursor || undefined,
         };
         const res = await searchDictCategories(searchParams);
-        const data = res.data as {
+        data = res.data as {
           code: string;
           result: {
             categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
             pagination: { last: boolean };
             nextCursor?: string;
           };
-        };
-        const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
-          ...c,
-          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
-          status: c.fileStatus ?? {
-            total: 0,
-            completed: 0,
-            processing: 0,
-            fail: 0,
-          },
-        }));
-        return {
-          code: data.code,
-          result: {
-            historyList: categoryList,
-            pagination: data.result?.pagination ?? { last: true },
-            nextCursor: data.result?.nextCursor,
-          },
         };
       } else {
-        /*await new Promise((resolve) => setTimeout(resolve, 4000));*/ //딜레이 시간
         const res = await getAllDictCategories(cursor);
-        const data = res.data as {
+        data = res.data as {
           code: string;
           result: {
             categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
@@ -112,27 +107,30 @@ export default function DictionaryPage() {
             nextCursor?: string;
           };
         };
-        const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
-          ...c,
-          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
-          status: c.fileStatus ?? {
-            total: 0,
-            completed: 0,
-            processing: 0,
-            fail: 0,
-          },
-        }));
-        return {
-          code: data.code,
-          result: {
-            historyList: categoryList,
-            pagination: data.result?.pagination ?? { last: true },
-            nextCursor: data.result?.nextCursor,
-          },
-        };
       }
+
+      const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
+        ...c,
+        lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+        status: c.fileStatus ??
+          c.status ?? {
+            total: 0,
+            Completed: 0,
+            Processing: 0,
+            Fail: 0,
+          },
+      }));
+
+      return {
+        code: data.code,
+        result: {
+          historyList: categoryList,
+          pagination: data.result?.pagination ?? { last: true },
+          nextCursor: data.result?.nextCursor,
+        },
+      };
     },
-    [isSearching, debouncedSearchKeyword, startDate, endDate]
+    [isSearching, debouncedSearchKeyword, debouncedStartDate, debouncedEndDate]
   );
 
   const {
@@ -210,27 +208,30 @@ export default function DictionaryPage() {
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
     try {
       const res = await createDictCategory(data);
-
-      if (res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200') {
-        setIsCategoryModalOpen(false);
-        setSearchKeyword('');
-        setStartDate(null);
-        setEndDate(null);
-        setCheckedItems?.({});
-        await refetch();
-      } else {
+      if (!(res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200')) {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
-    } catch (e) {
-      console.error('카테고리 등록 에러:', e);
-      throw e;
+
+      setIsCategoryModalOpen(false);
+      setSearchKeyword('');
+      setStartDate(null);
+      setEndDate(null);
+      setCheckedItems?.({});
+
+      await refetch();
+
+      (window as { showToast?: (_: string) => void }).showToast?.('카테고리를 등록했습니다.');
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '카테고리 등록에 실패했습니다.';
+      setErrorToastMessage(errorMessage);
     }
   };
 
   const handleDeleteSelected = async () => {
     const selected = filteredCategories.filter((cat, idx) => checkedItems[rowKeyOf(cat, idx)]);
     if (selected.length === 0) return;
-
     const ids = selected.map((cat) => cat.id);
     try {
       const res = await deleteDictCategories(ids);
@@ -240,18 +241,21 @@ export default function DictionaryPage() {
         );
         setCheckedItems({});
         await refetch();
+      } else {
+        throw new Error(res.data?.message || '카테고리 삭제에 실패했습니다.');
       }
-    } catch (e) {
-      console.error('카테고리 삭제 에러:', e);
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '카테고리 삭제에 실패했습니다.';
+      setErrorToastMessage(errorMessage);
     }
   };
 
   const handleUpdateCategory = async (payload: { name: string; description: string }) => {
     if (!editingCategory) return;
-
     try {
       const res = await updateDictCategory(editingCategory.id, payload);
-
       const code = (res as { data?: { code?: string } }).data?.code;
       if (code === 'COMMON200' || code === 'CATEGORY200' || code === '200') {
         (window as Window & { showToast?: (_m: string) => void }).showToast?.(
@@ -262,16 +266,13 @@ export default function DictionaryPage() {
         reset();
         await loadMore();
       } else {
-        console.error('카테고리 수정 실패:', res);
-        (window as Window & { showToast?: (_m: string) => void }).showToast?.(
-          '수정에 실패했습니다.'
-        );
+        throw new Error(res as unknown as string);
       }
-    } catch (e) {
-      console.error('카테고리 수정 에러:', e);
-      (window as Window & { showToast?: (_m: string) => void }).showToast?.(
-        '수정 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '카테고리 수정에 실패했습니다.';
+      setErrorToastMessage(errorMessage);
     }
   };
 
@@ -292,6 +293,13 @@ export default function DictionaryPage() {
     },
     ...TABLE_COLUMNS,
   ];
+
+  useEffect(() => {
+    setCheckedItems({});
+    reset();
+    loadMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchKeyword, debouncedStartDate, debouncedEndDate]);
 
   const renderTableRow = (category: DictCategory, index: number) => {
     const isChecked = !!checkedItems[rowKeyOf(category, index)];
@@ -329,9 +337,9 @@ export default function DictionaryPage() {
           <StatusWrapper>
             <StatusSummary
               items={[
-                { type: 'Completed', count: category.status.completed },
-                { type: 'Processing', count: category.status.processing },
-                { type: 'Fail', count: category.status.fail },
+                { type: 'Completed', count: category.status.Completed },
+                { type: 'Processing', count: category.status.Processing },
+                { type: 'Fail', count: category.status.Fail },
               ]}
             />
           </StatusWrapper>
@@ -461,6 +469,11 @@ export default function DictionaryPage() {
           initialDescription={editingCategory.description}
         />
       )}
+      {errorToastMessage && (
+        <ErrorToastWrapper>
+          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+        </ErrorToastWrapper>
+      )}
     </PageWrapper>
   );
 }
@@ -518,6 +531,7 @@ const Description = styled.p`
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
 `;
+
 const TopBar = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -530,6 +544,7 @@ const FilterBar = styled.div`
   margin-left: 20px;
   margin-bottom: 28px;
 `;
+
 const EmptyRow = styled.tr`
   height: calc(100vh - 450px);
 `;
@@ -597,4 +612,17 @@ const LoadingWrapper = styled.div`
   height: calc(100vh - 450px);
   gap: 8px;
   transform: translateX(500px);
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;

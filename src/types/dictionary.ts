@@ -11,3 +11,15 @@ export interface DictionaryCategory {
   documentCount: number;
   lastModifiedDate: string;
 }
+
+export interface FileItem {
+  id: string;
+  name: string;
+  fileName: string;
+  status: string;
+  manager: string;
+  registeredAt: string;
+  updatedAt: string;
+  version?: string;
+  fileUrl: string;
+}

@@ -7,11 +7,12 @@ import { VersionSelector } from '@/components/common/version/VersionCard';
 import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 interface BaseUploadEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  onSubmit: (_data: { file?: File; description: string; version: string }) => Promise<void> | void;
   originalFileName: string;
   originalVersion: string;
   title: string;
@@ -34,7 +35,8 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
   const [isVersionSelected, setIsVersionSelected] = useState(false);
-  const [fileError, setFileError] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -42,53 +44,53 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     } else {
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
-  const handleConfirm = () => {
-    onSubmit({
-      title: file?.name || originalFileName,
-      description: description.trim(),
-      version,
-    });
-
-    setFile(null);
-    setDescription('');
-    setVersion('');
-    setFileError('');
-    onClose();
-
-    setTimeout(() => {
-      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
-        'success'
+  const handleConfirm = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await Promise.resolve(
+        onSubmit({
+          file: file || undefined,
+          description: description.trim(),
+          version,
+        })
       );
-    }, MODAL_STYLE.TOAST_DELAY);
+      setFile(null);
+      setDescription('');
+      setVersion('');
+      onClose();
+      setTimeout(() => {
+        (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
+          UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
+          'success'
+        );
+      }, MODAL_STYLE.TOAST_DELAY);
+    } catch {
+      setErrorToastMessage('파일 수정에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
-
-    // 파일 크기 검증 (20MB)
     const FILE_SIZE_LIMIT = 20 * 1024 * 1024;
     if (selectedFile.size > FILE_SIZE_LIMIT) {
-      setFileError('20MB가 넘는 파일입니다.');
+      setErrorToastMessage('20MB가 넘는 파일입니다.');
       return;
     }
-
-    // 파일 확장자 검증
     const fileExtension = selectedFile.name.toLowerCase();
     if (!fileExtension.endsWith(acceptFileType.toLowerCase())) {
-      setFileError('지원하지 않는 확장자입니다.');
+      setErrorToastMessage('지원하지 않는 확장자입니다.');
       return;
     }
-
     setFile(selectedFile);
-    setFileError('');
   };
 
   const handleVersionSelect = (ver: string) => {
@@ -96,7 +98,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     setIsVersionSelected(true);
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected || !!fileError;
+  const isDisabled = (!file && !originalFileName) || !isVersionSelected || submitting;
 
   return (
     <>
@@ -105,10 +107,8 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
           <ModalBox>
             <Title>{title}</Title>
             <Divider />
-
             <UploadRow>
               <FileInputContainer>
-                {fileError && <ErrorText>{fileError}</ErrorText>}
                 <UploadInput
                   fileType={acceptFileType === '.csv' ? 'csv' : 'pdf'}
                   value={file?.name || originalFileName}
@@ -122,17 +122,18 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
                   accept={acceptFileType}
                   ref={fileInputRef}
                   onChange={handleFileChange}
+                  disabled={submitting}
                 />
                 <Button
                   variant="primary"
                   size="medium"
                   onClick={() => fileInputRef.current?.click()}
+                  disabled={submitting}
                 >
                   {UPLOAD_MODAL_CONSTANTS.UPLOAD_BUTTON}
                 </Button>
               </UploadButtonWrapper>
             </UploadRow>
-
             <DescriptionInput
               label="히스토리 설명"
               placeholder="히스토리 설명을 작성해주세요."
@@ -141,19 +142,23 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
               onChange={setDescription}
               errorMessage="히스토리 설명을 입력해주세요."
             />
-
             <VersionSelector onSelect={handleVersionSelect} />
             {children}
-
             <ButtonRow>
-              <Button variant="dark" onClick={onClose}>
+              <Button variant="dark" onClick={onClose} disabled={submitting}>
                 {UPLOAD_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
-              <Button onClick={handleConfirm} disabled={isDisabled}>
+              <Button onClick={handleConfirm} disabled={isDisabled} isLoading={submitting}>
                 {UPLOAD_MODAL_CONSTANTS.EDIT_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
+
+          {errorToastMessage && (
+            <ErrorToastWrapper>
+              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+            </ErrorToastWrapper>
+          )}
         </Overlay>
       )}
     </>
@@ -220,8 +225,15 @@ const FileInputContainer = styled.div`
   flex-direction: column;
 `;
 
-const ErrorText = styled.div`
-  color: ${colors.MainRed};
-  font-size: 10px;
-  text-align: right;
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;
