@@ -5,7 +5,6 @@ export const formatDateTime = (date: Date | string | null | undefined): string =
     return '-';
   }
 
-  // 빈 문자열이나 공백만 있는 경우
   if (typeof date === 'string' && date.trim() === '') {
     return '-';
   }

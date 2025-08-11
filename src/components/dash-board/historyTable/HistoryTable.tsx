@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import {
@@ -9,13 +9,60 @@ import {
 } from '@/components/common/table/index';
 import { HistoryFilter } from '../history-filter/HistoryFilter';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
-import { historyMockData } from '@/pages/mock/dictMock';
-import { HistoryData } from './HistoryTable.types';
+import { getHistory } from '@/apis/dash-board/api';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { Loading } from '@/components/common/loading/Loading';
+import { formatDateTime } from '@/utils/formatDateTime';
 
 export const HistoryTable: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [filteredData, setFilteredData] = useState<HistoryData[]>([]);
+  const [menu, setMenu] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  const [files, setFiles] = useState<string[]>([]);
+  const [isTableScrolling, setIsTableScrolling] = useState(false);
+
+  const fetchHistory = useCallback(
+    async (cursor?: string) => {
+      const formatDate = (dateString: string) => {
+        if (!dateString) return undefined;
+        return dateString.split('T')[0];
+      };
+
+      return getHistory({
+        menu: menu || undefined,
+        category: category || undefined,
+        files: files.length > 0 ? files : undefined,
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        cursor: cursor || undefined,
+      });
+    },
+    [menu, category, files, startDate, endDate]
+  );
+
+  const {
+    data: historyList,
+    isLoading,
+    observerRef,
+    reset,
+    loadMore,
+    isFetchingNextPage,
+    hasMore,
+  } = useInfiniteScroll<
+    {
+      version: string;
+      fileName: string;
+      lastModifierName: string;
+      timestamp: string;
+      work: string;
+      description: string;
+    },
+    HTMLTableRowElement
+  >({
+    fetchFn: fetchHistory,
+    queryKey: ['history', menu, category, ...files, startDate, endDate],
+  });
 
   const columns = [
     { label: '버전', width: '80px', align: 'center' as const },
@@ -28,7 +75,13 @@ export const HistoryTable: React.FC = () => {
 
   const handleFilterConfirm = (filters: { menu: string[]; category: string[]; file: string[] }) => {
     console.log('필터 적용:', filters);
-    // TODO: 필터링 로직은 나중에 실제 API 연동 시 구현
+    setMenu(filters.menu[0] || '');
+    setCategory(filters.category[0] || '');
+    setFiles(filters.file);
+    reset();
+    setTimeout(() => {
+      loadMore();
+    }, 0);
   };
 
   const handleFilterCancel = () => {
@@ -38,36 +91,13 @@ export const HistoryTable: React.FC = () => {
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start || '');
     setEndDate(end || '');
-
-    if (!start || !end) {
-      setFilteredData([]);
-      return;
+    reset();
+    if (start && end) {
+      setTimeout(() => {
+        loadMore();
+      }, 0);
     }
-
-    const filtered = historyMockData.filter((item) => {
-      const itemDate = item.timeStamp;
-      return itemDate >= start && itemDate <= end;
-    });
-
-    setFilteredData(filtered);
   };
-
-  const renderTableRow = (row: HistoryData, index: number) => (
-    <TableRow key={index}>
-      <td style={{ width: '80px', minWidth: '80px', textAlign: 'center' }}>{row.version}</td>
-      <ScrollableCell maxWidth="200px" align="left">
-        {row.fileName}
-      </ScrollableCell>
-      <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>{row.modifier}</td>
-      <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>{row.timeStamp}</td>
-      <td style={{ width: '120px', minWidth: '120px', textAlign: 'center' }}>
-        <OperationBadge operation={row.work}>{row.work}</OperationBadge>
-      </td>
-      <ScrollableCell maxWidth="458px" align="left">
-        {row.description}
-      </ScrollableCell>
-    </TableRow>
-  );
 
   const renderEmptyState = () => (
     <EmptyRow>
@@ -76,6 +106,46 @@ export const HistoryTable: React.FC = () => {
       </EmptyCell>
     </EmptyRow>
   );
+
+  const renderLoadingState = () => (
+    <tr>
+      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
+        <Loading size={20} color="#666" />
+      </td>
+    </tr>
+  );
+
+  const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtTop = target.scrollTop === 0;
+    const isAtBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+
+    if (!isAtTop && !isAtBottom) {
+      setIsTableScrolling(true);
+    } else {
+      setIsTableScrolling(false);
+    }
+  };
+
+  const handleTableScrollEnd = () => {
+    setIsTableScrolling(false);
+  };
+
+  useEffect(() => {
+    const preventPageScroll = (e: WheelEvent) => {
+      if (isTableScrolling) {
+        e.preventDefault();
+      }
+    };
+
+    if (isTableScrolling) {
+      document.addEventListener('wheel', preventPageScroll, { passive: false });
+    }
+
+    return () => {
+      document.removeEventListener('wheel', preventPageScroll);
+    };
+  }, [isTableScrolling]);
 
   return (
     <Container>
@@ -93,10 +163,45 @@ export const HistoryTable: React.FC = () => {
 
       <TableContainer>
         <TableLayout>
-          <TableHeader columns={columns} />
-          <tbody>
-            {filteredData.length > 0 ? filteredData.map(renderTableRow) : renderEmptyState()}
-          </tbody>
+          <thead>
+            <TableHeader columns={columns} />
+          </thead>
+          <TableScrollWrapper
+            onScroll={handleTableScroll}
+            onScrollEnd={handleTableScrollEnd}
+            style={{ overflow: isTableScrolling ? 'auto' : 'auto' }}
+          >
+            <tbody>
+              {historyList.length === 0
+                ? renderEmptyState()
+                : historyList.map((row, index) => {
+                    const isLast = index === historyList.length - 1;
+                    return (
+                      <TableRow key={index} ref={isLast && hasMore ? observerRef : undefined}>
+                        <td style={{ width: '80px', minWidth: '80px', textAlign: 'center' }}>
+                          {row.version}
+                        </td>
+                        <ScrollableCell maxWidth="200px" align="left">
+                          {row.fileName}
+                        </ScrollableCell>
+                        <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
+                          {row.lastModifierName}
+                        </td>
+                        <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
+                          {formatDateTime(row.timestamp)}
+                        </td>
+                        <td style={{ width: '120px', minWidth: '120px', textAlign: 'center' }}>
+                          <OperationBadge operation={row.work}>{row.work}</OperationBadge>
+                        </td>
+                        <ScrollableCell maxWidth="458px" align="left">
+                          {row.description}
+                        </ScrollableCell>
+                      </TableRow>
+                    );
+                  })}
+              {(isLoading || isFetchingNextPage) && renderLoadingState()}
+            </tbody>
+          </TableScrollWrapper>
         </TableLayout>
       </TableContainer>
     </Container>
@@ -138,6 +243,13 @@ const FilterSection = styled.div`
 const TableContainer = styled.div`
   border-radius: 4px;
   overflow: hidden;
+  background: ${colors.White};
+`;
+
+const TableScrollWrapper = styled.div`
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 8px;
   background: ${colors.White};
 `;
 
