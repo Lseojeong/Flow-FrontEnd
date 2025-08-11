@@ -317,7 +317,7 @@ const IdSuccessText = styled.span`
 const DuplicateCheckButton = styled.button<{ $isChecked?: boolean }>`
   height: 52px;
   padding: 0 16px;
-  background: ${({ $isChecked }) => ($isChecked ? '#28a745' : colors.Normal)};
+  background: ${({ $isChecked }) => ($isChecked ? colors.Dark : colors.Normal)};
   color: white;
   border: none;
   border-radius: 4px;
@@ -328,7 +328,7 @@ const DuplicateCheckButton = styled.button<{ $isChecked?: boolean }>`
   transition: background-color 0.2s;
 
   &:hover {
-    background: ${({ $isChecked }) => ($isChecked ? '#218838' : colors.Normal_active)};
+    background: ${({ $isChecked }) => ($isChecked ? colors.Dark_active : colors.Normal_active)};
   }
 
   &:disabled {
