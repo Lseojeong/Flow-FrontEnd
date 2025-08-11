@@ -19,11 +19,11 @@ export const checkAdminIdExists = async (id: string) => {
   return res.data.result.exists;
 };
 
-export const verifyInvitationToken = async (invitationToken: string) => {
-  const res = await axiosInstance.post<ApiResponse<unknown>>('/admin/signup/token', {
-    invitationToken,
+export const verifyInvitationToken = async (token: string) => {
+  const response = await axiosInstance.post<ApiResponse<unknown>>('/admin/signup/token', {
+    invitationToken: token,
   });
-  return res.data;
+  return response.data;
 };
 
 export const postAdminLogin = async (data: LoginRequest) => {
@@ -34,12 +34,11 @@ export const postAdminLogin = async (data: LoginRequest) => {
 };
 
 export const postLogout = async () => {
-  // 로그아웃은 빠르게 처리하도록 짧은 타임아웃 설정
   const res = await axiosInstance.post<ApiResponse<unknown>>(
     '/admin/logout',
     {},
     {
-      timeout: 3000, // 3초 타임아웃
+      timeout: 3000,
     }
   );
   localStorage.removeItem('csrfToken');

@@ -2,10 +2,17 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { SigninForm } from '@/components/auth/SigninForm';
 import { symbolLogo } from '@/assets/logo/index';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import { useSearchParams, Navigate } from 'react-router-dom';
+import { useVerifyInvitationToken } from '@/apis/auth/query';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [searchParams] = useSearchParams();
+  const [isTokenValid, setIsTokenValid] = useState<boolean | null>(null);
+  const invitationToken = searchParams.get('token');
+
+  const verifyTokenMutation = useVerifyInvitationToken();
 
   useEffect(() => {
     const handleResize = () => {
@@ -13,11 +20,39 @@ export default function LoginPage() {
         wrapperRef.current.scrollLeft = wrapperRef.current.scrollWidth;
       }
     };
-    //회원가입 폼 포커스
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!invitationToken) {
+        setIsTokenValid(false);
+        return;
+      }
+
+      try {
+        const response = await verifyTokenMutation.mutateAsync(invitationToken);
+        if (response.code !== 'COMMON200') {
+          setIsTokenValid(false);
+        } else {
+          setIsTokenValid(true);
+        }
+      } catch {
+        setIsTokenValid(false);
+      }
+    };
+
+    const timeoutId = setTimeout(verifyToken, 100);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invitationToken]);
+
+  if (isTokenValid === false) {
+    return <Navigate to="/error/access-denied" replace />;
+  }
 
   return (
     <>
@@ -31,7 +66,7 @@ export default function LoginPage() {
             <TextLine>Work</TextLine>
           </LogoText>
         </LogoWrapper>
-        <SigninForm />
+        <SigninForm invitationToken={invitationToken || ''} />
       </PageWrapper>
     </>
   );

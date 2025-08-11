@@ -214,7 +214,9 @@ const UserModal: React.FC<UserModalProps> = ({
                 />
                 {errors.department && <ErrorMessage>{errors.department}</ErrorMessage>}
               </DepartmentSection>
-              <InviteButton onClick={handleAddEmail}>초대</InviteButton>
+              <InviteButton onClick={handleAddEmail} disabled={inviteAdminMutation.isPending}>
+                초대
+              </InviteButton>
             </InputRow>
           </FormSection>
 
@@ -241,6 +243,7 @@ const UserModal: React.FC<UserModalProps> = ({
             size="medium"
             type="submit"
             disabled={isSubmitDisabled}
+            isLoading={inviteAdminMutation.isPending}
           >
             등록
           </Button>
@@ -339,6 +342,11 @@ const InviteButton = styled.button`
 
   &:hover {
     background: ${colors.Normal_hover};
+  }
+
+  &:disabled {
+    background: rgba(15, 66, 157, 0.5);
+    cursor: not-allowed;
   }
 `;
 

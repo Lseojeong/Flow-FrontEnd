@@ -2,7 +2,7 @@ import React from 'react';
 import { RouteObject } from 'react-router-dom';
 
 import LoginPage from '@/pages/auth/LoginPage';
-import SigninPage from '@/pages/auth/SigninPage';
+import SignupPage from '@/pages/auth/SignupPage';
 import { PublicRoute } from './publicRoute';
 
 import DictionaryPage from '@/pages/dictionary/DictionaryPage';
@@ -33,10 +33,10 @@ const routes: RouteObject[] = [
     ),
   },
   {
-    path: '/signin',
+    path: '/signup',
     element: (
       <PublicRoute>
-        <SigninPage />
+        <SignupPage />
       </PublicRoute>
     ),
   },
