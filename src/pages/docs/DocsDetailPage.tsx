@@ -89,7 +89,7 @@ export default function DocsDetailPage() {
           pagination: {
             last: res.result?.pagination?.last ?? true,
           },
-          nextCursor: res.result?.pagination?.nextCursor, // 있으면 넣기
+          nextCursor: res.result?.pagination?.nextCursor,
         },
       };
     },

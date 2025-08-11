@@ -40,6 +40,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const [errorType, setErrorType] = useState<ErrorType>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServerDuplicate, setIsServerDuplicate] = useState(false);
+  const [isTouched, setIsTouched] = useState(false);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
@@ -54,24 +55,29 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (trimmedName === '') {
-      setErrorType('required');
-    } else if (isServerDuplicate) {
-      setErrorType('serverDuplicate');
-    } else {
-      setErrorType('');
-    }
-  }, [trimmedName, isServerDuplicate]);
-
   const handleNameChange = (val: string) => {
     setCategoryName(val);
     if (isServerDuplicate) {
       setIsServerDuplicate(false);
     }
+    if (isTouched && val.trim() !== '') {
+      setErrorType('');
+    }
+  };
+
+  const handleNameBlur = () => {
+    setIsTouched(true);
+    if (trimmedName === '') {
+      setErrorType('required');
+    }
   };
 
   const handleConfirm = async () => {
+    setIsTouched(true);
+    if (trimmedName === '') {
+      setErrorType('required');
+      return;
+    }
     if (isDisabled) return;
 
     try {
@@ -119,6 +125,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     setErrorType('');
     setIsServerDuplicate(false);
     setIsSubmitting(false);
+    setIsTouched(false);
     onClose();
   };
 
@@ -133,7 +140,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
               <CategoryInput
                 value={categoryName}
                 onChange={handleNameChange}
-                onBlur={() => {}}
+                onBlur={handleNameBlur}
                 error={getErrorMessage()}
               />
               {children}

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { getAllDictCategories } from './api';
 import type { DictCategory } from './types';
 
@@ -33,4 +34,14 @@ export const fetchDictCategories = async (cursor?: string) => {
       nextCursor: data.result?.nextCursor,
     },
   };
+};
+
+export const useDictCategories = (cursor?: string) => {
+  return useQuery({
+    queryKey: ['dictCategories', cursor],
+    queryFn: () => fetchDictCategories(cursor),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
 };

@@ -138,7 +138,7 @@ export default function FaqPage() {
     (async () => {
       try {
         const res = await getDepartments();
-        setDepartments(res.data.result.departmentList);
+        setDepartments(res.data.result.departmentList as unknown as Department[]);
       } catch (e) {
         console.error('부서 목록 조회 실패', e);
       }
@@ -456,7 +456,10 @@ export default function FaqPage() {
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
+            <DepartmentSelect
+              value={selectedDepartment ? [selectedDepartment] : []}
+              onChange={(ids) => setSelectedDepartment(ids.length > 0 ? ids[0] : null)}
+            />
           </FilterBar>
 
           <CheckBox

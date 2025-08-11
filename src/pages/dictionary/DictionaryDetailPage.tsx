@@ -430,7 +430,6 @@ export default function DictionaryDetailPage() {
         />
       )}
 
-      {/* FileDetailPanel이 DictFile 타입을 기대할 수 있어 캐스팅 */}
       {selectedFile && (
         <FileDetailPanel
           file={selectedFile as unknown as DictFile}

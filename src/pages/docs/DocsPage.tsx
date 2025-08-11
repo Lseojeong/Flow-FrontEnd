@@ -362,7 +362,10 @@ export default function DocsPage() {
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            <DepartmentSelect value={selectedDepartment} onChange={setSelectedDepartment} />
+            <DepartmentSelect
+              value={selectedDepartment ? [selectedDepartment] : []}
+              onChange={(ids) => setSelectedDepartment(ids.length > 0 ? ids[0] : null)}
+            />
           </FilterBar>
 
           <CheckBox

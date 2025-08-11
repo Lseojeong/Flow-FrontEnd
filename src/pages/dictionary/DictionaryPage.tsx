@@ -295,10 +295,11 @@ export default function DictionaryPage() {
 
   const renderTableRow = (category: DictCategory, index: number) => {
     const isChecked = !!checkedItems[rowKeyOf(category, index)];
-    const isLast = index === filteredCategories.length - 1;
+    const isLastItem = index === categories.length - 1;
+    const ref = isLastItem ? observerRef : undefined;
 
     return (
-      <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
+      <TableRow key={rowKeyOf(category, index)} ref={ref}>
         <td
           style={{
             width: CELL_WIDTHS.CHECKBOX,

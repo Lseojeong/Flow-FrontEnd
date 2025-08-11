@@ -1,4 +1,3 @@
-// src/pages/faq/FaqDetailPage.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -27,11 +26,9 @@ import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 
-// ✅ FAQ 단일 조회 API만 사용
 import { getFaqCategoryById } from '@/apis/faq/api';
 import type { FaqCategory } from '@/apis/faq/types';
 
-// 파일 디테일 패널 타입만 맞추기 위한 임포트(목데이터 아님, 타입만 사용)
 import type { DictFile } from '@/pages/mock/dictMock';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -66,11 +63,9 @@ interface EditTargetFile {
 export default function FaqDetailPage() {
   const { faqId = '' } = useParams();
 
-  // 상세 전용 상태
   const [category, setCategory] = useState<FaqCategory | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 파일 관련(아직 API 미연결, UI 유지용)
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
@@ -79,13 +74,11 @@ export default function FaqDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
-  // ✅ 단일 조회만 호출
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const res = await getFaqCategoryById(faqId);
-        // API 반환 구조에 맞춰 result 우선 사용
         const data = (res.data?.result ?? res.data) as FaqCategory;
         if (!mounted) return;
         setCategory({
@@ -103,7 +96,6 @@ export default function FaqDetailPage() {
     };
   }, [faqId]);
 
-  // 포함 부서(DepartmentTagList가 기대하는 타입으로 매핑)
   const departmentsForTag = useMemo<Department[]>(() => {
     const list = category?.departmentList ?? [];
     return list.map((name) => ({
@@ -129,7 +121,6 @@ export default function FaqDetailPage() {
     { type: 'Fail', count: category.status?.fail ?? 0 },
   ];
 
-  // 핸들러들 (UI 유지용)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };

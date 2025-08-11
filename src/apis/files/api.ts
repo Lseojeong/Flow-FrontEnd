@@ -7,7 +7,7 @@ export interface CreatePresignedUrlBody {
   fileSize: number;
   folderType: FolderType;
   organizationId: string;
-  contentType?: string; // ✅ Content-Type 추가
+  contentType?: string; // Content-Type 추가
 }
 
 export interface CreatePresignedUrlResult {
@@ -43,7 +43,7 @@ export function buildPublicUrlFromKey(fileKey: string): string {
   return `${PUBLIC_OBJECT_BASE}${fileKey}`;
 }
 
-// ✅ 확장자 → Content-Type 매핑
+// 확장자 → Content-Type 매핑
 function getContentTypeByExt(fileName: string): string {
   const lower = fileName.toLowerCase();
   if (lower.endsWith('.csv')) return 'text/csv';
@@ -113,15 +113,17 @@ export async function uploadViaPresigned({
             throw new Error('fileName is required for Blob');
           })());
 
-    // ✅ Content-Type 결정 (인자 우선, 없으면 확장자 기반)
+    // Content-Type 결정 (인자 우선, 없으면 확장자 기반)
     const mime = contentType || getContentTypeByExt(name);
     console.log('[1] 결정된 MIME 타입:', mime);
 
-    // ✅ presigned URL 발급 시 Content-Type 포함
+    // presigned URL 발급 시 Content-Type 포함
     console.log('[2] Presigned URL 발급 요청 시작');
+    const uuidFile = `${crypto.randomUUID()}_${name}`;
+
     const presigned = await createPresignedUrl({
-      fileName: name,
-      fileSize: (file as File).size ?? file.size ?? 0,
+      fileName: uuidFile,
+      fileSize: file.size,
       folderType,
       organizationId,
       contentType: mime,
