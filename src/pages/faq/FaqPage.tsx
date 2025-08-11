@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -20,7 +20,15 @@ import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCate
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllFaqCategories, createFaqCategory, deleteFaqCategories } from '@/apis/faq/api';
+import type { Department } from '@/components/common/department/Department.types';
+import { getDepartments } from '@/apis/org/api';
+import {
+  getAllFaqCategories,
+  createFaqCategory,
+  deleteFaqCategories,
+  searchFaqCategories,
+  SearchParams,
+} from '@/apis/faq/api';
 import type { FaqCategory } from '@/apis/faq/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -53,12 +61,16 @@ export default function FaqPage() {
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [editingCategory, setEditingCategory] = useState<{
     id: number;
     name: string;
     description: string;
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
+
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+  const isSearching = !!debouncedSearchKeyword || !!startDate || !!endDate || !!selectedDepartment;
 
   const {
     data: categories,
@@ -67,83 +79,73 @@ export default function FaqPage() {
     reset,
   } = useInfiniteScroll<FaqCategory, HTMLTableRowElement>({
     fetchFn: async (cursor) => {
-      const res = await getAllFaqCategories(cursor);
-
-      type FaqCategoryStatus = {
-        total: number;
-        completed: number;
-        processing: number;
-        fail: number;
+      const normalizeStatus = (item: FaqCategory): FaqCategory['status'] => {
+        return item.status ?? { total: 0, completed: 0, processing: 0, fail: 0 };
       };
 
-      type StatusLower = { total?: number; completed?: number; processing?: number; fail?: number };
-      type StatusUpper = { Total?: number; Completed?: number; Processing?: number; Fail?: number };
-
-      type FaqCategoryApiItem = Omit<FaqCategory, 'status' | 'lastModifiedDate'> & {
-        status?: StatusLower;
-        fileStatus?: StatusLower | StatusUpper;
-        lastModifiedDate?: string;
-      };
-
-      type GetAllFaqCategoriesResponse = {
-        code: string;
-        message: string;
-        result: {
-          categoryList: FaqCategoryApiItem[];
-          pagination: { last: boolean };
-          nextCursor?: string;
-        };
-      };
-
-      const data = res.data as GetAllFaqCategoriesResponse;
-
-      const normalizeStatus = (item: FaqCategoryApiItem): FaqCategoryStatus => {
-        const raw = item.status ?? item.fileStatus;
-
-        if (raw && ('completed' in raw || 'processing' in raw || 'fail' in raw || 'total' in raw)) {
-          const r = raw as StatusLower;
-          const completed = Number(r.completed ?? 0);
-          const processing = Number(r.processing ?? 0);
-          const fail = Number(r.fail ?? 0);
-          const total = Number(r.total ?? completed + processing + fail);
-          return { total, completed, processing, fail };
-        }
-
-        if (raw && ('Completed' in raw || 'Processing' in raw || 'Fail' in raw || 'Total' in raw)) {
-          const r = raw as StatusUpper;
-          const completed = Number(r.Completed ?? 0);
-          const processing = Number(r.Processing ?? 0);
-          const fail = Number(r.Fail ?? 0);
-          const total = Number(r.Total ?? completed + processing + fail);
-          return { total, completed, processing, fail };
-        }
-
-        return { total: 0, completed: 0, processing: 0, fail: 0 };
-      };
-
-      const normalizeDate = (c: FaqCategoryApiItem): string =>
+      const normalizeDate = (c: FaqCategory): string =>
         (c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '').slice(0, 10);
 
-      const categoryList: FaqCategory[] = (data.result?.categoryList ?? []).map((c) => ({
-        ...c,
-        status: normalizeStatus(c),
-        lastModifiedDate: normalizeDate(c),
-      }));
+      if (isSearching) {
+        const searchParams: SearchParams = {
+          keyword: debouncedSearchKeyword || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          cursor: cursor || undefined,
+          departmentId: selectedDepartment || undefined,
+        };
 
-      return {
-        code: data.code,
-        result: {
-          historyList: categoryList,
-          pagination: data.result?.pagination ?? { last: true },
-          nextCursor: data.result?.nextCursor,
-        },
-      };
+        const res = await searchFaqCategories(searchParams);
+
+        const categoryList: FaqCategory[] = (res.data.result?.categoryList ?? []).map(
+          (c: FaqCategory) => ({
+            ...c,
+            status: normalizeStatus(c),
+            lastModifiedDate: normalizeDate(c),
+          })
+        );
+
+        return {
+          code: res.data.code,
+          result: {
+            historyList: categoryList,
+            pagination: res.data.result?.pagination ?? { last: true },
+            nextCursor: res.data.result?.nextCursor,
+          },
+        };
+      } else {
+        const res = await getAllFaqCategories(cursor);
+
+        const categoryList: FaqCategory[] = (res.data.result?.categoryList ?? []).map((c) => ({
+          ...c,
+          status: normalizeStatus(c),
+          lastModifiedDate: normalizeDate(c),
+        }));
+
+        return {
+          code: res.data.code,
+          result: {
+            historyList: categoryList,
+            pagination: res.data.result?.pagination ?? { last: true },
+            nextCursor: res.data.result?.nextCursor,
+          },
+        };
+      }
     },
   });
 
-  const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getDepartments();
+        setDepartments(res.data.result.departmentList);
+      } catch (e) {
+        console.error('부서 목록 조회 실패', e);
+      }
+    })();
+  }, []);
 
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+  const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
 
   const filteredCategories = useMemo(() => {
     const isDateInRange = (dateStr: string) => {
@@ -486,7 +488,7 @@ export default function FaqPage() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
-        departments={mockDepartments}
+        departments={departments}
         existingCategoryNames={existingCategoryNames}
       />
 

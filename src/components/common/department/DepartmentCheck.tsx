@@ -8,6 +8,7 @@ import { DepartmentCheckProps } from './Department.types';
  * 부서 선택 체크박스 컴포넌트
  * TODO: 사용자의 부서가 무조건 체크되게 해야함
  */
+
 export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   departments,
   selectedDepartmentIds,

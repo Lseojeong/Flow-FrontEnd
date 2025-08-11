@@ -1,6 +1,14 @@
 import { axiosInstance } from '@/apis/axiosInstance';
 import type { FaqCategory } from './types';
 
+export interface SearchParams {
+  keyword?: string;
+  startDate?: string;
+  endDate?: string;
+  cursor?: string;
+  departmentId?: string;
+}
+
 // 전체 카테고리 조회 (cursor 필수)
 export const getAllFaqCategories = async (cursor?: string) => {
   return axiosInstance.get<{
@@ -17,17 +25,11 @@ export const getAllFaqCategories = async (cursor?: string) => {
 };
 
 // 조건 검색
-interface SearchFaqParams {
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-  cursorDate?: string;
-}
-export const searchFaqCategories = async (params: SearchFaqParams) => {
+export const searchFaqCategories = async (params: SearchParams) => {
   return axiosInstance.get('/admin/faqs/categories/search', {
     params: {
       ...params,
-      cursorDate: params.cursorDate || '2024-01-01T00:00:00',
+      cursorDate: params.cursor || '2024-01-01T00:00:00',
     },
   });
 };

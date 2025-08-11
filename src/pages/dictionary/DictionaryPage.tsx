@@ -8,6 +8,7 @@ import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { TableLayout, TableHeader, TableRow } from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
 import SideBar from '@/components/common/layout/SideBar';
+import { Loading } from '@/components/common/loading/Loading';
 import StatusSummary from '@/components/common/status/StatusSummary';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
@@ -22,8 +23,10 @@ import {
   createDictCategory,
   deleteDictCategories,
   updateDictCategory,
+  searchDictCategories,
+  SearchParams,
 } from '@/apis/dictcategory/api';
-import type { DictCategory } from '@/apis/dictcategory/types';
+import type { DictCategory, DictCategoryStatus } from '@/apis/dictcategory/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -46,6 +49,8 @@ const CELL_WIDTHS = {
 
 export default function DictionaryPage() {
   const [activeMenuId, setActiveMenuId] = useState('dictionary');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -56,52 +61,93 @@ export default function DictionaryPage() {
     name: string;
     description: string;
   } | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState('');
   const rowKeyOf = (cat: DictCategory, idx: number) => String(cat.id ?? `row-${idx}-${cat.name}`);
+
+  const isSearching = !!(debouncedSearchKeyword || startDate || endDate);
+
+  const fetchFn = useCallback(
+    async (cursor?: string) => {
+      if (isSearching) {
+        const searchParams: SearchParams = {
+          keyword: debouncedSearchKeyword || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          cursor: cursor || undefined,
+        };
+        const res = await searchDictCategories(searchParams);
+        const data = res.data as {
+          code: string;
+          result: {
+            categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
+            pagination: { last: boolean };
+            nextCursor?: string;
+          };
+        };
+        const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
+          ...c,
+          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+          status: c.fileStatus ?? {
+            total: 0,
+            completed: 0,
+            processing: 0,
+            fail: 0,
+          },
+        }));
+        return {
+          code: data.code,
+          result: {
+            historyList: categoryList,
+            pagination: data.result?.pagination ?? { last: true },
+            nextCursor: data.result?.nextCursor,
+          },
+        };
+      } else {
+        /*await new Promise((resolve) => setTimeout(resolve, 4000));*/ //딜레이 시간
+        const res = await getAllDictCategories(cursor);
+        const data = res.data as {
+          code: string;
+          result: {
+            categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
+            pagination: { last: boolean };
+            nextCursor?: string;
+          };
+        };
+        const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
+          ...c,
+          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+          status: c.fileStatus ?? {
+            total: 0,
+            completed: 0,
+            processing: 0,
+            fail: 0,
+          },
+        }));
+        return {
+          code: data.code,
+          result: {
+            historyList: categoryList,
+            pagination: data.result?.pagination ?? { last: true },
+            nextCursor: data.result?.nextCursor,
+          },
+        };
+      }
+    },
+    [isSearching, debouncedSearchKeyword, startDate, endDate]
+  );
 
   const {
     data: categories,
     observerRef,
     isLoading,
+    refetch,
     reset,
     loadMore,
   } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
-    fetchFn: async (cursor) => {
-      const res = await getAllDictCategories(cursor);
-
-      type GetAllDictCategoriesResponse = {
-        code: string;
-        message: string;
-        result: {
-          categoryList: DictCategory[];
-          pagination: { last: boolean };
-          nextCursor?: string;
-        };
-      };
-
-      const data = res.data as GetAllDictCategoriesResponse;
-
-      const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map(
-        (c: DictCategory) => ({
-          ...c,
-          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
-        })
-      );
-
-      return {
-        code: data.code,
-        result: {
-          historyList: categoryList,
-          pagination: data.result?.pagination ?? { last: true },
-          nextCursor: data.result?.nextCursor,
-        },
-      };
-    },
+    fetchFn,
+    getKey: (item) => item.id,
   });
 
   const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
-
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
   const isDateInRange = useCallback(
     (dateStr: string) => {
@@ -164,16 +210,20 @@ export default function DictionaryPage() {
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
     try {
       const res = await createDictCategory(data);
-      if (res.data.code === 'CATEGORY200' || res.data.code === '200') {
-        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+
+      if (res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200') {
         setIsCategoryModalOpen(false);
-        reset();
-        loadMore();
+        setSearchKeyword('');
+        setStartDate(null);
+        setEndDate(null);
+        setCheckedItems?.({});
+        await refetch();
       } else {
-        console.error('카테고리 등록 실패:', res.data);
+        throw new Error(res.data?.message || '카테고리 등록 실패');
       }
     } catch (e) {
       console.error('카테고리 등록 에러:', e);
+      throw e;
     }
   };
 
@@ -182,28 +232,17 @@ export default function DictionaryPage() {
     if (selected.length === 0) return;
 
     const ids = selected.map((cat) => cat.id);
-
     try {
       const res = await deleteDictCategories(ids);
-
       if (res.status === 200 || res.data.code === '200') {
         (window as { showToast?: (_: string) => void }).showToast?.(
           '선택한 카테고리를 삭제했습니다.'
         );
-
         setCheckedItems({});
-
-        reset();
-        await loadMore();
-      } else {
-        console.error('카테고리 삭제 실패:', res.data);
-        (window as { showToast?: (_: string) => void }).showToast?.('삭제에 실패했습니다.');
+        await refetch();
       }
     } catch (e) {
       console.error('카테고리 삭제 에러:', e);
-      (window as { showToast?: (_: string) => void }).showToast?.(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
     }
   };
 
@@ -333,14 +372,6 @@ export default function DictionaryPage() {
     </EmptyRow>
   );
 
-  const renderLoadingState = () => (
-    <tr>
-      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
-        불러오는 중...
-      </td>
-    </tr>
-  );
-
   return (
     <PageWrapper>
       <SideBarWrapper>
@@ -392,10 +423,22 @@ export default function DictionaryPage() {
             </thead>
             <TableScrollWrapper>
               <tbody>
-                {filteredCategories.length === 0
-                  ? renderEmptyState()
-                  : filteredCategories.map((category, index) => renderTableRow(category, index))}
-                {isLoading && renderLoadingState()}
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={columns.length} style={{ padding: 0 }}>
+                      <LoadingWrapper>
+                        <Loading size={32} color="#555" />
+                        <span style={{ fontSize: '14px', color: '#555' }}>
+                          용어사전 카테고리 불러오는 중...
+                        </span>
+                      </LoadingWrapper>
+                    </td>
+                  </tr>
+                ) : filteredCategories.length === 0 ? (
+                  renderEmptyState()
+                ) : (
+                  filteredCategories.map((category, index) => renderTableRow(category, index))
+                )}
               </tbody>
             </TableScrollWrapper>
           </TableLayout>
@@ -487,19 +530,23 @@ const FilterBar = styled.div`
   margin-bottom: 28px;
 `;
 const EmptyRow = styled.tr`
-  height: 200px;
+  height: calc(100vh - 450px);
 `;
 
 const EmptyCell = styled.td<{ colSpan: number }>`
-  text-align: center;
-  vertical-align: middle;
-  color: ${colors.BoxText};
-  font-size: 14px;
-  padding: 80px 0;
+  padding: 0;
 `;
 
 const EmptyMessage = styled.div`
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 200px;
+  text-align: center;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  transform: translateX(500px);
 `;
 
 const StatusWrapper = styled.div`
@@ -538,4 +585,15 @@ const TableScrollWrapper = styled.div`
   overflow-y: auto;
   border-radius: 8px;
   background: ${colors.White};
+`;
+
+const LoadingWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 450px);
+  gap: 8px;
+  transform: translateX(500px);
 `;
