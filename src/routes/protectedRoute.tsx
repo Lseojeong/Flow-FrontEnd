@@ -1,26 +1,39 @@
-// src/routes/ProtectedRoute.tsx
-import React, { useEffect } from 'react';
+import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
+import { Loading } from '@/components/common/loading/Loading';
+import { colors } from '@/styles/index';
 
 interface ProtectedRouteProps {
-  children: React.ReactElement;
+  children: ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isLoggedIn, isLoading, checkLoginStatus } = useAuthStore();
+  const { isLoggedIn, isLoading, hasChecked } = useAuthStore();
 
-  useEffect(() => {
-    checkLoginStatus();
-  }, [checkLoginStatus]);
-
-  if (isLoading) {
-    return null;
+  if (isLoading || !hasChecked) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          backgroundColor: colors.background,
+        }}
+      >
+        <Loading size={24} color={colors.Normal} />
+      </div>
+    );
   }
 
   if (!isLoggedIn) {
+    const csrfToken = localStorage.getItem('csrfToken');
+    if (!csrfToken) {
+      return <Navigate to="/" replace />;
+    }
     return <Navigate to="/error/access-denied" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };

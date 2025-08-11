@@ -3,7 +3,9 @@ import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { MenuItemType, Props } from './SideBar.types';
 import { ArrowIcon } from '@/assets/icons/common/index';
+import { LogoutIcon } from '@/assets/icons/side-bar/index';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * @example
@@ -17,17 +19,29 @@ import { useNavigate } from 'react-router-dom';
 
 const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const { logout, profile } = useAuthStore();
+
+  // 권한 기반 메뉴 필터링
+  const filteredMenuItems = menuItems.filter((item) => {
+    // 설정 메뉴는 ROOT 권한만 접근 가능
+    if (item.id === 'settings') {
+      return profile?.permission === 'ROOT';
+    }
+    // 다른 메뉴는 모든 권한에서 접근 가능
+    return true;
+  });
 
   useEffect(() => {
-    const activeItem = menuItems.find((item) =>
+    const activeItem = filteredMenuItems.find((item) =>
       item.subMenuItems?.some((subItem) => subItem.id === activeMenuId)
     );
 
     if (activeItem && openDropdownId !== activeItem.id) {
       setOpenDropdownId(activeItem.id);
     }
-  }, [activeMenuId, menuItems, openDropdownId]);
+  }, [activeMenuId, filteredMenuItems, openDropdownId]);
 
   const handleClick = (item: MenuItemType) => {
     if (item.subMenuItems) {
@@ -54,7 +68,7 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
       </LogoWrapper>
       <MenuWrapper>
         <MenuList>
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isOpen = openDropdownId === item.id;
             const isActive = activeMenuId === item.id;
@@ -97,6 +111,19 @@ const SideBar = ({ logoSymbol, menuItems, activeMenuId, onMenuClick }: Props) =>
           })}
         </MenuList>
       </MenuWrapper>
+      <LogoutWrapper>
+        <Divider />
+        <LogoutButton
+          onClick={async () => {
+            setIsLoggingOut(true);
+            await logout();
+          }}
+          disabled={isLoggingOut}
+        >
+          <LogoutIcon className="menu-icon" />
+          로그아웃
+        </LogoutButton>
+      </LogoutWrapper>
     </SideBarContainer>
   );
 };
@@ -190,4 +217,55 @@ const SubMenuItem = styled.li<{ $active?: boolean }>`
   &:hover {
     color: ${colors.Normal};
   }
+`;
+
+const LogoutWrapper = styled.div`
+  margin-top: auto;
+  margin-bottom: 40px;
+  margin-left: 40px;
+  width: calc(100% - 80px);
+`;
+
+const LogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  color: ${colors.Dark_active};
+  font-weight: ${fontWeight.Medium};
+  cursor: pointer;
+  transition: color 0.2s;
+  outline: none;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+
+  & .menu-icon {
+    width: 20px;
+    height: 20px;
+    color: inherit;
+    -webkit-user-drag: none;
+  }
+
+  &:hover:not(:disabled) {
+    color: ${colors.Light_active};
+  }
+
+  &:disabled {
+    color: ${colors.BoxText};
+    cursor: not-allowed;
+  }
+  svg {
+    width: 8px;
+    height: 8px;
+  }
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: ${colors.GridLine};
+  margin-bottom: 20px;
 `;

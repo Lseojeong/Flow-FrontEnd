@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRoutes } from 'react-router-dom';
 import routes from '@/routes/router';
 import GlobalStyle from '@/styles/globalStyle';
@@ -8,32 +8,26 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/reactQuery';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useLocation } from 'react-router-dom';
 
 const App: React.FC = () => {
   const element = useRoutes(routes);
-  const { checkLoginStatus, logout } = useAuthStore();
-  const location = useLocation();
+  const { checkLoginStatus } = useAuthStore();
+  const ranRef = useRef(false);
 
   useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '/login') {
-      logout();
-      return;
-    }
+    if (ranRef.current) return;
+    ranRef.current = true;
     checkLoginStatus();
-  }, [location.pathname, checkLoginStatus, logout]);
+  }, [checkLoginStatus]);
 
   return (
-    <>
-      <QueryClientProvider client={queryClient}>
-        <GlobalStyle />
-        <ToastContainer />
-        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={true} />}
-        {element}
-        {/* 개발 환경에서만 플레이그라운드 라우트 추가 */}
-        {import.meta.env.DEV && <PlaygroundRoutes />}
-      </QueryClientProvider>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <GlobalStyle />
+      <ToastContainer />
+      {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={true} />}
+      {element}
+      {import.meta.env.DEV && <PlaygroundRoutes />}
+    </QueryClientProvider>
   );
 };
 
