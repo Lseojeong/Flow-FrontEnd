@@ -266,16 +266,21 @@ const OperationBadge = styled.span<{ operation: string }>`
 `;
 
 const EmptyRow = styled.tr`
-  border: none;
+  height: calc(100vh - 700px);
 `;
 
-const EmptyCell = styled.td`
-  text-align: center;
-  padding: 80px;
-  border: none;
+const EmptyCell = styled.td<{ colSpan: number }>`
+  padding: 0;
 `;
 
 const EmptyMessage = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100px;
+  text-align: center;
   color: ${colors.BoxText};
   font-size: 14px;
+  transform: translateX(500px);
 `;
