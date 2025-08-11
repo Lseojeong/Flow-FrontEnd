@@ -30,3 +30,20 @@ export interface FlowSettingUpdateResponse {
     orgId: string;
   };
 }
+
+export interface FlowSettingTestRequest {
+  temperature: number;
+  maxToken: number;
+  topK: number;
+  topP: number;
+  prompt: string;
+  text: string;
+}
+
+export interface FlowSettingTestResponse {
+  code: string;
+  message: string;
+  result: {
+    answer: string;
+  };
+}
