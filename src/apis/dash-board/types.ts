@@ -59,6 +59,7 @@ export interface HistoryItem {
   fileName: string;
   lastModifierName: string;
   lastModifierId: string;
+  lastModifierAdminId: string;
   timestamp: string;
   work: string;
   description: string;

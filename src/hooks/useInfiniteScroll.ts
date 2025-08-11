@@ -11,6 +11,7 @@ interface UseInfiniteScrollParams<T extends { timestamp: string }> {
   }>;
   queryKey: (string | number | boolean | null | undefined)[];
   initialCursor?: string;
+  enabled?: boolean;
 }
 
 export const useInfiniteScroll = <
@@ -20,6 +21,7 @@ export const useInfiniteScroll = <
   fetchFn,
   queryKey,
   initialCursor = '',
+  enabled = true,
 }: UseInfiniteScrollParams<T>) => {
   const observerRef = useRef<R | null>(null);
 
@@ -49,6 +51,7 @@ export const useInfiniteScroll = <
     gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
+    enabled,
   });
 
   const flattenedData = useMemo(

@@ -54,6 +54,7 @@ export const HistoryTable: React.FC = () => {
       version: string;
       fileName: string;
       lastModifierName: string;
+      lastModifierId: string;
       timestamp: string;
       work: string;
       description: string;
@@ -62,12 +63,13 @@ export const HistoryTable: React.FC = () => {
   >({
     fetchFn: fetchHistory,
     queryKey: ['history', menu, category, ...files, startDate, endDate],
+    enabled: !!(menu || category || files.length > 0 || (startDate && endDate)),
   });
 
   const columns = [
     { label: '버전', width: '80px', align: 'center' as const },
     { label: '파일명', width: '200px', align: 'left' as const },
-    { label: '수정자', width: '150px', align: 'left' as const },
+    { label: '관리자', width: '150px', align: 'left' as const },
     { label: '일시', width: '150px', align: 'left' as const },
     { label: '작업', width: '120px', align: 'center' as const },
     { label: '설명', width: '458px', align: 'left' as const },
@@ -185,7 +187,7 @@ export const HistoryTable: React.FC = () => {
                           {row.fileName}
                         </ScrollableCell>
                         <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
-                          {row.lastModifierName}
+                          {row.lastModifierId}({row.lastModifierName})
                         </td>
                         <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
                           {formatDateTime(row.timestamp)}
