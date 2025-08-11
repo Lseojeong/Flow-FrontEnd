@@ -5,6 +5,7 @@ import type { AdminProfile, LoginRequest } from '@/apis/auth/types';
 declare global {
   interface Window {
     showToast?: (_message: string) => void;
+    showErrorToast?: (_message: string) => void;
   }
 }
 

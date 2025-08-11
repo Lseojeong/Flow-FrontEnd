@@ -19,7 +19,6 @@ import {
 } from '@/apis/user/query';
 import { Loading } from '@/components/common/loading/Loading';
 import { formatDateTime } from '@/utils/formatDateTime';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -37,7 +36,6 @@ export default function UserSettingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useUserSetting();
   const changeDepartmentMutation = useChangeAdminDepartment();
@@ -82,12 +80,16 @@ export default function UserSettingPage() {
     );
 
     if (!selectedDepartment) {
-      setErrorToastMessage('선택된 부서 정보를 찾을 수 없습니다.');
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast('선택된 부서 정보를 찾을 수 없습니다.');
+      }
       return;
     }
 
     if (!selectedDepartment.departmentId) {
-      setErrorToastMessage('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast('부서 ID를 찾을 수 없습니다. 잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
@@ -109,7 +111,9 @@ export default function UserSettingPage() {
           (response?.result as { id?: string })?.id ||
           response?.message ||
           '부서 변경에 실패했습니다.';
-        setErrorToastMessage(errorMessage);
+        if (typeof window !== 'undefined' && window.showErrorToast) {
+          window.showErrorToast(errorMessage);
+        }
       }
     } catch (error: unknown) {
       const errorMessage =
@@ -117,7 +121,9 @@ export default function UserSettingPage() {
           ?.response?.data?.result?.id ||
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '부서 변경에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -145,13 +151,17 @@ export default function UserSettingPage() {
         refetch();
       } else {
         const errorMessage = response?.message || '관리자 탈퇴에 실패했습니다.';
-        setErrorToastMessage(errorMessage);
+        if (typeof window !== 'undefined' && window.showErrorToast) {
+          window.showErrorToast(errorMessage);
+        }
       }
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '관리자 탈퇴에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(errorMessage);
+      }
     } finally {
       setIsDeletePopupOpen(false);
     }
@@ -321,11 +331,6 @@ export default function UserSettingPage() {
         cancelText="취소"
         confirmText="탈퇴"
       />
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
-      )}
     </PageWrapper>
   );
 }
@@ -540,11 +545,4 @@ const EmptyCell = styled.td`
 
 const EmptyMessage = styled.p`
   margin-top: 20px;
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 9999;
 `;

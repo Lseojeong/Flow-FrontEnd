@@ -3,34 +3,52 @@ import styled from 'styled-components';
 import { Toast } from './ToastPopup';
 import { v4 as uuidv4 } from 'uuid';
 import { ToastItem } from './ToastPopup.types';
-
-/**
- * @example
- * 개발자모드에서 테스트용 전역 함수
- * showToast('테스트 메시지입니다!')
-   showToast('두 번째 토스트입니다!')
-   showToast('세 번째 토스트입니다!')
- */
+import { Toast as ErrorToast } from './ErrorToastPopup';
 
 export const ToastContainer: React.FC = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [errorToasts, setErrorToasts] = useState<ToastItem[]>([]);
 
   const showToast = useCallback((message: string) => {
     const id = uuidv4();
     setToasts((prev) => [...prev, { id, message }]);
   }, []);
 
+  const showErrorToast = useCallback((message: string) => {
+    const id = uuidv4();
+    setErrorToasts((prev) => [...prev, { id, message }]);
+  }, []);
+
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // 개발자 도구 테스트용 전역 함수
+  const removeErrorToast = (id: string) => {
+    setErrorToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   React.useEffect(() => {
-    (window as unknown as { showToast?: typeof showToast }).showToast = showToast;
+    (
+      window as unknown as { showToast?: typeof showToast; showErrorToast?: typeof showErrorToast }
+    ).showToast = showToast;
+    (
+      window as unknown as { showToast?: typeof showToast; showErrorToast?: typeof showErrorToast }
+    ).showErrorToast = showErrorToast;
     return () => {
-      delete (window as unknown as { showToast?: typeof showToast }).showToast;
+      delete (
+        window as unknown as {
+          showToast?: typeof showToast;
+          showErrorToast?: typeof showErrorToast;
+        }
+      ).showToast;
+      delete (
+        window as unknown as {
+          showToast?: typeof showToast;
+          showErrorToast?: typeof showErrorToast;
+        }
+      ).showErrorToast;
     };
-  }, [showToast]);
+  }, [showToast, showErrorToast]);
 
   return (
     <>
@@ -41,6 +59,14 @@ export const ToastContainer: React.FC = () => {
             message={toast.message}
             duration={5000}
             onClose={() => removeToast(toast.id)}
+          />
+        ))}
+        {errorToasts.map((toast) => (
+          <ErrorToast
+            key={toast.id}
+            message={toast.message}
+            duration={5000}
+            onClose={() => removeErrorToast(toast.id)}
           />
         ))}
       </Wrapper>
