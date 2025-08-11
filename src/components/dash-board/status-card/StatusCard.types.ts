@@ -8,6 +8,6 @@ export interface StatusItem {
 
 export interface StatusCardProps {
   title: string;
-  count: number | string;
+  count: number | string | React.ReactNode;
   items?: StatusItem[];
 }

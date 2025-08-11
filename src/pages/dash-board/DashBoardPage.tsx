@@ -20,7 +20,8 @@ import {
   SmallTalkIcon,
   TermsIcon,
 } from '@/assets/icons/dash-board/index';
-import { chartData, mockApiResponse } from '@/pages/mock/dictMock';
+import { useDashboardData } from '@/apis/dash-board/query';
+import { Loading } from '@/components/common/loading/Loading';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -29,81 +30,102 @@ export default function DashBoardPage() {
   const [startDate, setStartDate] = useState<string>(getTodayDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
 
+  const { data: dashboardData, isLoading } = useDashboardData({
+    startTime: startDate?.replace('Z', ''),
+    endTime: endDate?.replace('Z', ''),
+  });
+
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start || '');
     setEndDate(end || '');
   };
 
-  const getStatusCardData = () => [
-    {
-      title: 'FLOW 상태',
-      count: `${mockApiResponse.status.total}건`,
-      items: [
-        {
-          label: 'Completed',
-          value: `${mockApiResponse.status.completed}건`,
-          icon: <CompletedIcon />,
-        },
-        {
-          label: 'Processing',
-          value: `${mockApiResponse.status.processing}건`,
-          icon: <ProcessingIcon />,
-        },
-        { label: 'Fail', value: `${mockApiResponse.status.fail}건`, icon: <FailIcon /> },
-      ],
-    },
-    {
-      // TODO: 평균 응답시간 단위 변경 필요
-      title: '평균 응답시간',
-      count: `${mockApiResponse.responseTime.average}${mockApiResponse.responseTime.unit}`,
-      items: [
-        {
-          label: '가장 빠른 응답 시간',
-          value: `${mockApiResponse.responseTime.fastest}${mockApiResponse.responseTime.unit}`,
-          icon: <BadIcon />,
-        },
-        {
-          label: '가장 오래 걸린 응답 시간',
-          value: `${mockApiResponse.responseTime.slowest}${mockApiResponse.responseTime.unit}`,
-          icon: <GoodIcon />,
-        },
-      ],
-    },
-    {
-      title: '작업 히스토리',
-      count: `${mockApiResponse.contentBreakdown.total}건`,
-      items: [
-        {
-          label: '용어 사전',
-          value: `${mockApiResponse.contentBreakdown.dictionary}건`,
-          icon: <TermsIcon />,
-        },
-        {
-          label: '사내 문서',
-          value: `${mockApiResponse.contentBreakdown.documentary}건`,
-          icon: <DocsIcon />,
-        },
-        { label: 'FAQ', value: `${mockApiResponse.contentBreakdown.faq}건`, icon: <FaqIcon /> },
-      ],
-    },
-    {
-      title: '질문',
-      count: `${mockApiResponse.queryBreakdown.total}건`,
-      items: [
-        {
-          label: '스몰톡',
-          value: `${mockApiResponse.queryBreakdown.smallTalk}건`,
-          icon: <SmallTalkIcon />,
-        },
-        { label: 'RAG', value: `${mockApiResponse.queryBreakdown.rag}건`, icon: <DocsIcon /> },
-      ],
-    },
-  ];
+  const getStatusCardData = () => {
+    const defaultData = {
+      status: { total: 0, completed: 0, processing: 0, fail: 0 },
+      responseTime: { average: '0s', fastest: '0s', slowest: '0s' },
+      workHistory: { total: 0, dictionary: 0, document: 0, faq: 0 },
+      question: { total: 0, smallTalk: 0, rag: 0 },
+    };
+
+    const data = dashboardData?.result || defaultData;
+    const { status, responseTime, workHistory, question } = data;
+
+    return [
+      {
+        title: 'FLOW 상태',
+        count: `${status.total}건`,
+        items: [
+          {
+            label: 'Completed',
+            value: `${status.completed}건`,
+            icon: <CompletedIcon />,
+          },
+          {
+            label: 'Processing',
+            value: `${status.processing}건`,
+            icon: <ProcessingIcon />,
+          },
+          { label: 'Fail', value: `${status.fail}건`, icon: <FailIcon /> },
+        ],
+      },
+      {
+        title: '평균 응답시간',
+        count: responseTime.average,
+        items: [
+          {
+            label: '가장 빠른 응답 시간',
+            value: responseTime.fastest,
+            icon: <BadIcon />,
+          },
+          {
+            label: '가장 오래 걸린 응답 시간',
+            value: responseTime.slowest,
+            icon: <GoodIcon />,
+          },
+        ],
+      },
+      {
+        title: '작업 히스토리',
+        count: `${workHistory.total}건`,
+        items: [
+          {
+            label: '용어 사전',
+            value: `${workHistory.dictionary}건`,
+            icon: <TermsIcon />,
+          },
+          {
+            label: '사내 문서',
+            value: `${workHistory.document}건`,
+            icon: <DocsIcon />,
+          },
+          { label: 'FAQ', value: `${workHistory.faq}건`, icon: <FaqIcon /> },
+        ],
+      },
+      {
+        title: '질문',
+        count: `${question.total}건`,
+        items: [
+          {
+            label: '스몰톡',
+            value: `${question.smallTalk}건`,
+            icon: <SmallTalkIcon />,
+          },
+          { label: 'RAG', value: `${question.rag}건`, icon: <DocsIcon /> },
+        ],
+      },
+    ];
+  };
 
   const renderStatusCards = () => (
     <StatusCardSection>
       {getStatusCardData().map((card, index) => (
-        <StatusCard key={index} title={card.title} count={card.count} items={card.items} />
+        <StatusCard
+          key={index}
+          title={card.title}
+          count={isLoading ? <Loading size={20} color={colors.Normal} /> : card.count}
+          items={card.items}
+        />
       ))}
     </StatusCardSection>
   );
@@ -129,7 +151,7 @@ export default function DashBoardPage() {
           <Divider />
           <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           {renderStatusCards()}
-          <Chart data={chartData} />
+          <Chart data={dashboardData?.result?.requestVolume || []} />
           <HistoryTableSection>
             <HistoryTable />
           </HistoryTableSection>
@@ -141,7 +163,9 @@ export default function DashBoardPage() {
 }
 
 function getTodayDate(): string {
-  return new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return koreaTime.toISOString().replace('Z', '');
 }
 
 const PageWrapper = styled.div`
