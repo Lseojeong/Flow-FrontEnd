@@ -61,21 +61,23 @@ export default function DictionaryPage() {
     isLoading,
     reset,
     loadMore,
-  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
+  } = useInfiniteScroll<DictCategory & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['dictCategories'],
     fetchFn: async (cursor) => {
       const response = await getAllDictCategories(cursor);
       const res = response.data;
 
-      const categoryList: DictCategory[] = (res?.result?.categoryList ?? []).map(
-        (item: DictCategory) => ({
-          ...item,
-          status: {
-            completed: item.status?.completed ?? 0,
-            processing: item.status?.processing ?? 0,
-            fail: item.status?.fail ?? 0,
-          },
-        })
-      );
+      const categoryList: (DictCategory & { timestamp: string })[] = (
+        res?.result?.categoryList ?? []
+      ).map((item: DictCategory) => ({
+        ...item,
+        status: {
+          completed: item.status?.completed ?? 0,
+          processing: item.status?.processing ?? 0,
+          fail: item.status?.fail ?? 0,
+        },
+        timestamp: item.updatedAt || item.createdAt || new Date().toISOString(),
+      }));
 
       const pagination = res?.result?.pagination ?? { last: true };
 
