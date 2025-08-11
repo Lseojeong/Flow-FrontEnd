@@ -1,62 +1,87 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
-interface UseInfiniteScrollParams<T> {
+interface UseInfiniteScrollParams<T extends { timestamp: string }> {
   fetchFn: (_cursor?: string) => Promise<{
     code: string;
     result: {
       historyList: T[];
-      pagination: { last: boolean };
-      nextCursor?: string;
+      pagination: { isLast: boolean };
     };
   }>;
+  queryKey: (string | number | boolean | null | undefined)[];
   initialCursor?: string;
+  enabled?: boolean;
 }
 
-export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
+export const useInfiniteScroll = <
+  T extends { timestamp: string },
+  R extends HTMLElement = HTMLTableRowElement,
+>({
   fetchFn,
+  queryKey,
   initialCursor = '',
+  enabled = true,
 }: UseInfiniteScrollParams<T>) => {
-  const [data, setData] = useState<T[]>([]);
-  const [cursor, setCursor] = useState<string | undefined>(initialCursor);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const observerRef = useRef<R | null>(null);
 
-  const loadMore = useCallback(async () => {
-    if (!hasMore || isLoading) return;
-    setIsLoading(true);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey,
+    queryFn: ({ pageParam = initialCursor }) => fetchFn(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.code !== 'COMMON200') return undefined;
 
-    try {
-      const response = await fetchFn(cursor);
-      if (response.code === 'CATEGORY200') {
-        const { historyList, pagination, nextCursor } = response.result;
-        setData((prev) => [...prev, ...historyList]);
-        setCursor(nextCursor);
-        setHasMore(!pagination.last && !!nextCursor);
-      } else {
-        console.error('Unexpected response code:', response.code);
-      }
-    } catch (error) {
-      console.error('Infinite scroll fetch error:', error);
-    } finally {
-      setIsLoading(false);
+      const { historyList, pagination } = lastPage.result;
+      const lastItem = historyList[historyList.length - 1];
+      const nextCursor = lastItem ? lastItem.timestamp : undefined;
+
+      return !pagination.isLast && nextCursor ? nextCursor : undefined;
+    },
+    initialPageParam: initialCursor,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    enabled,
+  });
+
+  const flattenedData = useMemo(
+    () =>
+      data?.pages.flatMap((page) => (page.code === 'COMMON200' ? page.result.historyList : [])) ||
+      [],
+    [data?.pages]
+  );
+
+  const reset = () => {
+    refetch();
+  };
+
+  const loadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [cursor, hasMore, isLoading, fetchFn]);
+  };
+
+  const loadInitial = () => {
+    refetch();
+  };
 
   useEffect(() => {
-    if (cursor === initialCursor && !isLoading) {
-      loadMore();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!observerRef.current || !hasMore) return;
+    if (!observerRef.current || !hasNextPage || isFetchingNextPage) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading) {
-          loadMore();
+        if (entries[0].isIntersecting && !isFetchingNextPage && hasNextPage) {
+          fetchNextPage();
         }
       },
       { threshold: 1.0 }
@@ -64,21 +89,19 @@ export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
 
     observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [data, hasMore, isLoading, loadMore]);
-
-  const reset = () => {
-    setData([]);
-    setCursor(initialCursor);
-    setHasMore(true);
-    setIsLoading(false);
-  };
+  }, [flattenedData, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return {
-    data,
+    data: flattenedData,
     observerRef,
     isLoading,
-    hasMore,
+    isFetchingNextPage,
+    hasMore: hasNextPage,
+    isError,
+    error,
     reset,
     loadMore,
+    loadInitial,
+    refetch,
   };
 };

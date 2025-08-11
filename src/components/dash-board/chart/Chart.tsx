@@ -24,9 +24,6 @@ export const Chart: React.FC<ChartProps> = ({ data }) => {
     count: item.count || item.requests || 0,
   }));
 
-  console.log('Chart data:', data);
-  console.log('Chart chartData:', chartData);
-
   const noData = chartData.length === 0;
 
   const option = {

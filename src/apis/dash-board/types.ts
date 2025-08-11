@@ -53,3 +53,37 @@ export interface DashboardParams {
   startTime: string;
   endTime: string;
 }
+
+export interface HistoryItem {
+  version: string;
+  fileName: string;
+  lastModifierName: string;
+  lastModifierId: string;
+  lastModifierAdminId: string;
+  timestamp: string;
+  work: string;
+  description: string;
+  fileUrl: string;
+}
+
+export interface HistoryPagination {
+  isLast: boolean;
+}
+
+export interface HistoryResponse {
+  code: string;
+  message: string;
+  result: {
+    historyList: HistoryItem[];
+    pagination: HistoryPagination;
+  };
+}
+
+export interface HistoryParams {
+  menu?: string;
+  category?: string;
+  files?: string[];
+  startDate?: string;
+  endDate?: string;
+  cursor?: string;
+}

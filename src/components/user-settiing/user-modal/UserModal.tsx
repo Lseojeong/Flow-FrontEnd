@@ -24,6 +24,7 @@ const UserModal: React.FC<UserModalProps> = ({
   const [emailTags, setEmailTags] = useState<EmailTagData[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const inviteAdminMutation = useInviteAdmin();
 
   React.useEffect(() => {
@@ -132,15 +133,13 @@ const UserModal: React.FC<UserModalProps> = ({
   const handleSubmit = async () => {
     try {
       const emails = emailTags.map((tag) => tag.email);
-      const department =
-        departmentOptions.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
 
       const selectedDepartmentData = departmentOptions.find(
         (d) => d.departmentId === selectedDepartment
       );
 
       if (!selectedDepartmentData || !selectedDepartmentData.departmentId) {
-        setErrorToastMessage('부서 정보를 찾을 수 없습니다.');
+        setSubmitError('부서 정보를 찾을 수 없습니다.');
         return;
       }
 
@@ -155,18 +154,53 @@ const UserModal: React.FC<UserModalProps> = ({
         if (typeof window !== 'undefined' && window.showToast) {
           window.showToast('관리자 초대가 성공적으로 완료되었습니다.');
         }
-        onSubmit(emails, department);
-        handleClose();
+        onSubmit();
+        setEmailInput('');
+        setSelectedDepartment(null);
+        setEmailTags([]);
+        setErrors({});
+        setSubmitError(null);
+        onClose();
       } else {
         const errorMessage = response?.message || '초대에 실패했습니다.';
-        setErrorToastMessage(errorMessage);
+        setSubmitError(errorMessage);
       }
     } catch (error: unknown) {
       console.error('초대 실패:', error);
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '초대에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+      const errorResponse = error as {
+        response?: {
+          data?: {
+            code?: string;
+            message?: string;
+            result?: {
+              id?: string;
+              email?: string;
+            };
+          };
+        };
+      };
+
+      const errorCode = errorResponse?.response?.data?.code;
+      const errorMessage = errorResponse?.response?.data?.message;
+      const errorResult = errorResponse?.response?.data?.result;
+
+      let displayMessage = '초대에 실패했습니다.';
+
+      if (errorCode === 'INVITATION500') {
+        displayMessage = '일시적인 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      } else if (errorCode === 'ADMIN400') {
+        displayMessage = '관리자가 조직에 소속되어 있지 않아 작업을 수행할 수 없습니다.';
+      } else if (errorCode === 'INVITATION400') {
+        if (errorResult?.email) {
+          displayMessage = `${errorResult.email}은(는) 이미 해당 부서에 관리자로 할당되어 있는 유저입니다.`;
+        } else {
+          displayMessage = '이미 해당 부서에 관리자로 할당되어 있는 유저입니다.';
+        }
+      } else if (errorMessage) {
+        displayMessage = errorMessage;
+      }
+
+      setSubmitError(displayMessage);
     }
   };
 
@@ -175,6 +209,7 @@ const UserModal: React.FC<UserModalProps> = ({
     setSelectedDepartment(null);
     setEmailTags([]);
     setErrors({});
+    setSubmitError(null);
     onClose();
   };
 
@@ -231,6 +266,7 @@ const UserModal: React.FC<UserModalProps> = ({
               />
             ))}
           </TagsSection>
+          {submitError && <ErrorMessage>{submitError}</ErrorMessage>}
         </ModalBody>
 
         <ModalFooter>
