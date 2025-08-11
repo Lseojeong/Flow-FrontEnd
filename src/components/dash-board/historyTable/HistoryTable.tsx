@@ -11,8 +11,9 @@ import { HistoryFilter } from '../history-filter/HistoryFilter';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import { getHistory } from '@/apis/dash-board/api';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { Loading } from '@/components/common/loading/Loading';
+
 import { formatDateTime } from '@/utils/formatDateTime';
+import { Loading } from '@/components/common/loading/Loading';
 
 export const HistoryTable: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
@@ -24,17 +25,12 @@ export const HistoryTable: React.FC = () => {
 
   const fetchHistory = useCallback(
     async (cursor?: string) => {
-      const formatDate = (dateString: string) => {
-        if (!dateString) return undefined;
-        return dateString.split('T')[0];
-      };
-
       return getHistory({
         menu: menu || undefined,
         category: category || undefined,
         files: files.length > 0 ? files : undefined,
-        startDate: formatDate(startDate),
-        endDate: formatDate(endDate),
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
         cursor: cursor || undefined,
       });
     },
@@ -43,11 +39,9 @@ export const HistoryTable: React.FC = () => {
 
   const {
     data: historyList,
-    isLoading,
     observerRef,
     reset,
     loadMore,
-    isFetchingNextPage,
     hasMore,
   } = useInfiniteScroll<
     {
@@ -55,6 +49,7 @@ export const HistoryTable: React.FC = () => {
       fileName: string;
       lastModifierName: string;
       lastModifierId: string;
+      lastModifierAdminId: string;
       timestamp: string;
       work: string;
       description: string;
@@ -76,7 +71,6 @@ export const HistoryTable: React.FC = () => {
   ];
 
   const handleFilterConfirm = (filters: { menu: string[]; category: string[]; file: string[] }) => {
-    console.log('필터 적용:', filters);
     setMenu(filters.menu[0] || '');
     setCategory(filters.category[0] || '');
     setFiles(filters.file);
@@ -86,9 +80,7 @@ export const HistoryTable: React.FC = () => {
     }, 0);
   };
 
-  const handleFilterCancel = () => {
-    console.log('필터 취소');
-  };
+  const handleFilterCancel = () => {};
 
   const handleDateChange = (start: string | null, end: string | null) => {
     setStartDate(start || '');
@@ -107,14 +99,6 @@ export const HistoryTable: React.FC = () => {
         <EmptyMessage>원하는 필터 옵션을 선택해주세요.</EmptyMessage>
       </EmptyCell>
     </EmptyRow>
-  );
-
-  const renderLoadingState = () => (
-    <tr>
-      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
-        <Loading size={20} color="#666" />
-      </td>
-    </tr>
   );
 
   const handleTableScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -178,8 +162,22 @@ export const HistoryTable: React.FC = () => {
                 ? renderEmptyState()
                 : historyList.map((row, index) => {
                     const isLast = index === historyList.length - 1;
+                    const isLastRealItem = isLast && row.timestamp !== 'loading';
+                    if (row.timestamp === 'loading') {
+                      return (
+                        <LoadingRow key="loading">
+                          <LoadingCell colSpan={columns.length}>
+                            <Loading size={20} color="#666" />
+                          </LoadingCell>
+                        </LoadingRow>
+                      );
+                    }
+
                     return (
-                      <TableRow key={index} ref={isLast && hasMore ? observerRef : undefined}>
+                      <TableRow
+                        key={index}
+                        ref={isLastRealItem && hasMore ? observerRef : undefined}
+                      >
                         <td style={{ width: '80px', minWidth: '80px', textAlign: 'center' }}>
                           {row.version}
                         </td>
@@ -187,7 +185,7 @@ export const HistoryTable: React.FC = () => {
                           {row.fileName}
                         </ScrollableCell>
                         <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
-                          {row.lastModifierId}({row.lastModifierName})
+                          {row.lastModifierAdminId}({row.lastModifierName})
                         </td>
                         <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
                           {formatDateTime(row.timestamp)}
@@ -201,7 +199,6 @@ export const HistoryTable: React.FC = () => {
                       </TableRow>
                     );
                   })}
-              {(isLoading || isFetchingNextPage) && renderLoadingState()}
             </tbody>
           </TableScrollWrapper>
         </TableLayout>
@@ -283,4 +280,11 @@ const EmptyMessage = styled.div`
   color: ${colors.BoxText};
   font-size: 14px;
   transform: translateX(500px);
+`;
+
+const LoadingRow = styled.tr``;
+
+const LoadingCell = styled.td<{ colSpan: number }>`
+  text-align: center;
+  padding: 16px;
 `;
