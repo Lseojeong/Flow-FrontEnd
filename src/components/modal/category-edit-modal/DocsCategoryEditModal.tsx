@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Department } from '@/components/common/department/Department.types';
-import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import BaseCategoryEditModal from './BaseCategoryEditModal';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  onSubmit: (_: { name: string; description: string; departments?: string[] }) => void;
   initialName: string;
   initialDescription: string;
   initialDepartments: string[];
@@ -22,31 +21,18 @@ const DocsCategoryEditModal: React.FC<Props> = ({
   initialDepartments,
   departments,
 }) => {
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>(initialDepartments);
-
-  const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
-    onSubmit({
-      name: data.name,
-      description: data.description,
-      departments: selectedDepartments,
-    });
-  };
-
   return (
     <BaseCategoryEditModal
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
       initialName={initialName}
       initialDescription={initialDescription}
+      initialDepartments={initialDepartments}
+      departments={departments}
+      showDepartmentCheck={true}
       title="카테고리 수정"
-    >
-      <DepartmentCheck
-        departments={departments}
-        selectedDepartmentIds={selectedDepartments}
-        onChange={setSelectedDepartments}
-      />
-    </BaseCategoryEditModal>
+    />
   );
 };
 

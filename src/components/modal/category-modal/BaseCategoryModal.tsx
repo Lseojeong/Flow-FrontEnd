@@ -7,7 +7,7 @@ import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
-import axios, { AxiosError } from 'axios';
+
 import { Department } from '@/components/common/department/Department.types';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -24,12 +24,7 @@ interface BaseCategoryModalProps {
   showDepartmentCheck?: boolean;
 }
 
-type ErrorType = '' | 'required' | 'serverDuplicate';
-
-type ErrorBody = {
-  code?: string;
-  message?: string;
-};
+type ErrorType = '' | 'required';
 
 const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
@@ -45,7 +40,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [errorType, setErrorType] = useState<ErrorType>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isServerDuplicate, setIsServerDuplicate] = useState(false);
+
   const [isTouched, setIsTouched] = useState(false);
 
   const trimmedName = categoryName.trim();
@@ -63,9 +58,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
   const handleNameChange = (val: string) => {
     setCategoryName(val);
-    if (isServerDuplicate) {
-      setIsServerDuplicate(false);
-    }
     if (isTouched && val.trim() !== '') {
       setErrorType('');
     }
@@ -95,25 +87,8 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         departments: selectedDepartments,
       });
 
+      // 성공 시에만 모달을 닫음 (토스트는 페이지에서 처리)
       handleClose();
-
-      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
-      setTimeout(() => {
-        w.showToast?.(CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE, 'success');
-      }, MODAL_STYLE.TOAST_DELAY);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const data = (err as AxiosError<ErrorBody>)?.response?.data;
-        const code = data?.code;
-        const msg = data?.message ?? '';
-
-        if (code === 'CATEGORY400' || msg.includes('중복')) {
-          setIsServerDuplicate(true);
-          setErrorType('serverDuplicate');
-          return;
-        }
-      }
-      setErrorType('serverDuplicate');
     } finally {
       setIsSubmitting(false);
     }
@@ -121,7 +96,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
   const getErrorMessage = () => {
     if (errorType === 'required') return '카테고리를 등록해주세요.';
-    if (errorType === 'serverDuplicate') return '이미 존재하는 카테고리입니다.';
     return '';
   };
 
@@ -130,7 +104,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     setDescription('');
     setSelectedDepartments([]);
     setErrorType('');
-    setIsServerDuplicate(false);
     setIsSubmitting(false);
     setIsTouched(false);
     onClose();

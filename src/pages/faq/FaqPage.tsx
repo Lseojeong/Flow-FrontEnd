@@ -160,8 +160,6 @@ export default function FaqPage() {
     })();
   }, []);
 
-  const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
-
   const filteredCategories = useMemo(() => {
     const isDateInRange = (dateStr: string) => {
       if (!startDate && !endDate) return true;
@@ -272,19 +270,6 @@ export default function FaqPage() {
     departments: string[] | { departmentId: string }[];
   }) => {
     try {
-      if (existingCategoryNames.includes(form.name.trim())) {
-        const errorMessage = '이미 존재하는 카테고리명입니다.';
-
-        if (
-          typeof window !== 'undefined' &&
-          'showErrorToast' in window &&
-          typeof window.showErrorToast === 'function'
-        ) {
-          window.showErrorToast(errorMessage);
-        }
-        return;
-      }
-
       const depIds =
         Array.isArray(form.departments) &&
         form.departments.length > 0 &&
@@ -323,6 +308,7 @@ export default function FaqPage() {
         }
       }
     } catch (error: unknown) {
+      console.error('카테고리 등록 에러:', error);
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 등록 중 오류가 발생했습니다.';
@@ -569,6 +555,7 @@ export default function FaqPage() {
               setEditingCategory(null);
               await reset();
             } catch (error: unknown) {
+              console.error('카테고리 수정 에러:', error);
               const errorMessage =
                 (error as { response?: { data?: { message?: string } } })?.response?.data
                   ?.message || '카테고리 수정에 실패했습니다.';
