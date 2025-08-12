@@ -53,11 +53,11 @@ export const useInfiniteScroll = <
     refetchOnWindowFocus: false,
     enabled,
   });
+
   const flattenedData = useMemo(
     () =>
-      data?.pages.flatMap((page) =>
-        page.code === 'COMMON200' || page.code === 'CATEGORY200' ? page.result.historyList : []
-      ) || [],
+      data?.pages.flatMap((page) => (page.code === 'COMMON200' ? page.result.historyList : [])) ||
+      [],
     [data?.pages]
   );
 
