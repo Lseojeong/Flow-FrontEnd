@@ -229,7 +229,7 @@ const FileTableRow: React.FC<{
       </StatusWrapper>
     </td>
     <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
-      {file.lastModifierName}
+      {file.lastModifierId}({file.lastModifierName})
     </td>
     <td
       style={{
@@ -325,7 +325,7 @@ const FileDetailPanelWrapper: React.FC<FileDetailPanelProps> = ({ file, onClose 
         name: file.fileName,
         fileName: file.fileName,
         status: file.status,
-        manager: file.lastModifierName,
+        manager: `${file.lastModifierId}(${file.lastModifierName})`,
         registeredAt: file.createdAt,
         updatedAt: file.updatedAt,
         version: '1.0.0',
