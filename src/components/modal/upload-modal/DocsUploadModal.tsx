@@ -60,6 +60,7 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId, 
       onSubmit={handlePresignedSubmit}
       title="사내문서 데이터 등록"
       fileType="pdf"
+      latestVersion="1.0.0"
     />
   );
 };

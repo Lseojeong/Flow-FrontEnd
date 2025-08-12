@@ -5,7 +5,7 @@ import { UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  onSubmit: (_data: { file?: File; description: string; version: string }) => void;
   originalFileName: string;
   originalVersion: string;
 }
@@ -26,6 +26,7 @@ export const DocsEditModal: React.FC<Props> = ({
       originalVersion={originalVersion}
       title="사내문서 데이터 수정"
       acceptFileType={UPLOAD_MODAL_CONSTANTS.PDF_ACCEPT}
+      latestVersion="1.0.0"
     />
   );
 };
