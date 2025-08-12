@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Department } from '@/components/common/department/Department.types';
 import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import BaseCategoryModal from './BaseCategoryModal';
-interface Props {
+
+type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  onSubmit: (_data: { name: string; description: string; departments: string[] }) => Promise<void>;
   departments: Department[];
   existingCategoryNames: string[];
-}
+};
 
 const DocsCategoryModal: React.FC<Props> = ({
   isOpen,
@@ -19,7 +20,7 @@ const DocsCategoryModal: React.FC<Props> = ({
 }) => {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
-  const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
+  const handleSubmit = (data: { name: string; description: string }) => {
     onSubmit({
       name: data.name,
       description: data.description,

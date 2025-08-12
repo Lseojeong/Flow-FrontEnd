@@ -1,23 +1,58 @@
 import React from 'react';
 import BaseUploadModal from './BaseUploadModal';
+import { uploadViaPresigned } from '@/apis/files/api';
+import { createDictCategoryFile } from '@/apis/dictcategory_detail/api';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  categoryId?: string;
+  onSubmit?: (_args: {
+    fileUrl: string;
+    fileName: string;
+    description: string;
+    version: string;
+  }) => Promise<void>;
+  onSuccess?: () => void;
 }
 
-export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
+export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }) => {
+  const handlePresignedSubmit = async (data: {
+    file: File;
+    description: string;
+    version: string;
+  }) => {
+    try {
+      const { publicUrl } = await uploadViaPresigned({
+        file: data.file,
+        folderType: 'dict',
+        organizationId: '550e8400-e29b-41d4-a716-446655440001',
+      });
+
+      await createDictCategoryFile(categoryId!, {
+        fileUrl: publicUrl,
+        fileName: data.file.name,
+        description: data.description,
+        version: data.version,
+      });
+
+      onClose();
+    } catch {
+      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
+        '파일 업로드 또는 DB 등록 중 오류가 발생했습니다.',
+        'error'
+      );
+    }
+  };
+
   return (
     <BaseUploadModal
       isOpen={isOpen}
       onClose={onClose}
-      onSubmit={onSubmit}
+      onSubmit={handlePresignedSubmit}
       title="용어사전 데이터 등록"
       fileType="csv"
       downloadLink="/assets/dict-template.csv"
     />
   );
 };
-
-export default DictUploadModal;

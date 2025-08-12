@@ -132,7 +132,7 @@ const Form = styled.form`
 const ErrorMessage = styled.div`
   width: 370px;
   color: ${colors.MainRed};
-  font-size: 10px;
+  font-size: 12px;
   text-align: right;
   margin-bottom: 16px;
   padding: 8px;

@@ -58,7 +58,7 @@ interface EditTargetFile {
 }
 
 export default function DocsDetailPage() {
-  const { docId } = useParams();
+  const { docId: categoryId } = useParams<{ docId: string }>();
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
@@ -68,28 +68,42 @@ export default function DocsDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
 
-  const { data: paginatedFiles, observerRef } = useInfiniteScroll<DictFile, HTMLTableRowElement>({
+  const { data: paginatedFiles, observerRef } = useInfiniteScroll<
+    DictFile & { timestamp: string; fileName: string; fileUrl: string },
+    HTMLTableRowElement
+  >({
+    queryKey: ['docs-detail-files', categoryId],
     fetchFn: async (cursor) => {
       const response = await getAllDictCategories(cursor);
       const res = response.data;
 
-      const categoryList = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
+      const categoryList: (DictFile & {
+        timestamp: string;
+        fileName: string;
+        fileUrl: string;
+      })[] = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
         ...item,
         status: {
           completed: item.status?.completed ?? 0,
           processing: item.status?.processing ?? 0,
           fail: item.status?.fail ?? 0,
         },
+        fileName: item.name ?? '-',
+        fileUrl: (item as { fileUrl?: string }).fileUrl ?? '-',
+        timestamp:
+          (item as { updatedAt?: string }).updatedAt ??
+          (item as { createdAt?: string }).createdAt ??
+          '',
       }));
 
       return {
         code: res.code ?? '200',
         result: {
-          historyList: categoryList as DictFile[],
+          historyList: categoryList,
           pagination: {
-            last: res.result?.pagination?.last ?? true,
+            isLast: res.result?.pagination?.last ?? true,
           },
-          nextCursor: res.result?.pagination?.nextCursor, // 있으면 넣기
+          nextCursor: res.result?.pagination?.nextCursor,
         },
       };
     },
@@ -97,7 +111,7 @@ export default function DocsDetailPage() {
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
-  const detailData = dictMockData.find((item) => item.id.toString() === docId);
+  const detailData = dictMockData.find((item) => item.id.toString() === categoryId);
 
   const filteredFiles = useMemo(() => {
     if (!detailData) return [];
@@ -368,7 +382,18 @@ export default function DocsDetailPage() {
         />
       )}
 
-      {selectedFile && <FileDetailPanel file={selectedFile} onClose={handleFileDetailClose} />}
+      {selectedFile && (
+        <FileDetailPanel
+          file={{
+            ...selectedFile,
+            fileName: selectedFile.name,
+            fileUrl: selectedFile.fileUrl ?? '',
+            timestamp: selectedFile.updatedAt,
+            id: String(selectedFile.id),
+          }}
+          onClose={handleFileDetailClose}
+        />
+      )}
     </PageWrapper>
   );
 }

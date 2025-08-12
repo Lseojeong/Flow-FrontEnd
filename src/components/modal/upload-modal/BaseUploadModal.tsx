@@ -7,11 +7,19 @@ import { VersionSelector } from '@/components/common/version/VersionCard';
 import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 interface BaseUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  onSubmit: (_data: {
+    file: File;
+    fileName: string;
+    description: string;
+    version: string;
+    fileUrl: string;
+  }) => Promise<void> | void;
+  onSuccess?: () => void;
   title: string;
   fileType: 'csv' | 'pdf';
   downloadLink?: string;
@@ -22,6 +30,7 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onSuccess,
   title,
   fileType,
   downloadLink,
@@ -31,50 +40,61 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState('');
   const [fileError, setFileError] = useState<string>('');
+  const [fileUrl, setFileUrl] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
-  const handleConfirm = () => {
-    onSubmit({
-      title: file!.name,
-      description: description.trim(),
-      version,
-    });
-
-    setFile(null);
-    setDescription('');
-    setVersion('');
-    setFileError('');
-    onClose();
-
-    setTimeout(() => {
-      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        UPLOAD_MODAL_CONSTANTS.SUCCESS_UPLOAD_MESSAGE,
-        'success'
+  const handleConfirm = async () => {
+    if (!file || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await Promise.resolve(
+        onSubmit({
+          file,
+          fileName: file.name,
+          description: description.trim(),
+          version,
+          fileUrl,
+        })
       );
-    }, MODAL_STYLE.TOAST_DELAY);
+
+      onSuccess?.();
+
+      setFile(null);
+      setDescription('');
+      setVersion('');
+      setFileError('');
+      setFileUrl('');
+      onClose();
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '파일 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      setErrorToastMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     setFileError('');
+    const localUrl = URL.createObjectURL(selectedFile);
+    setFileUrl(localUrl);
   };
 
   const handleVersionSelect = (ver: string) => {
     setVersion(ver);
   };
 
-  const isDisabled = !file || version === '' || !!fileError;
+  const isDisabled = !file || version === '' || !!fileError || isSubmitting;
 
   return (
     <>
@@ -108,6 +128,7 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
                   onClick={() => {
                     document.getElementById('hidden-input')?.click();
                   }}
+                  disabled={isSubmitting}
                 >
                   {UPLOAD_MODAL_CONSTANTS.UPLOAD_BUTTON}
                 </Button>
@@ -127,14 +148,20 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
             {children}
 
             <ButtonRow>
-              <Button variant="dark" onClick={onClose}>
+              <Button variant="dark" onClick={onClose} disabled={isSubmitting}>
                 {UPLOAD_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
-              <Button onClick={handleConfirm} disabled={isDisabled}>
+              <Button onClick={handleConfirm} disabled={isDisabled} isLoading={isSubmitting}>
                 {UPLOAD_MODAL_CONSTANTS.REGISTER_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
+
+          {errorToastMessage && (
+            <ErrorToastWrapper>
+              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+            </ErrorToastWrapper>
+          )}
         </Overlay>
       )}
     </>
@@ -211,4 +238,17 @@ const DownloadLink = styled.a`
   &:hover {
     color: rgb(255, 184, 77);
   }
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;

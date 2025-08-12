@@ -344,6 +344,7 @@ export interface DictFile {
   registeredAt: string;
   updatedAt: string;
   version: string;
+  fileUrl?: string;
 }
 
 export const MOCK_DEPARTMENTS: Department[] = [

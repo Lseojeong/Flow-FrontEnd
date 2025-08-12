@@ -1,12 +1,11 @@
 import { axiosInstance } from '@/apis/axiosInstance';
 
-interface SearchParams {
+export interface SearchParams {
   keyword?: string;
   startDate?: string;
   endDate?: string;
   cursor?: string;
 }
-
 // 전체 카테고리 목록
 export const getAllDictCategories = async (cursor?: string) => {
   const res = await axiosInstance.get('/admin/dict/categories', {

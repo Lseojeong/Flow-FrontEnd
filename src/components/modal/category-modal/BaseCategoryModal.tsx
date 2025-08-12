@@ -6,29 +6,49 @@ import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
+import axios, { AxiosError } from 'axios';
+import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { name: string; description: string; departments?: string[] }) => void;
+  onSubmit: (_data: {
+    name: string;
+    description: string;
+    departments?: string[];
+  }) => void | Promise<unknown>;
   existingCategoryNames: string[];
   title?: string;
   children?: React.ReactNode;
 }
 
+type ErrorType = '' | 'required' | 'serverDuplicate';
+
+type ErrorBody = {
+  code?: string;
+  message?: string;
+};
+
 const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  existingCategoryNames,
   title = '카테고리 등록',
   children,
 }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [errorType, setErrorType] = useState<'' | typeof CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR>(
-    ''
-  );
   const [description, setDescription] = useState('');
+  const [errorType, setErrorType] = useState<ErrorType>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isServerDuplicate, setIsServerDuplicate] = useState(false);
+  const [isTouched, setIsTouched] = useState(false);
+  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
+
+  const trimmedName = categoryName.trim();
+  const trimmedDescription = description.trim();
+
+  const isDisabled =
+    trimmedName === '' || trimmedDescription === '' || isServerDuplicate || isSubmitting;
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset';
@@ -37,41 +57,62 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     };
   }, [isOpen]);
 
-  const handleConfirm = () => {
-    const trimmedName = categoryName.trim();
-
-    if (trimmedName === '') {
-      return;
+  const handleNameChange = (val: string) => {
+    setCategoryName(val);
+    if (isServerDuplicate) {
+      setIsServerDuplicate(false);
     }
-
-    if (existingCategoryNames.includes(trimmedName)) {
-      setErrorType(CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR);
-      return;
+    if (isTouched && val.trim() !== '') {
+      setErrorType('');
     }
-
-    setErrorType('');
-
-    onSubmit({
-      name: trimmedName,
-      description,
-    });
-
-    handleClose();
-
-    setTimeout(() => {
-      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
-        CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE,
-        'success'
-      );
-    }, MODAL_STYLE.TOAST_DELAY);
   };
 
-  const trimmedName = categoryName.trim();
-  const isDisabled = trimmedName === '' || existingCategoryNames.includes(trimmedName);
+  const handleNameBlur = () => {
+    setIsTouched(true);
+    if (trimmedName === '') {
+      setErrorType('required');
+    }
+  };
+
+  const handleConfirm = async () => {
+    setIsTouched(true);
+    if (trimmedName === '') {
+      setErrorType('required');
+      return;
+    }
+    if (isDisabled) return;
+
+    try {
+      setIsSubmitting(true);
+
+      await onSubmit({
+        name: trimmedName,
+        description: trimmedDescription,
+      });
+
+      handleClose();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const data = (err as AxiosError<ErrorBody>)?.response?.data;
+        const code = data?.code;
+        const msg = data?.message ?? '';
+
+        if (code === 'CATEGORY400' || msg.includes('중복')) {
+          setIsServerDuplicate(true);
+          setErrorType('serverDuplicate');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+      setErrorToastMessage('등록에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getErrorMessage = () => {
-    if (errorType === CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR)
-      return CATEGORY_MODAL_CONSTANTS.DUPLICATE_ERROR;
+    if (errorType === 'required') return '카테고리를 등록해주세요.';
+    if (errorType === 'serverDuplicate') return '이미 존재하는 카테고리입니다.';
     return '';
   };
 
@@ -79,6 +120,9 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     setCategoryName('');
     setDescription('');
     setErrorType('');
+    setIsServerDuplicate(false);
+    setIsSubmitting(false);
+    setIsTouched(false);
     onClose();
   };
 
@@ -89,29 +133,37 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
           <ModalBox>
             <Title>{title}</Title>
             <Divider />
-
             <Container>
               <CategoryInput
                 value={categoryName}
-                onChange={setCategoryName}
-                onBlur={() => {}}
+                onChange={handleNameChange}
+                onBlur={handleNameBlur}
                 error={getErrorMessage()}
               />
-
               {children}
-
               <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
             </Container>
-
             <ButtonRow>
-              <Button variant="dark" size="medium" onClick={handleClose}>
+              <Button variant="dark" size="medium" onClick={handleClose} disabled={isSubmitting}>
                 {CATEGORY_MODAL_CONSTANTS.CANCEL_BUTTON}
               </Button>
-              <Button variant="primary" size="medium" onClick={handleConfirm} disabled={isDisabled}>
+              <Button
+                variant="primary"
+                size="medium"
+                onClick={handleConfirm}
+                disabled={isDisabled}
+                isLoading={isSubmitting}
+              >
                 {CATEGORY_MODAL_CONSTANTS.REGISTER_BUTTON}
               </Button>
             </ButtonRow>
           </ModalBox>
+
+          {errorToastMessage && (
+            <ErrorToastWrapper>
+              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
+            </ErrorToastWrapper>
+          )}
         </Overlay>
       )}
     </>
@@ -164,4 +216,17 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP};
   margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
+`;
+
+const ErrorToastWrapper = styled.div`
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 9999;
+  pointer-events: none;
 `;
