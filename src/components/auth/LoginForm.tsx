@@ -21,6 +21,7 @@ export function LoginForm() {
   });
 
   const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isDisabled = useMemo(() => {
     return (
@@ -39,6 +40,7 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setIsLoading(true);
     try {
       await login({
         adminId: adminIdField.value,
@@ -48,6 +50,8 @@ export function LoginForm() {
       navigate('/dictionary');
     } catch {
       setIsError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -78,7 +82,7 @@ export function LoginForm() {
         />
         <Spacer />
         {isError && <LoginErrorMessage />}
-        <Button size="large" type="submit" disabled={isDisabled}>
+        <Button size="large" type="submit" disabled={isDisabled} isLoading={isLoading}>
           로그인
         </Button>
       </Form>
