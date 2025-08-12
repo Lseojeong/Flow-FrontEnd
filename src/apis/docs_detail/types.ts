@@ -55,3 +55,10 @@ export interface DocsCategoryDetail {
   lastModifierName: string;
   departmentList: string[];
 }
+
+export interface EditTargetFile {
+  title: string;
+  version: string;
+  fileId: string;
+  fileUrl: string;
+}
