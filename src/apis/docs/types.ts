@@ -65,3 +65,14 @@ export interface DocsCategorySearchRequest {
 export interface DocsCategoryDeleteRequest {
   categoryIdList: string[];
 }
+
+export interface DocsCategoryDetail {
+  name: string;
+  description: string;
+  status: DocsCategoryStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastModifierId: string;
+  lastModifierName: string;
+  departmentList: string[];
+}

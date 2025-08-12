@@ -212,7 +212,7 @@ export default function DocsPage() {
     try {
       const res = await deleteDocsCategories({ categoryIdList: selectedIds });
       const code = (res as { data?: { code?: string } }).data?.code;
-      if (code === 'COMMON200' || code === '200') {
+      if (code === 'COMMON200') {
         (window as { showToast?: (_message: string) => void }).showToast?.(
           '선택한 카테고리가 삭제되었습니다.'
         );
@@ -236,7 +236,7 @@ export default function DocsPage() {
           description: data.description,
           departmentIdList: data.departments ?? [],
         });
-        if (!(res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200')) {
+        if (!(res.data?.code === 'COMMON200')) {
           throw new Error(res.data?.message || '카테고리 등록 실패');
         }
         (window as { showToast?: (_message: string) => void }).showToast?.(

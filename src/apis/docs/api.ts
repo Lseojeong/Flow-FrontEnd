@@ -8,6 +8,7 @@ import type {
   DocsCategoryListResult,
   DocsCategorySearchRequest,
   DocsCategoryDeleteRequest,
+  DocsCategoryDetail,
 } from './types';
 
 export const getAllDocsCategories = async (cursor?: string) => {
@@ -17,7 +18,7 @@ export const getAllDocsCategories = async (cursor?: string) => {
 };
 
 export const getDocsCategoryById = (categoryId: string) => {
-  return axiosInstance.get<ApiResponse<DocsCategory>>(`/admin/docs/categories/${categoryId}`);
+  return axiosInstance.get<ApiResponse<DocsCategoryDetail>>(`/admin/docs/categories/${categoryId}`);
 };
 
 export const createDocsCategory = (body: DocsCategoryCreateRequest) => {

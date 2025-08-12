@@ -38,7 +38,7 @@ export interface FileItem {
   manager: string;
   registeredAt: string;
   updatedAt: string;
-  version?: string;
+  version: string;
   fileUrl: string;
   timestamp?: string;
 }
@@ -53,17 +53,4 @@ export interface FileListResult {
   fileList: DictCategoryFile[];
   pagination: { last: boolean };
   nextCursor?: string;
-}
-
-export interface FileItem {
-  id: string;
-  name: string;
-  fileName: string;
-  status: 'Completed' | 'Processing' | 'Fail' | string;
-  manager: string;
-  registeredAt: string;
-  updatedAt: string;
-  version: string;
-  fileUrl: string;
-  timestamp?: string;
 }

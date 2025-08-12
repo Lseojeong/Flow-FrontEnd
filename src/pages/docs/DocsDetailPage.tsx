@@ -19,14 +19,16 @@ import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
 import { StatusItemData } from '@/components/common/status/Status.types';
-import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDictCategories } from '@/apis/dictcategory/api';
-import type { DictCategory } from '@/pages/mock/dictMock';
+import { getDocsCategoryById } from '@/apis/docs/api';
+import { getDocsCategoryFiles } from '@/apis/docs_detail/api';
+import type { DocsFile } from '@/apis/docs_detail/types';
+import { useQuery } from '@tanstack/react-query';
+import { formatDate, formatDateTime } from '@/utils/index';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -66,40 +68,39 @@ export default function DocsDetailPage() {
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
-  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<DocsFile | null>(null);
+
+  const { data: categoryDetailResponse } = useQuery({
+    queryKey: ['docs-category-detail', categoryId],
+    queryFn: () => getDocsCategoryById(categoryId!),
+    enabled: !!categoryId,
+  });
+
+  const categoryDetail = categoryDetailResponse?.data?.result;
 
   const { data: paginatedFiles, observerRef } = useInfiniteScroll<
-    DictFile & { timestamp: string; fileName: string; fileUrl: string },
+    DocsFile & { timestamp: string },
     HTMLTableRowElement
   >({
     queryKey: ['docs-detail-files', categoryId],
     fetchFn: async (cursor) => {
-      const response = await getAllDictCategories(cursor);
+      if (!categoryId) {
+        throw new Error('categoryId is required');
+      }
+      const response = await getDocsCategoryFiles(categoryId, cursor);
       const res = response.data;
 
-      const categoryList: (DictFile & {
-        timestamp: string;
-        fileName: string;
-        fileUrl: string;
-      })[] = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
-        ...item,
-        status: {
-          completed: item.status?.completed ?? 0,
-          processing: item.status?.processing ?? 0,
-          fail: item.status?.fail ?? 0,
-        },
-        fileName: item.name ?? '-',
-        fileUrl: (item as { fileUrl?: string }).fileUrl ?? '-',
-        timestamp:
-          (item as { updatedAt?: string }).updatedAt ??
-          (item as { createdAt?: string }).createdAt ??
-          '',
-      }));
+      const fileList: (DocsFile & { timestamp: string })[] = (res?.result?.fileList ?? []).map(
+        (item: DocsFile) => ({
+          ...item,
+          timestamp: item.updatedAt ?? item.createdAt ?? '',
+        })
+      );
 
       return {
-        code: res.code ?? '200',
+        code: res.code ?? 'COMMON200',
         result: {
-          historyList: categoryList,
+          historyList: fileList,
           pagination: {
             isLast: res.result?.pagination?.last ?? true,
           },
@@ -107,41 +108,44 @@ export default function DocsDetailPage() {
         },
       };
     },
+    enabled: !!categoryId,
   });
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
-  const detailData = dictMockData.find((item) => item.id.toString() === categoryId);
-
   const filteredFiles = useMemo(() => {
-    if (!detailData) return [];
-    return detailData.files.filter((file) =>
-      file.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
+    if (!paginatedFiles) return [];
+    return paginatedFiles.filter((file) =>
+      file.fileName.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
     );
-  }, [detailData, debouncedSearchKeyword]);
+  }, [paginatedFiles, debouncedSearchKeyword]);
 
-  if (!detailData) {
-    return <NoData>데이터가 없습니다.</NoData>;
+  if (!categoryId) {
+    return <NoData>카테고리 ID가 없습니다.</NoData>;
+  }
+
+  if (!categoryDetail) {
+    return <NoData>데이터를 불러오는 중...</NoData>;
   }
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: detailData.status.completed },
-    { type: 'Processing', count: detailData.status.processing },
-    { type: 'Fail', count: detailData.status.fail },
+    { type: 'Completed', count: categoryDetail?.status?.Completed ?? 0 },
+    { type: 'Processing', count: categoryDetail?.status?.Processing ?? 0 },
+    { type: 'Fail', count: categoryDetail?.status?.Fail ?? 0 },
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
 
-  const handleFileClick = (file: DictFile) => {
+  const handleFileClick = (file: DocsFile) => {
     setSelectedFile(file);
   };
 
-  const handleEditFile = (file: DictFile) => {
+  const handleEditFile = (file: DocsFile) => {
     setEditTargetFile({
-      title: file.name,
-      version: file.version,
+      title: file.fileName,
+      version: '1.0.0',
     });
     setIsEditModalOpen(true);
   };
@@ -173,24 +177,23 @@ export default function DocsDetailPage() {
     setEditTargetFile(null);
   };
 
-  const handleUploadModalSubmit = () => {
+  const handleUploadModalSuccess = () => {
     if ((window as { showToast?: (_message: string) => void }).showToast) {
       (window as { showToast?: (_message: string) => void }).showToast!('파일이 등록되었습니다.');
     }
-    setIsCsvModalOpen(false);
   };
 
   const handleFileDetailClose = () => {
     setSelectedFile(null);
   };
 
-  const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
-    <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
+  const renderFileRow = (file: DocsFile, index: number, isLast?: boolean) => (
+    <TableRow key={`file-${file.fileId}`} ref={isLast ? observerRef : undefined}>
       <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
         {index + 1}
       </td>
       <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
-        <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
+        <StyledLink onClick={() => handleFileClick(file)}>{file.fileName}</StyledLink>
       </ScrollableCell>
       <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
         <StatusWrapper>
@@ -198,7 +201,7 @@ export default function DocsDetailPage() {
         </StatusWrapper>
       </td>
       <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
-        {file.manager}
+        {file.lastModifierName}
       </td>
       <td
         style={{
@@ -207,7 +210,7 @@ export default function DocsDetailPage() {
           textAlign: 'left',
         }}
       >
-        {file.registeredAt}
+        {formatDateTime(file.createdAt)}
       </td>
       <td
         style={{
@@ -216,7 +219,7 @@ export default function DocsDetailPage() {
           textAlign: 'left',
         }}
       >
-        {file.updatedAt}
+        {formatDateTime(file.updatedAt)}
       </td>
       <td
         style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
@@ -232,7 +235,7 @@ export default function DocsDetailPage() {
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
           </ActionButton>
-          <ActionButton onClick={() => handleDeleteFile(file.name)}>
+          <ActionButton onClick={() => handleDeleteFile(file.fileName)}>
             <DeleteIcon />
           </ActionButton>
         </ActionButtons>
@@ -277,9 +280,9 @@ export default function DocsDetailPage() {
       <Content>
         <ContentWrapper>
           <HeaderSection>
-            <PageTitle>{detailData.name}</PageTitle>
+            <PageTitle>{categoryDetail.name}</PageTitle>
             <DescriptionRow>
-              <Description>{detailData.description}</Description>
+              <Description>{categoryDetail.description}</Description>
               <Button onClick={() => setIsCsvModalOpen(true)} size="small" variant="primary">
                 + 데이터 등록
               </Button>
@@ -315,22 +318,29 @@ export default function DocsDetailPage() {
 
             <InfoItemColumn>
               <Label>등록일:</Label>
-              <Value>{detailData.registeredDate}</Value>
+              <Value>{formatDate(categoryDetail.createdAt)}</Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정일:</Label>
-              <Value>{detailData.lastModified}</Value>
+              <Value>{formatDate(categoryDetail.updatedAt)}</Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정자:</Label>
-              <Value>{detailData.lastEditor}</Value>
+              <Value>{categoryDetail?.lastModifierName || '-'}</Value>
             </InfoItemColumn>
             <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
               <Label>포함 부서:</Label>
               <Value>
-                <DepartmentTagList departments={detailData.departments} />
+                <DepartmentTagList
+                  departments={
+                    categoryDetail.departmentList?.map((name) => ({
+                      departmentId: name,
+                      departmentName: name,
+                    })) ?? []
+                  }
+                />
               </Value>
             </InfoItemColumn>
           </InfoBox>
@@ -369,7 +379,8 @@ export default function DocsDetailPage() {
       <DocsUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSubmit={handleUploadModalSubmit}
+        onSuccess={handleUploadModalSuccess}
+        categoryId={categoryId}
       />
 
       {editTargetFile && (
@@ -385,11 +396,16 @@ export default function DocsDetailPage() {
       {selectedFile && (
         <FileDetailPanel
           file={{
-            ...selectedFile,
-            fileName: selectedFile.name,
+            id: String(selectedFile.fileId),
+            name: selectedFile.fileName,
+            fileName: selectedFile.fileName,
+            status: selectedFile.status,
+            manager: selectedFile.lastModifierName,
+            registeredAt: selectedFile.createdAt,
+            updatedAt: selectedFile.updatedAt,
+            version: '1.0.0',
             fileUrl: selectedFile.fileUrl ?? '',
             timestamp: selectedFile.updatedAt,
-            id: String(selectedFile.id),
           }}
           onClose={handleFileDetailClose}
         />
