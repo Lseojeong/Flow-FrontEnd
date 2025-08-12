@@ -80,7 +80,7 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
           result: {
             historyList: res.data.result.historyList,
             pagination: {
-              isLast: res.data.result.pagination.last, // ✅ last → isLast 변환
+              isLast: res.data.result.pagination.last,
             },
             nextCursor: res.data.result.nextCursor,
           },

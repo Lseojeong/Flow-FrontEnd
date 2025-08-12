@@ -24,12 +24,11 @@ import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
-import { getDictCategoryFiles } from '@/apis/dictcategory_detail/api';
-import type { DictCategoryFile } from '@/apis/dictcategory_detail/types';
+import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import type { FileItem } from '@/types/dictionary';
 import { formatDateTime } from '@/utils/formatDateTime';
 import {
+  getDictCategoryFiles,
   createDictCategoryFile,
   deleteDictCategoryFile,
   searchDictCategoryFiles,

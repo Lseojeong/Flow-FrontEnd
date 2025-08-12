@@ -105,7 +105,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
         const data = (err as AxiosError<ErrorBody>)?.response?.data;
         const code = data?.code;
         const msg = data?.message ?? '';
-        if (code === 'CATEGORY400' || msg.includes('중복')) {
+        if (code === 'COMMON400' || msg.includes('중복')) {
           setIsServerDuplicate(true);
           setErrorType('serverDuplicate');
           setIsSubmitting(false);

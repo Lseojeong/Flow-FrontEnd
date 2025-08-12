@@ -17,7 +17,7 @@ import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
 
 import { DepartmentTagList } from '@/components/common/department/DepartmentTagList';
 import type { Department } from '@/components/common/department/Department.types';
-
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
@@ -25,11 +25,15 @@ import { StatusItemData } from '@/components/common/status/Status.types';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
-
+import {
+  getFaqCategoryFiles,
+  createFaqCategoryFile,
+  searchFaqCategoryFiles,
+} from '@/apis/faq_detail/api';
 import { getFaqCategoryById } from '@/apis/faq/api';
 import type { FaqCategory } from '@/apis/faq/types';
-
-import type { DictFile } from '@/pages/mock/dictMock';
+import type { FaqCategoryFile, FileItem } from '@/apis/faq_detail/types';
+import { formatDateTime } from '@/utils/formatDate';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -61,40 +65,22 @@ interface EditTargetFile {
 }
 
 export default function FaqDetailPage() {
-  const { faqId = '' } = useParams();
+  const params = useParams();
+  const categoryId = params.categoryId ?? params.faqId ?? '';
 
   const [category, setCategory] = useState<FaqCategory | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [isFilesLoading, setIsFilesLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
-  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await getFaqCategoryById(faqId);
-        const data = (res.data?.result ?? res.data) as FaqCategory;
-        if (!mounted) return;
-        setCategory({
-          ...data,
-          lastModifiedDate: data.lastModifiedDate ?? (data.lastModifier ?? '').slice(0, 10),
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [faqId]);
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
   const departmentsForTag = useMemo<Department[]>(() => {
     const list = category?.departmentList ?? [];
@@ -104,9 +90,91 @@ export default function FaqDetailPage() {
     }));
   }, [category?.departmentList]);
 
-  // 파일 리스트는 아직 API 미연결이라 빈 배열 유지
-  const files: DictFile[] = [];
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getFaqCategoryById(categoryId);
+        const raw = res.data?.result ?? res.data;
+
+        const normalized: FaqCategory = {
+          id: raw.id,
+          name: raw.name,
+          description: raw.description ?? '-',
+          departmentList: raw.departmentList ?? [],
+          fileStatus: {
+            Total: raw.fileStatus?.Total ?? 0,
+            Completed: raw.fileStatus?.Completed ?? 0,
+            Processing: raw.fileStatus?.Processing ?? 0,
+            Fail: raw.fileStatus?.Fail ?? 0,
+          },
+          createdAt: raw.createdAt,
+          lastModifiedDate: raw.updatedAt,
+          lastModifier: raw.lastModifier ?? '-',
+          documentCount: raw.documentCount ?? 0,
+        };
+
+        if (!mounted) return;
+        setCategory(normalized);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [categoryId]);
+
+  const { data: paginatedFiles, observerRef } = useInfiniteScroll<
+    FileItem & { timestamp: string },
+    HTMLTableRowElement
+  >({
+    queryKey: ['faq-category-files', categoryId, debouncedSearchKeyword],
+    fetchFn: async (cursor) => {
+      setIsFilesLoading(true);
+      try {
+        const hasKeyword = !!debouncedSearchKeyword.trim();
+
+        const res = hasKeyword
+          ? await searchFaqCategoryFiles(categoryId, { keyword: debouncedSearchKeyword, cursor })
+          : await getFaqCategoryFiles(categoryId, cursor);
+
+        const data = res.data;
+
+        const list: (FileItem & { timestamp: string })[] = (data.result?.fileList ?? []).map(
+          (f: FaqCategoryFile) => ({
+            id: f.fileId,
+            name: f.fileName,
+            fileName: f.fileName,
+            status: f.status,
+            manager: f.lastModifier ?? '-',
+            registeredAt: formatDateTime(f.createdAt),
+            updatedAt: formatDateTime(f.updatedAt),
+            version: f.latestVersion ?? '-',
+            fileUrl: f.fileUrl,
+            departmentList: f.departmentList ?? [],
+            timestamp: f.updatedAt ?? f.createdAt ?? '',
+          })
+        );
+
+        return {
+          code: data.code,
+          result: {
+            historyList: list,
+            pagination: {
+              isLast: data.result?.pagination?.last ?? true,
+            },
+          },
+        };
+      } finally {
+        setIsFilesLoading(false);
+      }
+    },
+  });
+
+  const files = paginatedFiles ?? [];
   const filteredFiles = useMemo(() => {
     const kw = debouncedSearchKeyword.toLowerCase();
     return files.filter((f) => f.name.toLowerCase().includes(kw));
@@ -116,16 +184,16 @@ export default function FaqDetailPage() {
   if (!category) return <NoData>데이터가 없습니다.</NoData>;
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: category.status?.completed ?? 0 },
-    { type: 'Processing', count: category.status?.processing ?? 0 },
-    { type: 'Fail', count: category.status?.fail ?? 0 },
+    { type: 'Completed', count: category.fileStatus?.Completed ?? 0 },
+    { type: 'Processing', count: category.fileStatus?.Processing ?? 0 },
+    { type: 'Fail', count: category.fileStatus?.Fail ?? 0 },
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
-  const handleFileClick = (file: DictFile) => setSelectedFile(file);
-  const handleEditFile = (file: DictFile) => {
+  const handleFileClick = (file: FileItem) => setSelectedFile(file);
+  const handleEditFile = (file: FileItem) => {
     setEditTargetFile({ title: file.name, version: file.version });
     setIsEditModalOpen(true);
   };
@@ -144,60 +212,68 @@ export default function FaqDetailPage() {
     setEditTargetFile(null);
   };
   const handleEditModalSubmit = () => {
-    (window as { showToast?: (_m: string) => void }).showToast?.('파일이 수정되었습니다.');
+    if ((window as { showToast?: (_message: string) => void }).showToast) {
+      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
+    }
     setIsEditModalOpen(false);
     setEditTargetFile(null);
   };
-  const handleUploadModalSubmit = () => {
-    (window as { showToast?: (_m: string) => void }).showToast?.('파일이 등록되었습니다.');
-    setIsCsvModalOpen(false);
+
+  const handleUploadModalSubmit = async ({
+    fileUrl,
+    fileName,
+    description,
+    version,
+  }: {
+    fileUrl: string;
+    fileName: string;
+    description: string;
+    version: string;
+  }) => {
+    if (!categoryId) {
+      console.error('카테고리 ID가 없습니다.');
+      return;
+    }
+
+    try {
+      await createFaqCategoryFile(categoryId, {
+        fileUrl,
+        fileName,
+        description,
+        version: version || 'v1.0.0',
+      });
+
+      (window as { showToast?: (_: string) => void }).showToast?.('파일이 등록되었습니다.');
+      setIsCsvModalOpen(false);
+    } catch (e) {
+      console.error(e);
+      (window as { showToast?: (_: string) => void }).showToast?.(
+        '파일 등록 중 오류가 발생했습니다.'
+      );
+    }
   };
   const handleFileDetailClose = () => setSelectedFile(null);
 
-  const renderFileRow = (file: DictFile, index: number) => (
-    <TableRow key={`file-${file.id}`}>
-      <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
-        {index + 1}
-      </td>
+  const renderFileRow = (file: FileItem, index: number, isLast: boolean) => (
+    <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
+      <td style={{ width: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>{index + 1}</td>
       <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
         <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
       </ScrollableCell>
-      <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+      <td style={{ width: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
         <StatusWrapper>
           <StatusBadge status={file.status}>{file.status}</StatusBadge>
         </StatusWrapper>
       </td>
-      <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
-        {file.manager}
-      </td>
-      <td
-        style={{
-          width: CELL_WIDTHS.REGISTERED_AT,
-          minWidth: CELL_WIDTHS.REGISTERED_AT,
-          textAlign: 'left',
-        }}
-      >
-        {file.registeredAt}
-      </td>
-      <td
-        style={{
-          width: CELL_WIDTHS.UPDATED_AT,
-          minWidth: CELL_WIDTHS.UPDATED_AT,
-          textAlign: 'left',
-        }}
-      >
-        {file.updatedAt}
-      </td>
-      <td
-        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
-      >
+      <td style={{ width: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>{file.manager}</td>
+      <td style={{ width: CELL_WIDTHS.REGISTERED_AT, textAlign: 'left' }}>{file.registeredAt}</td>
+      <td style={{ width: CELL_WIDTHS.UPDATED_AT, textAlign: 'left' }}>{file.updatedAt}</td>
+      <td style={{ width: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}>
         <DownloadIconWrapper>
           <DownloadIcon />
         </DownloadIconWrapper>
       </td>
-      <td
-        style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
-      >
+      <td style={{ width: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
         <ActionButtons>
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
@@ -218,10 +294,11 @@ export default function FaqDetailPage() {
     </EmptyRow>
   );
 
-  const renderFileList = () =>
-    (searchKeyword.trim() ? filteredFiles : files).length === 0
-      ? renderEmptyState()
-      : (searchKeyword.trim() ? filteredFiles : files).map((f, i) => renderFileRow(f, i));
+  const renderFileList = () => {
+    const data = searchKeyword.trim() ? filteredFiles : files;
+    if (data.length === 0) return renderEmptyState();
+    return data.map((f, i) => renderFileRow(f, i, i === data.length - 1));
+  };
 
   return (
     <PageWrapper>
@@ -331,6 +408,7 @@ export default function FaqDetailPage() {
       <FaqUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
+        categoryId={categoryId}
         onSubmit={handleUploadModalSubmit}
       />
 
