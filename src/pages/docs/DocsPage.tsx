@@ -22,6 +22,8 @@ import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getAllDocsCategories, createDocsCategory } from '@/apis/docs/api';
 import type { DocsCategory } from '@/apis/docs/types';
+import { useAuthStore } from '@/store/useAuthStore';
+import { formatDate } from '@/utils/formatDate';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -55,6 +57,8 @@ type GetAllDocsCategoriesResponse = {
 };
 
 export default function DocsPage() {
+  const { profile } = useAuthStore();
+  const isRootAdmin = profile?.permission === 'ROOT';
   const [activeMenuId, setActiveMenuId] = useState('docs');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
@@ -292,7 +296,7 @@ export default function DocsPage() {
             paddingLeft: ' 34px',
           }}
         >
-          {category.lastModifiedDate}
+          {formatDate(category.lastModifiedDate)}
         </td>
         <td
           style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
@@ -361,10 +365,12 @@ export default function DocsPage() {
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            <DepartmentSelect
-              value={selectedDepartment ?? ''}
-              onChange={(id) => setSelectedDepartment(id ?? null)}
-            />
+            {isRootAdmin && (
+              <DepartmentSelect
+                value={selectedDepartment ?? ''}
+                onChange={(id) => setSelectedDepartment(id ?? null)}
+              />
+            )}
           </FilterBar>
 
           <CheckBox
