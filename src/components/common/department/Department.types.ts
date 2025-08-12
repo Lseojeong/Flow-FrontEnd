@@ -51,4 +51,6 @@ export interface DepartmentCheckProps {
   showSelectAll?: boolean;
   /** 커스텀 제목 */
   title?: string;
+  /** 사용자의 부서 ID (Disabled Checked 상태로 설정됨) */
+  userDepartmentId?: string;
 }

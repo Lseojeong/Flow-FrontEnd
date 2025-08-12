@@ -25,4 +25,5 @@ export interface AdminProfile {
   adminId: string;
   permission: 'ROOT' | 'GENERAL';
   organizationId: string;
+  departmentId: string;
 }

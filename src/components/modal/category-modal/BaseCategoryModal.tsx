@@ -8,8 +8,8 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 import axios, { AxiosError } from 'axios';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 import { Department } from '@/components/common/department/Department.types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -36,10 +36,12 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  existingCategoryNames,
   title = '카테고리 등록',
   departments = [],
   showDepartmentCheck = false,
 }) => {
+  const { profile } = useAuthStore();
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -47,7 +49,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServerDuplicate, setIsServerDuplicate] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
@@ -69,6 +70,16 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     }
     if (isTouched && val.trim() !== '') {
       setErrorType('');
+    }
+
+    if (val.trim() !== '' && existingCategoryNames.includes(val.trim())) {
+      setIsServerDuplicate(true);
+      setErrorType('serverDuplicate');
+    } else {
+      setIsServerDuplicate(false);
+      if (errorType === 'serverDuplicate') {
+        setErrorType('');
+      }
     }
   };
 
@@ -110,7 +121,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
           return;
         }
       }
-      setErrorToastMessage('등록에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      setErrorType('serverDuplicate');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,6 +163,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
                   departments={departments}
                   selectedDepartmentIds={selectedDepartments}
                   onChange={setSelectedDepartments}
+                  userDepartmentId={profile?.departmentId}
                 />
               )}
               <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
@@ -171,12 +183,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
               </Button>
             </ButtonRow>
           </ModalBox>
-
-          {errorToastMessage && (
-            <ErrorToastWrapper>
-              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-            </ErrorToastWrapper>
-          )}
         </Overlay>
       )}
     </>
@@ -229,17 +235,4 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP};
   margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 9999;
-  pointer-events: none;
 `;

@@ -423,7 +423,7 @@ export default function DocsPage() {
             id="select-all"
             checked={isAllSelected}
             onChange={toggleSelectAll}
-            label="전체 선택"
+            label=""
           />
 
           <TableLayout>

@@ -4,11 +4,6 @@ import { colors, fontWeight } from '@/styles/index';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { DepartmentCheckProps } from './Department.types';
 
-/**
- * 부서 선택 체크박스 컴포넌트
- * TODO: 사용자의 부서가 무조건 체크되게 해야함
- */
-
 export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   departments,
   selectedDepartmentIds,
@@ -16,7 +11,17 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   showTitle = true,
   showSelectAll = true,
   title = '부서 선택',
+  userDepartmentId,
 }) => {
+  React.useEffect(() => {
+    if (userDepartmentId && departments.length > 0) {
+      const userDepartment = departments.find((dept) => dept.departmentId === userDepartmentId);
+      if (userDepartment && !selectedDepartmentIds.includes(userDepartmentId)) {
+        onChange([...selectedDepartmentIds, userDepartmentId]);
+      }
+    }
+  }, [userDepartmentId, departments, selectedDepartmentIds, onChange]);
+
   const isAllSelected =
     departments.length > 0 && selectedDepartmentIds.length === departments.length;
 
@@ -47,6 +52,7 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
           {showSelectAll && departments.length > 0 && (
             <CheckBox
               id="select-all-departments"
+              size="small"
               label="모두 선택"
               checked={isAllSelected}
               onChange={handleSelectAllChange}
@@ -56,16 +62,27 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
       )}
 
       <CheckboxList>
-        {departments.map((department) => (
-          <CheckboxItem key={department.departmentId}>
-            <CheckBox
-              id={`dept-${department.departmentId}`}
-              label={department.departmentName}
-              checked={selectedDepartmentIds.includes(department.departmentId)}
-              onChange={(checked) => handleDepartmentChange(department.departmentId, checked)}
-            />
-          </CheckboxItem>
-        ))}
+        {departments.map((department) => {
+          const isUserDepartment = department.departmentId === userDepartmentId;
+          const isChecked = selectedDepartmentIds.includes(department.departmentId);
+
+          return (
+            <CheckboxItem key={department.departmentId}>
+              <CheckBox
+                id={`dept-${department.departmentId}`}
+                label={department.departmentName}
+                size="small"
+                checked={isUserDepartment ? true : isChecked}
+                disabled={isUserDepartment}
+                onChange={(checked) => {
+                  if (!isUserDepartment) {
+                    handleDepartmentChange(department.departmentId, checked);
+                  }
+                }}
+              />
+            </CheckboxItem>
+          );
+        })}
       </CheckboxList>
 
       {departments.length === 0 && <EmptyMessage>선택할 수 있는 부서가 없습니다.</EmptyMessage>}
@@ -98,9 +115,10 @@ const Title = styled.h3`
 `;
 
 const Description = styled.p`
-  font-size: 9px;
+  font-size: 12px;
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
+  margin: 0;
 `;
 
 const CheckboxList = styled.div`
