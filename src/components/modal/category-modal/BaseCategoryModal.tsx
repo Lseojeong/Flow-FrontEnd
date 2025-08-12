@@ -19,7 +19,6 @@ interface BaseCategoryModalProps {
     description: string;
     departments?: string[];
   }) => void | Promise<unknown>;
-  existingCategoryNames: string[];
   title?: string;
   departments?: Department[];
   showDepartmentCheck?: boolean;
@@ -36,7 +35,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  existingCategoryNames,
   title = '카테고리 등록',
   departments = [],
   showDepartmentCheck = false,
@@ -54,7 +52,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const trimmedDescription = description.trim();
 
   const isDisabled =
-    trimmedName === '' || trimmedDescription === '' || isServerDuplicate || isSubmitting;
+    trimmedName === '' || trimmedDescription === '' || isSubmitting || errorType !== '';
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset';
@@ -70,16 +68,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     }
     if (isTouched && val.trim() !== '') {
       setErrorType('');
-    }
-
-    if (val.trim() !== '' && existingCategoryNames.includes(val.trim())) {
-      setIsServerDuplicate(true);
-      setErrorType('serverDuplicate');
-    } else {
-      setIsServerDuplicate(false);
-      if (errorType === 'serverDuplicate') {
-        setErrorType('');
-      }
     }
   };
 

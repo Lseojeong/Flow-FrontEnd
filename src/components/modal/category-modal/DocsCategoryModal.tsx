@@ -6,17 +6,11 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  onSuccess?: () => void;
   departments: Department[];
-  existingCategoryNames: string[];
 }
 
-const DocsCategoryModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  departments,
-  existingCategoryNames,
-}) => {
+const DocsCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, departments }) => {
   const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
     onSubmit({
       name: data.name,
@@ -30,7 +24,6 @@ const DocsCategoryModal: React.FC<Props> = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      existingCategoryNames={existingCategoryNames}
       title="카테고리 등록"
       departments={departments}
       showDepartmentCheck={true}

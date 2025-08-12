@@ -7,7 +7,6 @@ import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 import axios, { AxiosError } from 'axios';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 
 interface BaseCategoryEditModalProps {
   isOpen: boolean;
@@ -46,13 +45,12 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServerDuplicate, setIsServerDuplicate] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
 
   const isDisabled =
-    trimmedName === '' || trimmedDescription === '' || isServerDuplicate || isSubmitting;
+    trimmedName === '' || trimmedDescription === '' || isSubmitting || errorType !== '';
 
   useEffect(() => {
     if (isOpen) {
@@ -69,7 +67,9 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
   const handleNameChange = (val: string) => {
     setCategoryName(val);
-    if (isServerDuplicate) setIsServerDuplicate(false);
+    if (isServerDuplicate) {
+      setIsServerDuplicate(false);
+    }
     if (isTouched && val.trim() !== '') {
       setErrorType('');
     }
@@ -112,7 +112,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
           return;
         }
       }
-      setErrorToastMessage('수정에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      setErrorType('serverDuplicate');
     } finally {
       setIsSubmitting(false);
     }
@@ -168,12 +168,6 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
               </Button>
             </ButtonRow>
           </ModalBox>
-
-          {errorToastMessage && (
-            <ErrorToastWrapper>
-              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-            </ErrorToastWrapper>
-          )}
         </Overlay>
       )}
     </>
@@ -218,17 +212,4 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP_EDIT};
   margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 9999;
-  pointer-events: none;
 `;

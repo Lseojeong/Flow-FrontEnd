@@ -7,16 +7,9 @@ interface Props {
   onClose: () => void;
   onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   departments: Department[];
-  existingCategoryNames: string[];
 }
 
-const FaqCategoryModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  departments,
-  existingCategoryNames,
-}) => {
+const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, departments }) => {
   const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
     onSubmit({
       name: data.name,
@@ -30,7 +23,6 @@ const FaqCategoryModal: React.FC<Props> = ({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      existingCategoryNames={existingCategoryNames}
       title="카테고리 등록"
       departments={departments}
       showDepartmentCheck={true}

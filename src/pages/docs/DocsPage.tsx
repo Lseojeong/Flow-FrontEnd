@@ -20,12 +20,12 @@ import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCa
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDocsCategories } from '@/apis/docs/api';
-import { useCreateDocsCategory, useUpdateDocsCategory } from '@/apis/docs/mutation';
+import { getAllDocsCategories, createDocsCategory, updateDocsCategory } from '@/apis/docs/api';
 import { useDepartmentList } from '@/apis/department/query';
 import type { DocsCategory } from '@/apis/docs/types';
 import { useAuthStore } from '@/store/useAuthStore';
 import { formatDate } from '@/utils/formatDate';
+import axios from 'axios';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -76,9 +76,6 @@ export default function DocsPage() {
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
 
-  const createCategoryMutation = useCreateDocsCategory();
-  const updateCategoryMutation = useUpdateDocsCategory();
-
   const { data: departmentData } = useDepartmentList();
   const departments = departmentData?.result?.departmentList || mockDepartments;
 
@@ -86,8 +83,7 @@ export default function DocsPage() {
     data: categories,
     observerRef,
     isLoading,
-    reset,
-    loadMore,
+    refetch,
   } = useInfiniteScroll<DocsCategory & { timestamp: string }, HTMLTableRowElement>({
     queryKey: ['docs-categories'],
     fetchFn: async (cursor) => {
@@ -118,7 +114,6 @@ export default function DocsPage() {
       };
     },
   });
-  const existingCategoryNames = categories.map((item) => item.name);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
@@ -199,19 +194,30 @@ export default function DocsPage() {
     departments?: string[];
   }) => {
     try {
-      await createCategoryMutation.mutateAsync({
+      const res = await createDocsCategory({
         name: data.name,
         description: data.description,
         departmentIdList: data.departments ?? [],
       });
 
+      if (!(res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200')) {
+        throw new Error(res.data?.message || '카테고리 등록 실패');
+      }
+
       (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-      setIsCategoryModalOpen(false);
-      reset();
-      await loadMore();
+      await refetch();
     } catch (e) {
       console.error('카테고리 등록 에러:', e);
-      (window as { showToast?: (_: string) => void }).showToast?.(
+      // CATEGORY400 에러만 다시 throw하여 BaseCategoryModal에서 처리하도록 함
+      if (axios.isAxiosError(e)) {
+        const data = e.response?.data;
+        const code = data?.code;
+        if (code === 'CATEGORY400') {
+          throw e;
+        }
+      }
+      // 다른 에러는 토스트로 표시
+      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
         '등록 요청 중 오류가 발생했습니다.'
       );
     }
@@ -225,22 +231,32 @@ export default function DocsPage() {
     if (!editingCategory) return;
 
     try {
-      await updateCategoryMutation.mutateAsync({
-        categoryId: editingCategory.id,
-        data: {
-          name: data.name,
-          description: data.description,
-          departmentIdList: data.departments,
-        },
+      const res = await updateDocsCategory(editingCategory.id, {
+        name: data.name,
+        description: data.description,
+        departmentIdList: data.departments,
       });
 
-      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
-      setIsEditModalOpen(false);
-      setEditingCategory(null);
-      reset();
-      await loadMore();
+      const code = (res as { data?: { code?: string } }).data?.code;
+      if (code === 'COMMON200' || code === 'CATEGORY200' || code === '200') {
+        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+        await refetch();
+      } else {
+        throw new Error(res as unknown as string);
+      }
     } catch (e) {
       console.error('카테고리 수정 에러:', e);
+      // CATEGORY400 에러만 다시 throw하여 BaseCategoryEditModal에서 처리하도록 함
+      if (axios.isAxiosError(e)) {
+        const data = e.response?.data;
+        const code = data?.code;
+        if (code === 'CATEGORY400') {
+          throw e;
+        }
+      }
+      // 다른 에러는 토스트로 표시
       (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
         '수정 요청 중 오류가 발생했습니다.'
       );
@@ -446,8 +462,8 @@ export default function DocsPage() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
+        onSuccess={() => setIsCategoryModalOpen(false)}
         departments={departments}
-        existingCategoryNames={existingCategoryNames}
       />
 
       {editingCategory && (
