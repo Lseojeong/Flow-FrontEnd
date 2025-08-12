@@ -33,7 +33,7 @@ import {
 import { getFaqCategoryById } from '@/apis/faq/api';
 import type { FaqCategory } from '@/apis/faq/types';
 import type { FaqCategoryFile, FileItem } from '@/apis/faq_detail/types';
-import { formatDateTime } from '@/utils/formatDate';
+import { formatDate } from '@/utils/formatDate';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -71,7 +71,6 @@ export default function FaqDetailPage() {
   const [category, setCategory] = useState<FaqCategory | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [isFilesLoading, setIsFilesLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
@@ -133,7 +132,6 @@ export default function FaqDetailPage() {
   >({
     queryKey: ['faq-category-files', categoryId, debouncedSearchKeyword],
     fetchFn: async (cursor) => {
-      setIsFilesLoading(true);
       try {
         const hasKeyword = !!debouncedSearchKeyword.trim();
 
@@ -150,8 +148,8 @@ export default function FaqDetailPage() {
             fileName: f.fileName,
             status: f.status,
             manager: f.lastModifier ?? '-',
-            registeredAt: formatDateTime(f.createdAt),
-            updatedAt: formatDateTime(f.updatedAt),
+            registeredAt: formatDate(f.createdAt),
+            updatedAt: formatDate(f.updatedAt),
             version: f.latestVersion ?? '-',
             fileUrl: f.fileUrl,
             departmentList: f.departmentList ?? [],
@@ -168,13 +166,23 @@ export default function FaqDetailPage() {
             },
           },
         };
-      } finally {
-        setIsFilesLoading(false);
+      } catch (e) {
+        console.error(e);
+        // 에러 발생 시 빈 결과 반환
+        return {
+          code: 'ERROR',
+          result: {
+            historyList: [],
+            pagination: {
+              isLast: true,
+            },
+          },
+        };
       }
     },
   });
 
-  const files = paginatedFiles ?? [];
+  const files = useMemo(() => paginatedFiles ?? [], [paginatedFiles]);
   const filteredFiles = useMemo(() => {
     const kw = debouncedSearchKeyword.toLowerCase();
     return files.filter((f) => f.name.toLowerCase().includes(kw));

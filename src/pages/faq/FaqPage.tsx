@@ -207,15 +207,15 @@ export default function FaqPage() {
     if (!category) return;
 
     const selectedDeptIds: string[] = category.departmentList ?? [];
-    const selectedDepartments: Department[] = departments.filter((dept) =>
-      selectedDeptIds.includes(dept.departmentId)
-    );
 
     setEditingCategory({
       id: category.id,
       name: category.name,
       description: category.description ?? '',
-      departments: selectedDepartments,
+      departments: selectedDeptIds.map((deptId) => ({
+        departmentId: deptId,
+        departmentName: deptId,
+      })),
     });
 
     setIsEditModalOpen(true);
@@ -502,7 +502,7 @@ export default function FaqPage() {
             id="select-all"
             checked={isAllSelected}
             onChange={toggleSelectAll}
-            label="전체 선택"
+            label=""
           />
 
           <TableLayout>

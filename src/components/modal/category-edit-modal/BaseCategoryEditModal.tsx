@@ -16,7 +16,7 @@ interface BaseCategoryEditModalProps {
   onSubmit: (_data: {
     name: string;
     description: string;
-    departments?: string[];
+    departments: string[];
   }) => void | Promise<unknown>;
   onSuccess?: () => void;
   initialName: string;
@@ -64,7 +64,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
       setDescription(initialDescription ?? '');
 
       // 자신의 부서가 포함되도록 초기 부서 설정
-      const initialDepts = [...initialDepartments];
+      const initialDepts = [...(initialDepartments || [])];
       if (profile?.departmentId && !initialDepts.includes(profile.departmentId)) {
         initialDepts.push(profile.departmentId);
       }
@@ -78,6 +78,25 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, initialName, initialDescription, initialDepartments, profile?.departmentId]);
+
+  // 자신의 부서가 항상 선택되도록 보장
+  useEffect(() => {
+    if (profile?.departmentId && !selectedDepartments.includes(profile.departmentId)) {
+      setSelectedDepartments((prev) => [...prev, profile.departmentId]);
+    }
+  }, [profile?.departmentId]);
+
+  // 부서 선택 변경 시 자신의 부서가 제거되지 않도록 보장
+  const handleDepartmentChange = (newSelectedDepartments: string[]) => {
+    let finalDepartments = [...newSelectedDepartments];
+
+    // 자신의 부서가 포함되지 않았다면 추가
+    if (profile?.departmentId && !finalDepartments.includes(profile.departmentId)) {
+      finalDepartments.push(profile.departmentId);
+    }
+
+    setSelectedDepartments(finalDepartments);
+  };
 
   const handleNameChange = (val: string) => {
     setCategoryName(val);
@@ -154,7 +173,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
               <DepartmentCheck
                 departments={departments}
                 selectedDepartmentIds={selectedDepartments}
-                onChange={setSelectedDepartments}
+                onChange={handleDepartmentChange}
                 userDepartmentId={profile?.departmentId}
               />
             )}

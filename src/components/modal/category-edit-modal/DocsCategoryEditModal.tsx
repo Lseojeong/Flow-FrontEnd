@@ -5,7 +5,7 @@ import BaseCategoryEditModal from './BaseCategoryEditModal';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string; departments?: string[] }) => void;
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   initialName: string;
   initialDescription: string;
   initialDepartments: string[];

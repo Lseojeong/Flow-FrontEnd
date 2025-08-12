@@ -20,24 +20,48 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
         onChange([...selectedDepartmentIds, userDepartmentId]);
       }
     }
-  }, [userDepartmentId, departments, selectedDepartmentIds, onChange]);
+  }, [userDepartmentId, departments, onChange]);
 
   const isAllSelected =
-    departments.length > 0 && selectedDepartmentIds.length === departments.length;
+    departments.length > 0 &&
+    selectedDepartmentIds.length ===
+      departments.length +
+        (userDepartmentId && !departments.some((dept) => dept.departmentId === userDepartmentId)
+          ? 1
+          : 0);
 
   const handleDepartmentChange = (departmentId: string, checked: boolean) => {
+    let newSelectedIds: string[];
+
     if (checked) {
-      onChange([...selectedDepartmentIds, departmentId]);
+      newSelectedIds = [...selectedDepartmentIds, departmentId];
     } else {
-      onChange(selectedDepartmentIds.filter((id) => id !== departmentId));
+      // 자신의 부서는 제거할 수 없음
+      if (departmentId === userDepartmentId) {
+        return;
+      }
+      newSelectedIds = selectedDepartmentIds.filter((id) => id !== departmentId);
     }
+
+    // 자신의 부서가 포함되지 않았다면 추가
+    if (userDepartmentId && !newSelectedIds.includes(userDepartmentId)) {
+      newSelectedIds.push(userDepartmentId);
+    }
+
+    onChange(newSelectedIds);
   };
 
   const handleSelectAllChange = (checked: boolean) => {
     if (checked) {
-      onChange(departments.map((dept) => dept.departmentId));
+      // 모든 부서를 선택하되, 자신의 부서는 항상 포함
+      const allDepartmentIds = departments.map((dept) => dept.departmentId);
+      if (userDepartmentId && !allDepartmentIds.includes(userDepartmentId)) {
+        allDepartmentIds.push(userDepartmentId);
+      }
+      onChange(allDepartmentIds);
     } else {
-      onChange([]);
+      // 모두 해제할 때는 자신의 부서만 남김
+      onChange(userDepartmentId ? [userDepartmentId] : []);
     }
   };
 
