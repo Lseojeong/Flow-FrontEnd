@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
-import { ResetIcon } from '@/assets/icons/common/index';
-import { FilterIcon } from '@/assets/icons/dash-board/index';
+import { ResetIcon } from '@/assets/icons/common';
+import { FilterIcon } from '@/assets/icons/dash-board';
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { HistoryFilterProps } from './HistoryFilter.types';
-import { HistoryMenu, Category } from '@/apis/dash-board/types';
+import { Category } from '@/apis/dash-board/types';
 import { MSG, truncateFileName } from '@/constants/HistoryFilter.constants';
 import { useHistoryFilterMenu } from '@/apis/dash-board/query';
 
@@ -16,50 +16,60 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const { data: menuData, isLoading, error } = useHistoryFilterMenu();
+  const menuList = useMemo(() => menuData?.result?.menuList ?? [], [menuData?.result?.menuList]);
 
-  const menuList = menuData?.result?.menuList || [];
+  const selectedMenuObj = useMemo(
+    () => menuList.find((m) => m.menu === selectedMenu),
+    [menuList, selectedMenu]
+  );
+  const selectedCategoryObj = useMemo(
+    () => selectedMenuObj?.categoryList.find((c) => c.category === selectedCategory),
+    [selectedMenuObj, selectedCategory]
+  );
+  const isBusy = isLoading || !!error;
+  const isConfirmDisabled = !selectedMenu || !selectedCategory || !selectedFile;
 
-  const handleMenuSelect = (menu: string) => {
-    setSelectedMenu(menu);
-    setSelectedCategory(null);
-    setSelectedFile(null);
-  };
+  const toggleOpen = useCallback(() => {
+    if (isBusy) return;
+    setIsOpen((prev) => !prev);
+  }, [isBusy]);
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedFile(null);
-  };
-
-  const handleFileSelect = (file: string) => {
-    setSelectedFile(file);
-  };
-
-  const handleReset = () => {
+  const resetSelections = useCallback(() => {
     setSelectedMenu(null);
     setSelectedCategory(null);
     setSelectedFile(null);
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleMenuSelect = useCallback((menu: string) => {
+    setSelectedMenu(menu);
+    setSelectedCategory(null);
+    setSelectedFile(null);
+  }, []);
+
+  const handleCategorySelect = useCallback((category: string) => {
+    setSelectedCategory(category);
+    setSelectedFile(null);
+  }, []);
+
+  const handleFileSelect = useCallback((file: string) => {
+    setSelectedFile(file);
+  }, []);
+
+  const handleCancel = useCallback(() => {
     onCancel?.();
-    handleReset();
+    resetSelections();
     setIsOpen(false);
-  };
+  }, [onCancel, resetSelections]);
 
-  const handleConfirm = () => {
-    if (!selectedMenu || !selectedCategory || !selectedFile) return;
+  const handleConfirm = useCallback(() => {
+    if (isConfirmDisabled) return;
     onConfirm?.({
-      menu: [selectedMenu],
-      category: [selectedCategory],
-      file: [selectedFile],
+      menu: [selectedMenu as string],
+      category: [selectedCategory as string],
+      file: [selectedFile as string],
     });
     setIsOpen(false);
-  };
-
-  const selectedMenuObj = menuList.find((m) => m.menu === selectedMenu);
-  const selectedCategoryObj = selectedMenuObj?.categoryList.find(
-    (c: Category) => c.category === selectedCategory
-  );
+  }, [isConfirmDisabled, onConfirm, selectedMenu, selectedCategory, selectedFile]);
 
   const renderCategoryList = () => {
     if (!selectedMenuObj) return <GuideText>{MSG.selectMenu}</GuideText>;
@@ -91,36 +101,13 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
     ));
   };
 
-  const isConfirmDisabled = !selectedMenu || !selectedCategory || !selectedFile;
-
-  if (isLoading) {
-    return (
-      <FilterWrapper>
-        <FilterButton disabled>
-          <FilterIcon />
-          <span>필터</span>
-        </FilterButton>
-      </FilterWrapper>
-    );
-  }
-
-  if (error) {
-    return (
-      <FilterWrapper>
-        <FilterButton disabled>
-          <FilterIcon />
-          <span>필터</span>
-        </FilterButton>
-      </FilterWrapper>
-    );
-  }
-
   return (
     <FilterWrapper>
-      <FilterButton onClick={() => setIsOpen((prev) => !prev)}>
+      <FilterButton onClick={toggleOpen} disabled={isBusy} aria-expanded={isOpen}>
         <FilterIcon />
         <span>필터</span>
       </FilterButton>
+
       {isOpen && (
         <DropdownContainer>
           <FilterContainer>
@@ -128,7 +115,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
               <MenuColumn>
                 <ColumnTitle>메뉴</ColumnTitle>
                 <ItemList>
-                  {menuList.map((item: HistoryMenu) => (
+                  {menuList.map((item) => (
                     <FilterItemWrapper key={item.menu}>
                       <CheckBox
                         id={`menu-${item.menu}`}
@@ -140,22 +127,27 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
                   ))}
                 </ItemList>
               </MenuColumn>
+
               <CategoryColumn>
                 <ColumnTitle>카테고리</ColumnTitle>
                 <ItemList>{renderCategoryList()}</ItemList>
               </CategoryColumn>
+
               <FileColumn>
                 <ColumnTitle>파일</ColumnTitle>
                 <ItemList>{renderFileList()}</ItemList>
               </FileColumn>
             </FilterContent>
+
             <FilterFooter>
-              <ResetButton onClick={handleReset}>
+              <ResetButton onClick={resetSelections} aria-label="필터 초기화">
                 <ResetIcon />
               </ResetButton>
               <ButtonGroup>
-                <CancelButton onClick={handleCancel}>취소</CancelButton>
-                <ConfirmButton onClick={handleConfirm} disabled={isConfirmDisabled}>
+                <CancelButton type="button" onClick={handleCancel}>
+                  취소
+                </CancelButton>
+                <ConfirmButton type="button" onClick={handleConfirm} disabled={isConfirmDisabled}>
                   확인
                 </ConfirmButton>
               </ButtonGroup>
@@ -321,7 +313,7 @@ const ButtonGroup = styled.div`
   gap: 8px;
 `;
 
-const Button = styled.button`
+const BaseButton = styled.button`
   padding: 8px 16px;
   border: none;
   border-radius: 4px;
@@ -331,7 +323,7 @@ const Button = styled.button`
   transition: all 0.2s ease;
 `;
 
-const CancelButton = styled(Button)`
+const CancelButton = styled(BaseButton)`
   background: ${colors.Dark_active};
   color: ${colors.White};
 
@@ -340,13 +332,9 @@ const CancelButton = styled(Button)`
   }
 `;
 
-const ConfirmButton = styled(Button)`
+const ConfirmButton = styled(BaseButton)`
   background: ${colors.Normal};
   color: ${colors.White};
-
-  &:hover {
-    background: ${colors.Normal_active};
-  }
 
   &:disabled {
     background-color: ${colors.Disabled};
@@ -354,6 +342,6 @@ const ConfirmButton = styled(Button)`
   }
 
   &:hover:not(:disabled) {
-    background: ${colors.Normal};
+    background: ${colors.Normal_active};
   }
 `;

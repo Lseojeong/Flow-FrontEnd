@@ -6,7 +6,7 @@ export interface DictCategoryStatus {
 }
 
 export interface DictCategory {
-  id: string; // UUID
+  id: string;
   name: string;
   description?: string;
   status: DictCategoryStatus;
@@ -17,4 +17,5 @@ export interface DictCategory {
   registeredDate?: string;
   lastModifier?: string;
   lastEditor?: string;
+  fileStatus?: DictCategoryStatus;
 }

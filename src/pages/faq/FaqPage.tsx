@@ -77,7 +77,8 @@ export default function FaqPage() {
     observerRef,
     isLoading,
     reset,
-  } = useInfiniteScroll<FaqCategory, HTMLTableRowElement>({
+  } = useInfiniteScroll<FaqCategory & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['faq-categories', debouncedSearchKeyword, startDate, endDate, selectedDepartment],
     fetchFn: async (cursor) => {
       const normalizeStatus = (item: FaqCategory): FaqCategory['status'] => {
         return item.status ?? { total: 0, completed: 0, processing: 0, fail: 0 };
@@ -85,6 +86,14 @@ export default function FaqPage() {
 
       const normalizeDate = (c: FaqCategory): string =>
         (c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '').slice(0, 10);
+
+      const mapWithTimestamp = (list: FaqCategory[]) =>
+        list.map((c) => ({
+          ...c,
+          status: normalizeStatus(c),
+          lastModifiedDate: normalizeDate(c),
+          timestamp: c.updatedAt ?? c.createdAt ?? '',
+        }));
 
       if (isSearching) {
         const searchParams: SearchParams = {
@@ -97,18 +106,10 @@ export default function FaqPage() {
 
         const res = await searchFaqCategories(searchParams);
 
-        const categoryList: FaqCategory[] = (res.data.result?.categoryList ?? []).map(
-          (c: FaqCategory) => ({
-            ...c,
-            status: normalizeStatus(c),
-            lastModifiedDate: normalizeDate(c),
-          })
-        );
-
         return {
           code: res.data.code,
           result: {
-            historyList: categoryList,
+            historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
             pagination: res.data.result?.pagination ?? { last: true },
             nextCursor: res.data.result?.nextCursor,
           },
@@ -116,16 +117,10 @@ export default function FaqPage() {
       } else {
         const res = await getAllFaqCategories(cursor);
 
-        const categoryList: FaqCategory[] = (res.data.result?.categoryList ?? []).map((c) => ({
-          ...c,
-          status: normalizeStatus(c),
-          lastModifiedDate: normalizeDate(c),
-        }));
-
         return {
           code: res.data.code,
           result: {
-            historyList: categoryList,
+            historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
             pagination: res.data.result?.pagination ?? { last: true },
             nextCursor: res.data.result?.nextCursor,
           },
@@ -457,8 +452,8 @@ export default function FaqPage() {
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
             <DepartmentSelect
-              value={selectedDepartment ? [selectedDepartment] : []}
-              onChange={(ids) => setSelectedDepartment(ids.length > 0 ? ids[0] : null)}
+              value={selectedDepartment ?? ''} // 단일 값
+              onChange={(id) => setSelectedDepartment(id ?? null)} // id는 string | null
             />
           </FilterBar>
 

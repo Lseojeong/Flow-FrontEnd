@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { fontWeight, colors } from '@/styles/index';
 import { textV1Logo } from '@/assets/logo/index';
@@ -6,13 +6,15 @@ import { Button } from '@/components/common/button/Button';
 import { useFormField } from '@/hooks/useFormField';
 import { FormInput } from '@/components/auth/AuthInput';
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { postAdminSignup, checkAdminIdExists } from '@/apis/auth/api';
 
-export function SigninForm() {
+interface SigninFormProps {
+  invitationToken: string;
+}
+
+export function SigninForm({ invitationToken }: SigninFormProps) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const invitationToken = new URLSearchParams(location.search).get('token') || '';
 
   const [isIdChecked, setIsIdChecked] = useState(false);
   const [checkError, setCheckError] = useState('');
@@ -36,6 +38,12 @@ export function SigninForm() {
       },
     ],
   });
+
+  const handleAdminIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    adminIdField.onChange(e);
+    setIsIdChecked(false);
+    setCheckError('');
+  };
 
   const passwordField = useFormField({
     validations: [
@@ -92,16 +100,20 @@ export function SigninForm() {
         passwordCheck: passwordCheckField.value,
         invitationToken,
       });
-      navigate('/login');
-    } catch (error: unknown) {
-      console.error(error);
+
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast('회원가입이 완료되었습니다.');
+      }
+
+      navigate('/');
+    } catch {
       setSubmitError(
         '* 회원가입에 실패했습니다. (초대 토큰이 유효하지 않거나 만료됐을 수 있습니다.)'
       );
     }
   };
 
-  const getPasswordCheckErrorMessage = () => {
+  const getPasswordCheckErrorMessage = useMemo(() => {
     if (passwordCheckField.value.trim() === '') {
       return passwordCheckField.errorMessage;
     }
@@ -109,23 +121,43 @@ export function SigninForm() {
       return '* 비밀번호가 일치하지 않습니다.';
     }
     return '';
-  };
+  }, [
+    passwordCheckField.value,
+    passwordCheckField.errorMessage,
+    passwordCheckField.isBlurred,
+    passwordField.value,
+  ]);
 
-  const isDisabled =
-    nameField.value.trim() === '' ||
-    adminIdField.value.trim() === '' ||
-    passwordField.value.trim() === '' ||
-    passwordCheckField.value.trim() === '' ||
-    nameField.errorMessage !== '' ||
-    adminIdField.errorMessage !== '' ||
-    passwordField.errorMessage !== '' ||
-    (passwordCheckField.isBlurred &&
-      passwordCheckField.value.trim() !== '' &&
-      passwordCheckField.value !== passwordField.value) ||
-    !nameField.isBlurred ||
-    !adminIdField.isBlurred ||
-    !passwordField.isBlurred ||
-    !passwordCheckField.isBlurred;
+  const isDisabled = useMemo(() => {
+    return (
+      nameField.value.trim() === '' ||
+      adminIdField.value.trim() === '' ||
+      passwordField.value.trim() === '' ||
+      passwordCheckField.value.trim() === '' ||
+      nameField.errorMessage !== '' ||
+      adminIdField.errorMessage !== '' ||
+      passwordField.errorMessage !== '' ||
+      (passwordCheckField.isBlurred &&
+        passwordCheckField.value.trim() !== '' &&
+        passwordCheckField.value !== passwordField.value) ||
+      !nameField.isBlurred ||
+      !adminIdField.isBlurred ||
+      !passwordField.isBlurred ||
+      !passwordCheckField.isBlurred
+    );
+  }, [
+    nameField.value,
+    nameField.errorMessage,
+    nameField.isBlurred,
+    adminIdField.value,
+    adminIdField.errorMessage,
+    adminIdField.isBlurred,
+    passwordField.value,
+    passwordField.errorMessage,
+    passwordField.isBlurred,
+    passwordCheckField.value,
+    passwordCheckField.isBlurred,
+  ]);
 
   return (
     <Card>
@@ -149,21 +181,27 @@ export function SigninForm() {
               type="text"
               placeholder="아이디를 입력하세요.(영어&숫자만 가능/최대 12자)"
               value={adminIdField.value}
-              onChange={adminIdField.onChange}
+              onChange={handleAdminIdChange}
               onBlur={adminIdField.onBlur}
               maxLength={12}
-              $isError={!!adminIdField.errorMessage}
+              $isError={!!adminIdField.errorMessage || !!checkError}
             />
             {!!adminIdField.errorMessage && <IdErrorText>{adminIdField.errorMessage}</IdErrorText>}
+            {!adminIdField.errorMessage && checkError && <IdErrorText>{checkError}</IdErrorText>}
+            {!adminIdField.errorMessage && !checkError && isIdChecked && (
+              <IdSuccessText>사용 가능한 아이디입니다.</IdSuccessText>
+            )}
           </IdInputWrapper>
-          <DuplicateCheckButton
-            type="button"
-            onClick={handleCheckId}
-            disabled={!adminIdField.isValid || adminIdField.value.trim() === ''}
-          >
-            중복 확인
-          </DuplicateCheckButton>
-          {checkError && <IdErrorText>{checkError}</IdErrorText>}
+          <ButtonContainer>
+            <DuplicateCheckButton
+              type="button"
+              onClick={handleCheckId}
+              disabled={!adminIdField.isValid || adminIdField.value.trim() === ''}
+              $isChecked={isIdChecked}
+            >
+              {isIdChecked ? '확인 완료' : '중복 확인'}
+            </DuplicateCheckButton>
+          </ButtonContainer>
         </IdContainer>
         <FormInput
           id="login-pw"
@@ -183,13 +221,11 @@ export function SigninForm() {
           value={passwordCheckField.value}
           onChange={passwordCheckField.onChange}
           onBlur={handlePasswordCheckBlur}
-          error={getPasswordCheckErrorMessage()}
+          error={getPasswordCheckErrorMessage}
         />
-        <Form onSubmit={handleSubmit}>
-          <Button size="large" type="submit" disabled={isDisabled}>
-            완료
-          </Button>
-        </Form>
+        <Button size="large" type="submit" disabled={isDisabled}>
+          완료
+        </Button>
         {submitError && <ErrorText>{submitError}</ErrorText>}
       </Form>
     </Card>
@@ -237,6 +273,13 @@ const IdContainer = styled.div`
   gap: 12px;
   width: 368px;
   margin-bottom: 20px;
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 `;
 
 const IdInputWrapper = styled.div`
@@ -287,10 +330,19 @@ const IdErrorText = styled.span`
   top: 0;
 `;
 
-const DuplicateCheckButton = styled.button`
+const IdSuccessText = styled.span`
+  color: ${colors.Normal};
+  font-size: 10px;
+  font-weight: ${fontWeight.Regular};
+  position: absolute;
+  right: 0;
+  top: 0;
+`;
+
+const DuplicateCheckButton = styled.button<{ $isChecked?: boolean }>`
   height: 52px;
   padding: 0 16px;
-  background: ${colors.Normal};
+  background: ${({ $isChecked }) => ($isChecked ? colors.Dark : colors.Normal)};
   color: white;
   border: none;
   border-radius: 4px;
@@ -301,7 +353,7 @@ const DuplicateCheckButton = styled.button`
   transition: background-color 0.2s;
 
   &:hover {
-    background: ${colors.Normal_active};
+    background: ${({ $isChecked }) => ($isChecked ? colors.Dark_active : colors.Normal_active)};
   }
 
   &:disabled {

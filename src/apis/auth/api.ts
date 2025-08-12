@@ -7,16 +7,11 @@ import type {
   AdminProfile,
 } from './types';
 
-export interface RefreshTokenResponse {
-  csrfToken?: string;
-}
-
 export const postAdminSignup = async (data: AdminSignupRequest) => {
   const res = await axiosInstance.post<ApiResponse<unknown>>('/admin/signup', data);
   return res.data;
 };
 
-// ID 중복 확인
 export const checkAdminIdExists = async (id: string) => {
   const res = await axiosInstance.get<ApiResponse<{ exists: boolean }>>(
     `/admin/signup/check-id/${id}`
@@ -24,11 +19,11 @@ export const checkAdminIdExists = async (id: string) => {
   return res.data.result.exists;
 };
 
-export const verifyInvitationToken = async (invitationToken: string) => {
-  const res = await axiosInstance.post<ApiResponse<unknown>>('/admin/signup/token', {
-    invitationToken,
+export const verifyInvitationToken = async (token: string) => {
+  const response = await axiosInstance.post<ApiResponse<unknown>>('/admin/signup/token', {
+    invitationToken: token,
   });
-  return res.data;
+  return response.data;
 };
 
 export const postAdminLogin = async (data: LoginRequest) => {
@@ -39,12 +34,11 @@ export const postAdminLogin = async (data: LoginRequest) => {
 };
 
 export const postLogout = async () => {
-  // 로그아웃은 빠르게 처리하도록 짧은 타임아웃 설정
   const res = await axiosInstance.post<ApiResponse<unknown>>(
     '/admin/logout',
     {},
     {
-      timeout: 3000, // 3초 타임아웃
+      timeout: 3000,
     }
   );
   localStorage.removeItem('csrfToken');
@@ -54,10 +48,4 @@ export const postLogout = async () => {
 export const getAdminProfile = async (): Promise<AdminProfile> => {
   const res = await axiosInstance.get<ApiResponse<AdminProfile>>('/admin/profile');
   return res.data.result;
-};
-
-// ✅ refreshToken API 추가
-export const refreshToken = async () => {
-  const res = await axiosInstance.post<ApiResponse<RefreshTokenResponse>>('/admin/token/refresh');
-  return res;
 };

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { getHistoryFilterMenu, getDashboardData } from './api';
-import { DashboardParams } from './types';
+import { getHistoryFilterMenu, getDashboardData, getHistory } from './api';
+import { DashboardParams, HistoryParams } from './types';
 
 export const useHistoryFilterMenu = () => {
   return useQuery({
@@ -17,5 +17,16 @@ export const useDashboardData = (params: DashboardParams) => {
     queryFn: () => getDashboardData(params),
     staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
+  });
+};
+
+export const useHistory = (params: HistoryParams) => {
+  return useQuery({
+    queryKey: ['history', params],
+    queryFn: () => getHistory(params),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 };

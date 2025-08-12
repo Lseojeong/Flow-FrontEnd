@@ -1,8 +1,6 @@
 import { Department } from '@/components/common/department/Department.types';
 import { HistoryData } from '@/components/dash-board/historyTable/HistoryTable.types';
 import { HistoryMenu } from '@/apis/dash-board/types';
-import { User } from '@/types/usersetting.types';
-import { DepartmentSetting } from '@/types/departmentsetting.types';
 
 const duplicatedDicts = Array.from({ length: 40 }, (_, index) => ({
   id: index + 2,
@@ -346,6 +344,7 @@ export interface DictFile {
   registeredAt: string;
   updatedAt: string;
   version: string;
+  fileUrl?: string;
 }
 
 export const MOCK_DEPARTMENTS: Department[] = [
@@ -375,7 +374,7 @@ export const MOCK_DEPARTMENTS: Department[] = [
   },
 ];
 
-export const mockUsers: User[] = [
+export const mockUsers = [
   {
     id: 'kodari385',
     nickname: 'Milo',
@@ -390,7 +389,7 @@ export const mockUsers: User[] = [
   },
 ];
 
-export const mockDepartments: DepartmentSetting[] = [
+export const mockDepartments = [
   {
     id: '1',
     name: '기술전략실',

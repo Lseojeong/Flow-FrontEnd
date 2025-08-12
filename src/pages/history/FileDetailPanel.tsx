@@ -79,7 +79,9 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
           code: res.data.code,
           result: {
             historyList: res.data.result.historyList,
-            pagination: res.data.result.pagination,
+            pagination: {
+              isLast: res.data.result.pagination.last, // ✅ last → isLast 변환
+            },
             nextCursor: res.data.result.nextCursor,
           },
         };
@@ -89,7 +91,9 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
           code: res.data.code,
           result: {
             historyList: res.data.result.historyList,
-            pagination: res.data.result.pagination,
+            pagination: {
+              isLast: res.data.result.pagination.last,
+            },
             nextCursor: res.data.result.nextCursor,
           },
         };
@@ -104,6 +108,7 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
     reset,
     loadMore,
   } = useInfiniteScroll<DictFileHistory, HTMLTableRowElement>({
+    queryKey: ['file-history', file.id],
     fetchFn: fetchHistory,
   });
   useEffect(() => {

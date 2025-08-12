@@ -9,7 +9,7 @@ import { Button } from '@/components/common/button/Button';
 import { InformationIcon } from '@/assets/icons/settings/index';
 import { ResetIcon } from '@/assets/icons/common/index';
 import { Loading } from '@/components/common/loading/Loading';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
+
 import {
   Parameter,
   Tooltip,
@@ -57,7 +57,6 @@ export default function FlowSettingPage() {
   const [topP, setTopP] = useState(0);
   const [prompt, setPrompt] = useState('');
   const [isTestLoading, setIsTestLoading] = useState(false);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (settingResponse?.result) {
@@ -134,7 +133,9 @@ export default function FlowSettingPage() {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         'Flow 설정 업데이트에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -158,14 +159,18 @@ export default function FlowSettingPage() {
         return response.result.answer;
       } else {
         const errorMessage = response?.message || '알 수 없는 오류가 발생했습니다.';
-        setErrorToastMessage(errorMessage);
+        if (typeof window !== 'undefined' && window.showErrorToast) {
+          window.showErrorToast(errorMessage);
+        }
         return `테스트 실패: ${errorMessage}`;
       }
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '테스트 실행 중 오류가 발생했습니다.';
-      setErrorToastMessage(errorMessage);
+      if (typeof window !== 'undefined' && window.showErrorToast) {
+        window.showErrorToast(errorMessage);
+      }
       return `테스트 실패: ${errorMessage}`;
     } finally {
       setIsTestLoading(false);
@@ -334,11 +339,6 @@ export default function FlowSettingPage() {
           <Footer />
         </ContentWrapper>
       </Content>
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
-      )}
     </PageWrapper>
   );
 }
@@ -494,17 +494,4 @@ const InfoIcon = styled.div`
 
 const Footer = styled.footer`
   height: 40px;
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 9999;
-  pointer-events: none;
 `;

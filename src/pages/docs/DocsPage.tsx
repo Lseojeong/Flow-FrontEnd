@@ -44,6 +44,16 @@ const CELL_WIDTHS = {
   ACTIONS: '57px',
 } as const;
 
+type GetAllDocsCategoriesResponse = {
+  code: string;
+  message: string;
+  result: {
+    categoryList: DocsCategory[];
+    pagination: { last: boolean };
+    nextCursor?: string;
+  };
+};
+
 export default function DocsPage() {
   const [activeMenuId, setActiveMenuId] = useState('docs');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -66,34 +76,23 @@ export default function DocsPage() {
     isLoading,
     reset,
     loadMore,
-  } = useInfiniteScroll<DocsCategory, HTMLTableRowElement>({
+  } = useInfiniteScroll<DocsCategory & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['docs-categories'],
     fetchFn: async (cursor) => {
       const res = await getAllDocsCategories(cursor);
-
-      type GetAllDocsCategoriesResponse = {
-        code: string;
-        message: string;
-        result: {
-          categoryList: DocsCategory[];
-          pagination: { last: boolean };
-          nextCursor?: string;
-        };
-      };
-
       const data = res.data as GetAllDocsCategoriesResponse;
 
-      const categoryList: DocsCategory[] = (data.result?.categoryList ?? []).map(
-        (c: DocsCategory) => ({
-          ...c,
-          lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
-        })
-      );
+      const categoryList = (data.result?.categoryList ?? []).map((c) => ({
+        ...c,
+        lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+        timestamp: c.updatedAt ?? '',
+      }));
 
       return {
         code: data.code,
         result: {
           historyList: categoryList,
-          pagination: data.result?.pagination ?? { last: true },
+          pagination: { isLast: data.result?.pagination.last ?? true },
           nextCursor: data.result?.nextCursor,
         },
       };
@@ -363,8 +362,8 @@ export default function DocsPage() {
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
             <DepartmentSelect
-              value={selectedDepartment ? [selectedDepartment] : []}
-              onChange={(ids) => setSelectedDepartment(ids.length > 0 ? ids[0] : null)}
+              value={selectedDepartment ?? ''}
+              onChange={(id) => setSelectedDepartment(id ?? null)}
             />
           </FilterBar>
 

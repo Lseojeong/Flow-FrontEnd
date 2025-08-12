@@ -1,6 +1,6 @@
 // hooks/useAdminProfile.ts (파일 경로는 프로젝트에 맞게)
-import { useQuery } from '@tanstack/react-query';
-import { getAdminProfile } from '@/apis/auth/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { getAdminProfile, verifyInvitationToken } from '@/apis/auth/api';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { AdminProfile } from './types';
 
@@ -15,5 +15,11 @@ export const useAdminProfile = () => {
     gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useVerifyInvitationToken = () => {
+  return useMutation({
+    mutationFn: verifyInvitationToken,
   });
 };

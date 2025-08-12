@@ -5,10 +5,10 @@ export interface Department {
 
 export interface DepartmentSelectProps {
   options?: Department[];
-  value?: string[];
-  onChange: (_departmentIds: string[]) => void;
+  value?: string | null;
+  onChange: (_departmentId: string | null) => void;
   placeholder?: string;
-  showAllOption?: boolean;
+  showAllOption?: boolean; // "전체" 옵션 표시 여부
 }
 
 export interface DepartmentSelectItemProps {

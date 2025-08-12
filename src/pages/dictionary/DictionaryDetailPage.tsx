@@ -23,7 +23,6 @@ import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-
 import { getDictCategoryById } from '@/apis/dictcategory/api';
 import { getDictCategoryFiles } from '@/apis/dictcategory_detail/api';
 import type { DictCategoryFile } from '@/apis/dictcategory_detail/types';
@@ -81,11 +80,12 @@ export default function DictionaryDetailPage() {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isFilesLoading, setIsFilesLoading] = useState<boolean>(true);
   const [category, setCategory] = useState<DictCategory | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
   useEffect(() => {
     const ac = new AbortController();
-    setLoading(true);
+    setIsFilesLoading(true);
 
     (async () => {
       try {
@@ -102,7 +102,7 @@ export default function DictionaryDetailPage() {
           console.error(e);
         }
       } finally {
-        if (!ac.signal.aborted) setLoading(false);
+        if (!ac.signal.aborted) setIsFilesLoading(false);
       }
     })();
 
@@ -115,11 +115,11 @@ export default function DictionaryDetailPage() {
     reset,
     loadMore,
     refetch,
-  } = useInfiniteScroll<FileItem, HTMLTableRowElement>({
+  } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword],
     fetchFn: async (cursor) => {
       setIsFilesLoading(true);
       try {
-        /*await new Promise((resolve) => setTimeout(resolve, 3000));*/
         const hasKeyword = !!debouncedSearchKeyword.trim();
 
         const res = hasKeyword
@@ -128,28 +128,28 @@ export default function DictionaryDetailPage() {
 
         const data = res.data;
 
-        const list: FileItem[] = (data.result?.fileList ?? []).map((f: DictCategoryFile) => ({
-          id: f.fileId,
-          name: f.fileName,
-          fileName: f.fileName,
-          status: f.status,
-          manager: f.lastModifier ?? '-',
-          registeredAt: formatDateTime(f.createdAt),
-          updatedAt: formatDateTime(f.updatedAt),
-          version: f.latestVersion ?? '-',
-          fileUrl: f.fileUrl,
-        }));
-
-        const next =
-          data.result?.nextCursor ??
-          (data.result?.fileList?.length ? data.result.fileList.slice(-1)[0].updatedAt : undefined);
+        const list: (FileItem & { timestamp: string })[] = (data.result?.fileList ?? []).map(
+          (f: DictCategoryFile) => ({
+            id: f.fileId,
+            name: f.fileName,
+            fileName: f.fileName,
+            status: f.status,
+            manager: f.lastModifier ?? '-',
+            registeredAt: formatDateTime(f.createdAt),
+            updatedAt: formatDateTime(f.updatedAt),
+            version: f.latestVersion ?? '-',
+            fileUrl: f.fileUrl,
+            timestamp: f.updatedAt,
+          })
+        );
 
         return {
           code: data.code,
           result: {
             historyList: list,
-            pagination: data.result?.pagination ?? { last: true },
-            nextCursor: next,
+            pagination: {
+              isLast: data.result?.pagination?.last ?? true,
+            },
           },
         };
       } finally {
@@ -158,10 +158,7 @@ export default function DictionaryDetailPage() {
     },
   });
 
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-
-  if (loading) return <NoData>로딩 중…</NoData>;
-  if (!category) return <NoData>데이터가 없습니다.</NoData>;
+  if (!category) return renderEmptyState();
 
   const statusItems: StatusItemData[] = [
     { type: 'Completed', count: category.status?.Completed ?? 0 },
@@ -349,13 +346,15 @@ export default function DictionaryDetailPage() {
     </TableRow>
   );
 
-  const renderEmptyState = () => (
-    <EmptyRow>
-      <EmptyCell colSpan={8}>
-        <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-      </EmptyCell>
-    </EmptyRow>
-  );
+  function renderEmptyState() {
+    return (
+      <EmptyRow>
+        <EmptyCell colSpan={8}>
+          <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+        </EmptyCell>
+      </EmptyRow>
+    );
+  }
 
   return (
     <PageWrapper>
@@ -436,7 +435,6 @@ export default function DictionaryDetailPage() {
             <thead>
               <TableHeader columns={TABLE_COLUMNS} />
             </thead>
-
             <TableScrollWrapper>
               <tbody>
                 {isFilesLoading ? (
@@ -661,13 +659,6 @@ const ActionButton = styled.button`
   &:hover svg {
     color: ${colors.Normal};
   }
-`;
-
-const NoData = styled.div`
-  margin-left: 280px;
-  padding: 40px;
-  font-size: 18px;
-  color: #999;
 `;
 
 const EmptyRow = styled.tr`

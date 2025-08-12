@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { ENV } from '@/apis/env';
 
 declare module 'axios' {
@@ -136,33 +136,4 @@ axiosInstance.interceptors.response.use(
       isRefreshing = false;
     }
   }
-);
-
-function transformEnums(obj: unknown): void {
-  if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-    Object.entries(obj).forEach(([key, value]) => {
-      if (
-        value &&
-        typeof value === 'object' &&
-        'name' in value &&
-        typeof (value as { name: unknown }).name === 'string'
-      ) {
-        (obj as Record<string, unknown>)[key] = (value as { name: string }).name;
-      } else if (value && typeof value === 'object') {
-        transformEnums(value);
-      }
-    });
-  } else if (Array.isArray(obj)) {
-    obj.forEach((item) => transformEnums(item));
-  }
-}
-
-axiosInstance.interceptors.response.use(
-  <T>(response: AxiosResponse<T>): AxiosResponse<T> => {
-    if (response.data && typeof response.data === 'object' && 'result' in response.data) {
-      transformEnums((response.data as { result: unknown }).result);
-    }
-    return response;
-  },
-  (error) => Promise.reject(error)
 );

@@ -344,7 +344,18 @@ export default function FaqDetailPage() {
         />
       )}
 
-      {selectedFile && <FileDetailPanel file={selectedFile} onClose={handleFileDetailClose} />}
+      {selectedFile && (
+        <FileDetailPanel
+          file={{
+            ...selectedFile,
+            fileName: selectedFile.name,
+            fileUrl: selectedFile.fileUrl ?? '',
+            timestamp: selectedFile.updatedAt,
+            id: String(selectedFile.id),
+          }}
+          onClose={handleFileDetailClose}
+        />
+      )}
     </PageWrapper>
   );
 }

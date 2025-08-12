@@ -22,4 +22,5 @@ export interface FileItem {
   updatedAt: string;
   version?: string;
   fileUrl: string;
+  timestamp: string;
 }

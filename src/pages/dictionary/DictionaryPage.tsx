@@ -14,7 +14,6 @@ import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { DeleteIcon, EditIcon } from '@/assets/icons/common/index';
 import { colors, fontWeight } from '@/styles/index';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
 import Divider from '@/components/common/divider/Divider';
 import DictCategoryModal from '@/components/modal/category-modal/DictCategoryModal';
 import DictCategoryModalEdit from '@/components/modal/category-edit-modal/DictCategoryEditModal';
@@ -27,7 +26,7 @@ import {
   searchDictCategories,
   SearchParams,
 } from '@/apis/dictcategory/api';
-import type { DictCategory, DictCategoryStatus } from '@/apis/dictcategory/types';
+import type { DictCategory } from '@/apis/dictcategory/types';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -57,7 +56,6 @@ export default function DictionaryPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -71,6 +69,7 @@ export default function DictionaryPage() {
 
   const fetchFn = useCallback(
     async (cursor?: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       let data;
       const formatStartDate = (dateStr?: string | null) =>
         dateStr ? dateStr.slice(0, 10) : undefined;
@@ -89,27 +88,15 @@ export default function DictionaryPage() {
           cursor: cursor || undefined,
         };
         const res = await searchDictCategories(searchParams);
-        data = res.data as {
-          code: string;
-          result: {
-            categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
-            pagination: { last: boolean };
-            nextCursor?: string;
-          };
-        };
+        data = res.data;
       } else {
         const res = await getAllDictCategories(cursor);
-        data = res.data as {
-          code: string;
-          result: {
-            categoryList: (DictCategory & { fileStatus?: DictCategoryStatus })[];
-            pagination: { last: boolean };
-            nextCursor?: string;
-          };
-        };
+        data = res.data;
       }
 
-      const categoryList: DictCategory[] = (data.result?.categoryList ?? []).map((c) => ({
+      const categoryList: (DictCategory & { timestamp: string })[] = (
+        data.result?.categoryList ?? []
+      ).map((c: DictCategory) => ({
         ...c,
         lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
         status: c.fileStatus ??
@@ -119,13 +106,14 @@ export default function DictionaryPage() {
             Processing: 0,
             Fail: 0,
           },
+        timestamp: c.updatedAt ?? c.createdAt ?? '',
       }));
 
       return {
         code: data.code,
         result: {
           historyList: categoryList,
-          pagination: data.result?.pagination ?? { last: true },
+          pagination: { isLast: data.result?.pagination?.last ?? true },
           nextCursor: data.result?.nextCursor,
         },
       };
@@ -140,9 +128,9 @@ export default function DictionaryPage() {
     refetch,
     reset,
     loadMore,
-  } = useInfiniteScroll<DictCategory, HTMLTableRowElement>({
+  } = useInfiniteScroll<DictCategory & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['dict-categories'],
     fetchFn,
-    getKey: (item) => item.id,
   });
 
   const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
@@ -225,7 +213,10 @@ export default function DictionaryPage() {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 등록에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+
+      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -247,8 +238,11 @@ export default function DictionaryPage() {
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 삭제에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+        '카테고리 등록에 실패했습니다.';
+
+      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -271,8 +265,11 @@ export default function DictionaryPage() {
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 수정에 실패했습니다.';
-      setErrorToastMessage(errorMessage);
+        '카테고리 등록에 실패했습니다.';
+
+      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -425,31 +422,30 @@ export default function DictionaryPage() {
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           </FilterBar>
-
           <TableLayout>
             <thead>
               <TableHeader columns={columns} />
             </thead>
-            <TableScrollWrapper>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={columns.length} style={{ padding: 0 }}>
+            <tbody>
+              <tr>
+                <td colSpan={columns.length} style={{ padding: 0 }}>
+                  <TableScrollWrapper>
+                    {isLoading ? (
                       <LoadingWrapper>
                         <Loading size={32} color="#555" />
                         <span style={{ fontSize: '14px', color: '#555' }}>
                           용어사전 카테고리 불러오는 중...
                         </span>
                       </LoadingWrapper>
-                    </td>
-                  </tr>
-                ) : filteredCategories.length === 0 ? (
-                  renderEmptyState()
-                ) : (
-                  filteredCategories.map((category, index) => renderTableRow(category, index))
-                )}
-              </tbody>
-            </TableScrollWrapper>
+                    ) : filteredCategories.length === 0 ? (
+                      renderEmptyState()
+                    ) : (
+                      filteredCategories.map((category, index) => renderTableRow(category, index))
+                    )}
+                  </TableScrollWrapper>
+                </td>
+              </tr>
+            </tbody>
           </TableLayout>
         </ContentWrapper>
       </Content>
@@ -468,11 +464,6 @@ export default function DictionaryPage() {
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
         />
-      )}
-      {errorToastMessage && (
-        <ErrorToastWrapper>
-          <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-        </ErrorToastWrapper>
       )}
     </PageWrapper>
   );
@@ -562,7 +553,7 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: ${colors.BoxText};
   font-size: 14px;
-  transform: translateX(500px);
+  transform: translateX(50px);
 `;
 
 const StatusWrapper = styled.div`
@@ -611,18 +602,5 @@ const LoadingWrapper = styled.div`
   width: 100%;
   height: calc(100vh - 450px);
   gap: 8px;
-  transform: translateX(500px);
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 9999;
-  pointer-events: none;
+  transform: translateX(50px);
 `;

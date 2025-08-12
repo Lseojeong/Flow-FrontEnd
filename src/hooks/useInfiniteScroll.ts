@@ -1,133 +1,107 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
-interface UseInfiniteScrollParams<T> {
+interface UseInfiniteScrollParams<T extends { timestamp: string }> {
   fetchFn: (_cursor?: string) => Promise<{
     code: string;
     result: {
       historyList: T[];
-      pagination: { last: boolean };
-      nextCursor?: string;
+      pagination: { isLast: boolean };
     };
   }>;
+  queryKey: (string | number | boolean | null | undefined)[];
   initialCursor?: string;
-  getKey?: (_item: T) => string | number;
+  enabled?: boolean;
 }
 
-export const useInfiniteScroll = <T, R extends HTMLElement = HTMLElement>({
+export const useInfiniteScroll = <
+  T extends { timestamp: string },
+  R extends HTMLElement = HTMLTableRowElement,
+>({
   fetchFn,
-  initialCursor,
-  getKey,
+  queryKey,
+  initialCursor = '',
+  enabled = true,
 }: UseInfiniteScrollParams<T>) => {
-  const [cursor, setCursor] = useState<string | undefined>(initialCursor);
-  const [data, setData] = useState<T[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const observerRef = useRef<R | null>(null);
 
-  const isFetchingRef = useRef(false);
-  const hasInitialLoadedRef = useRef(false);
-  const seenKeysRef = useRef<Set<string | number>>(new Set());
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey,
+    queryFn: ({ pageParam = initialCursor }) => fetchFn(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.code !== 'COMMON200') return undefined;
 
-  const loadMore = useCallback(async () => {
-    if (!hasMore || isLoading || isFetchingRef.current) return;
-    isFetchingRef.current = true;
-    setIsLoading(true);
+      const { historyList, pagination } = lastPage.result;
+      const lastItem = historyList[historyList.length - 1];
+      const nextCursor = lastItem ? lastItem.timestamp : undefined;
 
-    try {
-      const response = await fetchFn(cursor);
-      if (['CATEGORY200', '200', 'COMMON200'].includes(response.code)) {
-        const { historyList, pagination, nextCursor } = response.result;
+      return !pagination.isLast && nextCursor ? nextCursor : undefined;
+    },
+    initialPageParam: initialCursor,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    enabled,
+  });
+  const flattenedData = useMemo(
+    () =>
+      data?.pages.flatMap((page) =>
+        page.code === 'COMMON200' || page.code === 'CATEGORY200' ? page.result.historyList : []
+      ) || [],
+    [data?.pages]
+  );
 
-        const toAppend = getKey
-          ? historyList.filter((item) => {
-              const k = getKey(item);
-              if (seenKeysRef.current.has(k)) return false;
-              seenKeysRef.current.add(k);
-              return true;
-            })
-          : historyList;
+  const reset = () => {
+    refetch();
+  };
 
-        setData((prev) => [...prev, ...toAppend]);
-        setCursor(nextCursor);
-        setHasMore(pagination?.last === false);
-      } else {
-        console.error('Unexpected response code:', response.code);
-      }
-    } catch (error) {
-      console.error('Infinite scroll fetch error:', error);
-    } finally {
-      setIsLoading(false);
-      isFetchingRef.current = false;
+  const loadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [cursor, hasMore, isLoading, fetchFn, getKey]);
+  };
 
-  const refetch = useCallback(async () => {
-    setHasMore(true);
-    setCursor(undefined);
-    seenKeysRef.current.clear();
-    isFetchingRef.current = false;
-    hasInitialLoadedRef.current = false;
-
-    setIsLoading(true);
-    try {
-      const response = await fetchFn(undefined);
-      if (['CATEGORY200', '200', 'COMMON200'].includes(response.code)) {
-        const { historyList, pagination, nextCursor } = response.result;
-
-        const newData = getKey
-          ? historyList.filter((item) => {
-              const k = getKey(item);
-              if (seenKeysRef.current.has(k)) return false;
-              seenKeysRef.current.add(k);
-              return true;
-            })
-          : historyList;
-
-        setData(newData);
-        setCursor(nextCursor);
-        setHasMore(pagination?.last === false);
-      } else {
-        console.error('Unexpected response code:', response.code);
-      }
-    } catch (error) {
-      console.error('Refetch error:', error);
-    } finally {
-      setIsLoading(false);
-      isFetchingRef.current = false;
-    }
-  }, [fetchFn, getKey]);
+  const loadInitial = () => {
+    refetch();
+  };
 
   useEffect(() => {
-    if (hasInitialLoadedRef.current) return;
-    hasInitialLoadedRef.current = true;
-    loadMore();
-  }, [loadMore]);
-
-  useEffect(() => {
-    if (!observerRef.current || !hasMore) return;
+    if (!observerRef.current || !hasNextPage || isFetchingNextPage) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading) {
-          loadMore();
+        if (entries[0].isIntersecting && !isFetchingNextPage && hasNextPage) {
+          fetchNextPage();
         }
       },
-      { threshold: 1.0, root: null, rootMargin: '0px 0px 200px 0px' }
+      { threshold: 1.0 }
     );
 
     observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasMore, isLoading, loadMore]);
+  }, [flattenedData, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const reset = () => {
-    setData([]);
-    setCursor(undefined);
-    setHasMore(true);
-    setIsLoading(false);
-    seenKeysRef.current.clear();
-    isFetchingRef.current = false;
-    hasInitialLoadedRef.current = false;
+  return {
+    data: flattenedData,
+    observerRef,
+    isLoading,
+    isFetchingNextPage,
+    hasMore: hasNextPage,
+    isError,
+    error,
+    reset,
+    loadMore,
+    loadInitial,
+    refetch,
   };
-
-  return { data, observerRef, isLoading, hasMore, reset, loadMore, refetch, setData };
 };

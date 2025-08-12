@@ -27,7 +27,7 @@ const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 export default function DashBoardPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('dashboard');
-  const [startDate, setStartDate] = useState<string>(getTodayDate());
+  const [startDate, setStartDate] = useState<string>(getWeekAgoDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
 
   const { data: dashboardData, isLoading } = useDashboardData({
@@ -165,6 +165,13 @@ export default function DashBoardPage() {
 function getTodayDate(): string {
   const now = new Date();
   const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  return koreaTime.toISOString().replace('Z', '');
+}
+
+function getWeekAgoDate(): string {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const koreaTime = new Date(weekAgo.getTime() + 9 * 60 * 60 * 1000);
   return koreaTime.toISOString().replace('Z', '');
 }
 

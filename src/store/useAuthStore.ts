@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { getAdminProfile, postLogout, postAdminLogin, refreshToken } from '@/apis/auth/api';
+import { getAdminProfile, postLogout, postAdminLogin } from '@/apis/auth/api';
 import type { AdminProfile, LoginRequest } from '@/apis/auth/types';
 
 declare global {
   interface Window {
     showToast?: (_message: string) => void;
+    showErrorToast?: (_message: string) => void;
   }
 }
 
@@ -20,40 +21,6 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-let refreshTimer: number | null = null;
-let isRefreshing = false;
-
-function setCsrfToken(csrfToken?: string) {
-  if (csrfToken) {
-    localStorage.setItem('csrfToken', csrfToken);
-  }
-}
-
-async function refreshNow() {
-  if (isRefreshing) return;
-  isRefreshing = true;
-  try {
-    const res = await refreshToken();
-    const headerCsrf = res.headers['x-csrf-token'] as string | undefined;
-    const bodyCsrf = res.data.result?.csrfToken;
-    const newCsrf = bodyCsrf ?? headerCsrf;
-    setCsrfToken(newCsrf);
-  } finally {
-    isRefreshing = false;
-  }
-}
-
-function schedulePeriodicRefresh(intervalMs = 25 * 60 * 1000) {
-  if (refreshTimer) {
-    window.clearTimeout(refreshTimer);
-    refreshTimer = null;
-  }
-  refreshTimer = window.setTimeout(async () => {
-    await refreshNow();
-    schedulePeriodicRefresh(intervalMs);
-  }, intervalMs);
-}
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   isLoggedIn: false,
   isLoading: true,
@@ -65,21 +32,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   checkLoginStatus: async () => {
     if (get().hasChecked) return;
+
     set({ isLoading: true });
 
     try {
       const profile = await getAdminProfile();
       set({ isLoggedIn: true, profile });
-      schedulePeriodicRefresh();
     } catch {
-      try {
-        await refreshNow();
-        const profile = await getAdminProfile();
-        set({ isLoggedIn: true, profile });
-        schedulePeriodicRefresh();
-      } catch {
-        set({ isLoggedIn: false, profile: null });
-      }
+      set({
+        isLoggedIn: false,
+        profile: null,
+        isLoading: false,
+        hasChecked: true,
+      });
     } finally {
       set({ isLoading: false, hasChecked: true });
     }
@@ -87,28 +52,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (data: LoginRequest) => {
     set({ isLoading: true });
+
     try {
+      // 1. 로그인 API 호출 (CSRF 토큰 설정 포함)
       await postAdminLogin(data);
+
+      // 2. 로그인 성공 후 프로필 조회
       const profile = await getAdminProfile();
-      set({ isLoggedIn: true, profile, hasChecked: true, isLoading: false });
+
+      // 3. 상태 업데이트
+      set({
+        isLoggedIn: true,
+        profile,
+        hasChecked: true,
+        isLoading: false,
+      });
     } catch (error) {
-      set({ isLoggedIn: false, profile: null, hasChecked: true, isLoading: false });
+      set({
+        isLoggedIn: false,
+        profile: null,
+        hasChecked: true,
+        isLoading: false,
+      });
       throw error;
     }
   },
 
   logout: async () => {
     localStorage.removeItem('csrfToken');
-    if (refreshTimer) {
-      window.clearTimeout(refreshTimer);
-      refreshTimer = null;
-    }
     set({ isLoggedIn: false, hasChecked: true, profile: null, isLoading: false });
 
     try {
       await postLogout();
     } catch {
-      window.showToast?.('로그아웃 중 오류가 발생했습니다.');
+      if (typeof window !== 'undefined' && window.showToast) {
+        window.showToast('로그아웃 중 오류가 발생했습니다.');
+      }
     }
 
     if (typeof window !== 'undefined') {

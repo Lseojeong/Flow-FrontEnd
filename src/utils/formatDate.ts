@@ -16,7 +16,7 @@ export const formatDateTime = (date: Date | string | null | undefined): string =
       return '-';
     }
 
-    return format(dateObj, 'yyyy.MM.dd HH:mm');
+    return format(dateObj, 'yyyy.MM.dd');
   } catch {
     return '-';
   }

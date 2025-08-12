@@ -1,7 +1,7 @@
 export interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_emails: string[], _department: string) => void;
+  onSubmit: () => void;
   departmentOptions?: Array<{
     departmentId: string;
     departmentName: string;
