@@ -25,12 +25,15 @@ export const getAllFaqCategories = async (cursor?: string) => {
 };
 
 // 조건 검색
-export const searchFaqCategories = async (params: SearchParams) => {
+export const searchFaqCategories = async (params: {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  cursorDate?: string;
+  departmentId?: string;
+}) => {
   return axiosInstance.get('/admin/faqs/categories/search', {
-    params: {
-      ...params,
-      cursorDate: params.cursor || '2024-01-01T00:00:00',
-    },
+    params,
   });
 };
 

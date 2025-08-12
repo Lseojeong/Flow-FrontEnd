@@ -24,12 +24,11 @@ import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
-import { getDictCategoryFiles } from '@/apis/dictcategory_detail/api';
-import type { DictCategoryFile } from '@/apis/dictcategory_detail/types';
+import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import type { FileItem } from '@/types/dictionary';
 import { formatDateTime } from '@/utils/formatDateTime';
 import {
+  getDictCategoryFiles,
   createDictCategoryFile,
   deleteDictCategoryFile,
   searchDictCategoryFiles,
@@ -409,14 +408,18 @@ export default function DictionaryDetailPage() {
             <InfoItemColumn>
               <Label>등록일:</Label>
               <Value>
-                {(category.createdAt ?? category.registeredDate ?? '').slice(0, 10) || '-'}
+                {category.createdAt || category.registeredDate
+                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                  : '-'}
               </Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정일:</Label>
               <Value>
-                {(category.lastModifiedDate ?? category.updatedAt ?? '').slice(0, 10) || '-'}
+                {category.createdAt || category.registeredDate
+                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                  : '-'}
               </Value>
             </InfoItemColumn>
 

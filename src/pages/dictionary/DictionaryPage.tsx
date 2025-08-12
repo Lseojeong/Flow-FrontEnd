@@ -196,7 +196,8 @@ export default function DictionaryPage() {
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
     try {
       const res = await createDictCategory(data);
-      if (!(res.status === 200 || res.data?.code === 'CATEGORY200' || res.data?.code === '200')) {
+
+      if (res.data?.code !== 'COMMON200') {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
 
@@ -207,16 +208,12 @@ export default function DictionaryPage() {
       setCheckedItems?.({});
 
       await refetch();
-
-      (window as { showToast?: (_: string) => void }).showToast?.('카테고리를 등록했습니다.');
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 등록에 실패했습니다.';
 
-      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
-        window.showErrorToast(errorMessage);
-      }
+      window.showErrorToast?.(errorMessage);
     }
   };
 
@@ -226,7 +223,7 @@ export default function DictionaryPage() {
     const ids = selected.map((cat) => cat.id);
     try {
       const res = await deleteDictCategories(ids);
-      if (res.status === 200 || res.data.code === '200') {
+      if (res.data?.code === 'COMMON200') {
         (window as { showToast?: (_: string) => void }).showToast?.(
           '선택한 카테고리를 삭제했습니다.'
         );
@@ -251,7 +248,7 @@ export default function DictionaryPage() {
     try {
       const res = await updateDictCategory(editingCategory.id, payload);
       const code = (res as { data?: { code?: string } }).data?.code;
-      if (code === 'COMMON200' || code === 'CATEGORY200' || code === '200') {
+      if (code === 'COMMON200') {
         (window as Window & { showToast?: (_m: string) => void }).showToast?.(
           '카테고리가 수정되었습니다.'
         );
@@ -265,7 +262,7 @@ export default function DictionaryPage() {
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 등록에 실패했습니다.';
+        '카테고리 수정에 실패했습니다.';
 
       if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
         window.showErrorToast(errorMessage);
@@ -549,11 +546,11 @@ const EmptyMessage = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 200px;
+  height: 400px;
   text-align: center;
   color: ${colors.BoxText};
   font-size: 14px;
-  transform: translateX(50px);
+  transform: translateX(500px);
 `;
 
 const StatusWrapper = styled.div`

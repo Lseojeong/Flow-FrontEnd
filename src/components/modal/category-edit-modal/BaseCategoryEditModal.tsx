@@ -70,16 +70,15 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   const handleNameChange = (val: string) => {
     setCategoryName(val);
     if (isServerDuplicate) setIsServerDuplicate(false);
-    if (isTouched && val.trim() !== '') {
+    if (isTouched && val.trim() !== '' && errorType === 'required') {
       setErrorType('');
     }
+    if (errorType === 'serverDuplicate') setErrorType('');
   };
 
   const handleNameBlur = () => {
     setIsTouched(true);
-    if (trimmedName === '') {
-      setErrorType('required');
-    }
+    if (trimmedName === '') setErrorType('required');
   };
 
   const handleConfirm = async () => {
@@ -120,7 +119,6 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
   const getErrorMessage = () => {
     if (errorType === 'required') return '카테고리를 입력해주세요.';
-    if (errorType === 'serverDuplicate') return '이미 존재하는 카테고리입니다.';
     return '';
   };
 
@@ -141,6 +139,12 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
           <ModalBox>
             <Title>{title}</Title>
             <Divider />
+
+            {errorType === 'serverDuplicate' && (
+              <InlineError role="alert" aria-live="polite">
+                이미 존재하는 카테고리입니다.
+              </InlineError>
+            )}
 
             <CategoryInput
               value={categoryName}
@@ -231,4 +235,12 @@ const ErrorToastWrapper = styled.div`
   gap: 12px;
   z-index: 9999;
   pointer-events: none;
+`;
+
+const InlineError = styled.p`
+  width: 100%;
+  color: ${colors.MainRed};
+  font-size: 12px;
+  margin: -4px 0 4px;
+  text-align: left;
 `;
