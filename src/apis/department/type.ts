@@ -1,8 +1,6 @@
 export interface Department {
   departmentId: string;
   departmentName: string;
-  adminCount: number;
-  categoryCount: number;
 }
 
 export interface DepartmentSetting {
@@ -74,5 +72,10 @@ export interface DuplicateDepartmentError {
 export interface DepartmentListResponse {
   code: string;
   message: string;
-  result: string;
+  result: {
+    departmentList: Array<{
+      departmentId: string;
+      departmentName: string;
+    }>;
+  };
 }

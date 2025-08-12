@@ -20,7 +20,9 @@ import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCa
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDocsCategories, createDocsCategory } from '@/apis/docs/api';
+import { getAllDocsCategories } from '@/apis/docs/api';
+import { useCreateDocsCategory, useUpdateDocsCategory } from '@/apis/docs/mutation';
+import { useDepartmentList } from '@/apis/department/query';
 import type { DocsCategory } from '@/apis/docs/types';
 import { useAuthStore } from '@/store/useAuthStore';
 import { formatDate } from '@/utils/formatDate';
@@ -68,11 +70,17 @@ export default function DocsPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
-    id: number;
+    id: string;
     name: string;
     description: string;
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
+
+  const createCategoryMutation = useCreateDocsCategory();
+  const updateCategoryMutation = useUpdateDocsCategory();
+
+  const { data: departmentData } = useDepartmentList();
+  const departments = departmentData?.result?.departmentList || mockDepartments;
 
   const {
     data: categories,
@@ -86,10 +94,18 @@ export default function DocsPage() {
       const res = await getAllDocsCategories(cursor);
       const data = res.data as GetAllDocsCategoriesResponse;
 
-      const categoryList = (data.result?.categoryList ?? []).map((c) => ({
+      const categoryList: (DocsCategory & { timestamp: string })[] = (
+        data.result?.categoryList ?? []
+      ).map((c: DocsCategory) => ({
         ...c,
         lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
-        timestamp: c.updatedAt ?? '',
+        status: c.status ?? {
+          Total: 0,
+          Completed: 0,
+          Processing: 0,
+          Fail: 0,
+        },
+        timestamp: c.updatedAt ?? c.createdAt ?? '',
       }));
 
       return {
@@ -154,7 +170,7 @@ export default function DocsPage() {
       })) ?? [];
 
     setEditingCategory({
-      id: Number.NaN as unknown as number,
+      id: category.id,
       name: category.name,
       description: category.description ?? '',
       departments,
@@ -177,27 +193,56 @@ export default function DocsPage() {
     }
   };
 
-  const handleRegisterCategory = async (data: { name: string; description: string }) => {
+  const handleRegisterCategory = async (data: {
+    name: string;
+    description: string;
+    departments?: string[];
+  }) => {
     try {
-      const res = await createDocsCategory({
+      await createCategoryMutation.mutateAsync({
         name: data.name,
         description: data.description,
-        departmentIdList: [],
+        departmentIdList: data.departments ?? [],
       });
 
-      if (res.data.code === 'COMMON200') {
-        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-        setIsCategoryModalOpen(false);
-        reset();
-        await loadMore();
-      } else {
-        console.error('카테고리 등록 실패:', res.data);
-        (window as { showToast?: (_: string) => void }).showToast?.('등록에 실패했습니다.');
-      }
+      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+      setIsCategoryModalOpen(false);
+      reset();
+      await loadMore();
     } catch (e) {
       console.error('카테고리 등록 에러:', e);
       (window as { showToast?: (_: string) => void }).showToast?.(
         '등록 요청 중 오류가 발생했습니다.'
+      );
+    }
+  };
+
+  const handleUpdateCategory = async (data: {
+    name: string;
+    description: string;
+    departments: string[];
+  }) => {
+    if (!editingCategory) return;
+
+    try {
+      await updateCategoryMutation.mutateAsync({
+        categoryId: editingCategory.id,
+        data: {
+          name: data.name,
+          description: data.description,
+          departmentIdList: data.departments,
+        },
+      });
+
+      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
+      setIsEditModalOpen(false);
+      setEditingCategory(null);
+      reset();
+      await loadMore();
+    } catch (e) {
+      console.error('카테고리 수정 에러:', e);
+      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
+        '수정 요청 중 오류가 발생했습니다.'
       );
     }
   };
@@ -258,9 +303,9 @@ export default function DocsPage() {
           <StatusWrapper>
             <StatusSummary
               items={[
-                { type: 'Completed', count: category.status.completed },
-                { type: 'Processing', count: category.status.processing },
-                { type: 'Fail', count: category.status.fail },
+                { type: 'Completed', count: category.status.Completed },
+                { type: 'Processing', count: category.status.Processing },
+                { type: 'Fail', count: category.status.Fail },
               ]}
             />
           </StatusWrapper>
@@ -293,7 +338,6 @@ export default function DocsPage() {
             width: CELL_WIDTHS.LAST_MODIFIED,
             minWidth: CELL_WIDTHS.LAST_MODIFIED,
             textAlign: 'left',
-            paddingLeft: ' 34px',
           }}
         >
           {formatDate(category.lastModifiedDate)}
@@ -402,7 +446,7 @@ export default function DocsPage() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
-        departments={mockDepartments}
+        departments={departments}
         existingCategoryNames={existingCategoryNames}
       />
 
@@ -410,14 +454,11 @@ export default function DocsPage() {
         <DocsCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSubmit={({ name, description }) => {
-            console.log('카테고리 수정:', name, description);
-            setIsEditModalOpen(false);
-          }}
+          onSubmit={handleUpdateCategory}
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
           initialDepartments={editingCategory.departments.map((d) => d.departmentId)}
-          departments={mockDepartments}
+          departments={departments}
         />
       )}
     </PageWrapper>
@@ -473,17 +514,6 @@ const FilterBar = styled.div`
   gap: 12px;
   margin: 0 0 5px 20px;
 `;
-const EmptyRow = styled.tr`
-  height: 200px;
-`;
-
-const EmptyCell = styled.td<{ colSpan: number }>`
-  text-align: center;
-  vertical-align: middle;
-  color: ${colors.BoxText};
-  font-size: 14px;
-  padding: 80px 0;
-`;
 
 const StatusWrapper = styled.div`
   display: flex;
@@ -523,6 +553,22 @@ const TableScrollWrapper = styled.div`
   background: ${colors.White};
 `;
 
+const EmptyRow = styled.tr`
+  height: calc(100vh - 450px);
+`;
+
+const EmptyCell = styled.td<{ colSpan: number }>`
+  padding: 0;
+`;
+
 const EmptyMessage = styled.div`
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 200px;
+  text-align: center;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  transform: translateX(500px);
 `;

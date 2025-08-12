@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
 import axios, { AxiosError } from 'axios';
 import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
+import { Department } from '@/components/common/department/Department.types';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -19,7 +21,8 @@ interface BaseCategoryModalProps {
   }) => void | Promise<unknown>;
   existingCategoryNames: string[];
   title?: string;
-  children?: React.ReactNode;
+  departments?: Department[];
+  showDepartmentCheck?: boolean;
 }
 
 type ErrorType = '' | 'required' | 'serverDuplicate';
@@ -34,10 +37,12 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   onClose,
   onSubmit,
   title = '카테고리 등록',
-  children,
+  departments = [],
+  showDepartmentCheck = false,
 }) => {
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [errorType, setErrorType] = useState<ErrorType>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServerDuplicate, setIsServerDuplicate] = useState(false);
@@ -88,6 +93,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
+        departments: selectedDepartments,
       });
 
       handleClose();
@@ -119,6 +125,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   const handleClose = () => {
     setCategoryName('');
     setDescription('');
+    setSelectedDepartments([]);
     setErrorType('');
     setIsServerDuplicate(false);
     setIsSubmitting(false);
@@ -140,7 +147,13 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
                 onBlur={handleNameBlur}
                 error={getErrorMessage()}
               />
-              {children}
+              {showDepartmentCheck && (
+                <DepartmentCheck
+                  departments={departments}
+                  selectedDepartmentIds={selectedDepartments}
+                  onChange={setSelectedDepartments}
+                />
+              )}
               <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
             </Container>
             <ButtonRow>

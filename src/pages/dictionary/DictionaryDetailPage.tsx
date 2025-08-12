@@ -27,7 +27,7 @@ import { getDictCategoryById } from '@/apis/dictcategory/api';
 import { getDictCategoryFiles } from '@/apis/dictcategory_detail/api';
 import type { DictCategoryFile } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import type { FileItem } from '@/types/dictionary';
+import type { FileItem } from '@/apis/dictcategory_detail/types';
 import { formatDateTime } from '@/utils/formatDateTime';
 import {
   createDictCategoryFile,

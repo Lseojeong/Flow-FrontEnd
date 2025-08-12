@@ -38,7 +38,7 @@ export interface FileItem {
   manager: string;
   registeredAt: string;
   updatedAt: string;
-  version: string;
+  version?: string;
   fileUrl: string;
   timestamp?: string;
 }

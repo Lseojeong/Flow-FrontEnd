@@ -1,8 +1,14 @@
+export interface ApiResponse<T> {
+  code: string;
+  message: string;
+  result: T;
+}
+
 export interface DocsCategoryStatus {
-  total: number;
-  completed: number;
-  processing: number;
-  fail: number;
+  Total: number;
+  Completed: number;
+  Processing: number;
+  Fail: number;
 }
 
 export interface DocsCategory {
@@ -17,4 +23,45 @@ export interface DocsCategory {
   updatedAt?: string;
   lastModifier?: string;
   lastEditor?: string;
+}
+
+export interface PaginationInfo {
+  last: boolean;
+  nextCursor?: string;
+}
+
+export interface DocsCategoryListResult {
+  categoryList: DocsCategory[];
+  pagination: PaginationInfo;
+}
+
+export interface DocsCategoryCreateRequest {
+  name: string;
+  description?: string;
+  departmentIdList: string[];
+}
+
+export interface DocsCategoryUpdateRequest {
+  name: string;
+  description: string;
+  departmentIdList: string[];
+}
+
+export interface DocsCategoryUpdateResponse {
+  categoryId: string;
+  name: string;
+  departmentList: string[];
+  description: string;
+}
+
+export interface DocsCategorySearchRequest {
+  name?: string;
+  departmentId?: string;
+  startDate?: string;
+  endDate?: string;
+  cursorDate: string;
+}
+
+export interface DocsCategoryDeleteRequest {
+  categoryIdList: string[];
 }

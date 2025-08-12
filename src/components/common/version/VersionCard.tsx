@@ -6,16 +6,16 @@ import { VersionSelectorProps, VersionType } from './VersionCard.types';
 export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) => {
   const [selectedVersionType, setSelectedVersionType] = useState<VersionType | null>(null);
 
-  const currentVersion = '1.0.0';
-  const [currentMajor, currentMinor, currentPatch] = currentVersion.split('.').map(Number);
+  const latestVersion = '1.0.0';
+  const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.').map(Number);
 
   const versionOptions = useMemo(
     () => ({
-      patch: `${currentMajor}.${currentMinor}.${currentPatch + 1}`,
-      minor: `${currentMajor}.${currentMinor + 1}.0`,
-      major: `${currentMajor + 1}.0.0`,
+      patch: `${latestMajor}.${latestMinor}.${latestPatch + 1}`,
+      minor: `${latestMajor}.${latestMinor + 1}.0`,
+      major: `${latestMajor + 1}.0.0`,
     }),
-    [currentMajor, currentMinor, currentPatch]
+    [latestMajor, latestMinor, latestPatch]
   );
 
   const handleVersionSelect = (versionType: VersionType) => {
@@ -49,7 +49,6 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) =>
           <VersionNumber>{versionOptions.patch}</VersionNumber>
         </VersionButton>
       </VersionButtonContainer>
-      <CurrentVersionText>현재 버전: {currentVersion}</CurrentVersionText>
     </VersionSelectorContainer>
   );
 };
@@ -99,10 +98,4 @@ const VersionTypeLabel = styled.span`
 const VersionNumber = styled.span`
   font-size: 14px;
   font-weight: ${fontWeight.Medium};
-`;
-
-const CurrentVersionText = styled.span`
-  font-size: 12px;
-  font-weight: ${fontWeight.Regular};
-  color: ${colors.BoxText};
 `;

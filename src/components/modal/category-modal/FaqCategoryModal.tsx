@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Department } from '@/components/common/department/Department.types';
-import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import BaseCategoryModal from './BaseCategoryModal';
 
 interface Props {
@@ -18,13 +17,11 @@ const FaqCategoryModal: React.FC<Props> = ({
   departments,
   existingCategoryNames,
 }) => {
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-
   const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
     onSubmit({
       name: data.name,
       description: data.description,
-      departments: selectedDepartments,
+      departments: data.departments ?? [],
     });
   };
 
@@ -35,13 +32,9 @@ const FaqCategoryModal: React.FC<Props> = ({
       onSubmit={handleSubmit}
       existingCategoryNames={existingCategoryNames}
       title="카테고리 등록"
-    >
-      <DepartmentCheck
-        departments={departments}
-        selectedDepartmentIds={selectedDepartments}
-        onChange={setSelectedDepartments}
-      />
-    </BaseCategoryModal>
+      departments={departments}
+      showDepartmentCheck={true}
+    />
   );
 };
 
