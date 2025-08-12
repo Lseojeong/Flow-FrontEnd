@@ -12,7 +12,6 @@ export const PopupPlayground: React.FC = () => {
 
   const handleConfirm = (type: string) => {
     alert(`${type} 완료되었습니다!`);
-    // 모든 팝업 닫기
     setShowDeleteFilePopup(false);
     setShowDeleteCategoryPopup(false);
     setShowDeleteDepartmentPopup(false);

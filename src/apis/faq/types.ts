@@ -1,15 +1,15 @@
 export interface FaqCategoryStatus {
-  total: number;
-  completed: number;
-  processing: number;
-  fail: number;
+  Total: number;
+  Completed: number;
+  Processing: number;
+  Fail: number;
 }
 
 export interface FaqCategory {
-  id: string; // UUID
+  id: string;
   name: string;
   description?: string;
-  status: FaqCategoryStatus;
+  fileStatus: FaqCategoryStatus;
   documentCount: number;
   lastModifiedDate: string;
   departmentList?: string[];
@@ -18,4 +18,9 @@ export interface FaqCategory {
   registeredDate?: string;
   lastModifier?: string;
   lastEditor?: string;
+}
+
+export interface DepartmentApi {
+  departmentId: string;
+  departmentName: string;
 }

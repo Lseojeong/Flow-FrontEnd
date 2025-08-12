@@ -9,10 +9,12 @@ import type {
 } from './types';
 
 /** 파일 리스트 조회 (커서 기반) */
-export const getDictCategoryFiles = (categoryId: string, cursor?: string) =>
-  axiosInstance.get<ApiEnvelope<FileListResult>>(`/admin/dict/categories/${categoryId}/files`, {
-    params: cursor ? { cursor } : {},
-  });
+export const getDictCategoryFiles = (categoryId: string, cursor?: string) => {
+  return axiosInstance.get<ApiEnvelope<FileListResult>>(
+    `/admin/dict/categories/${categoryId}/files`,
+    { params: cursor ? { cursor } : {} }
+  );
+};
 
 /** 파일 검색 (카테고리 내) */
 export const searchDictCategoryFiles = (categoryId: string, params: FileSearchParams) =>
@@ -57,7 +59,7 @@ export interface DictFileHistory {
   fileName: string;
   lastModifierName: string;
   lastModifierId: string;
-  timestamp: string; // ISO DateTime
+  timestamp: string;
   work: string;
   description: string;
   fileUrl: string;

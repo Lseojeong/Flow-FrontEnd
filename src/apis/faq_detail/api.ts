@@ -1,37 +1,44 @@
 import { axiosInstance } from '@/apis/axiosInstance';
 import type {
-  ApiBaseResponse,
-  FaqFilesListResult,
-  UpsertFaqFileBody,
-  SearchFaqFilesParams,
+  FaqFileSearchParams,
+  FaqCategoryFileCreateBody,
+  FaqCategoryFileUpdateBody,
+  ApiEnvelope,
+  FaqFileListResult,
 } from '@/apis/faq_detail/types';
 
-export const createFaqCategoryFile = (categoryId: string, body: UpsertFaqFileBody) => {
-  return axiosInstance.post<ApiBaseResponse<string>>(
+// 파일 생성
+export const createFaqCategoryFile = (categoryId: string, body: FaqCategoryFileCreateBody) => {
+  return axiosInstance.post<ApiEnvelope<string>>(
     `/admin/faqs/categories/${categoryId}/files`,
     body
   );
 };
 
-export const updateFaqCategoryFile = (fileId: string, body: UpsertFaqFileBody) => {
-  return axiosInstance.put<ApiBaseResponse<string>>(`/admin/faqs/categories/files/${fileId}`, body);
+// 파일 수정
+export const updateFaqCategoryFile = (fileId: string, body: FaqCategoryFileUpdateBody) => {
+  return axiosInstance.put<ApiEnvelope<string>>(`/admin/faqs/categories/files/${fileId}`, body);
 };
 
+// 파일 삭제
 export const deleteFaqCategoryFile = (fileId: string) => {
-  return axiosInstance.delete<ApiBaseResponse<Record<string, never>>>(
+  return axiosInstance.delete<ApiEnvelope<Record<string, never>>>(
     `/admin/faqs/categories/files/${fileId}`
   );
 };
 
-export const getFaqCategoryFiles = (categoryId: string, cursorDate: string) => {
-  return axiosInstance.get<ApiBaseResponse<FaqFilesListResult>>(
+export const getFaqCategoryFiles = (categoryId: string, cursorDate?: string) => {
+  const dateParam = cursorDate?.trim() ? cursorDate : '2025-01-01T00:00:00';
+
+  return axiosInstance.get<ApiEnvelope<FaqFileListResult>>(
     `/admin/faqs/categories/${categoryId}/files`,
-    { params: { cursorDate } }
+    { params: { cursorDate: dateParam } }
   );
 };
 
-export const searchFaqCategoryFiles = (categoryId: string, params: SearchFaqFilesParams) => {
-  return axiosInstance.get<ApiBaseResponse<FaqFilesListResult>>(
+// 파일 검색
+export const searchFaqCategoryFiles = (categoryId: string, params: FaqFileSearchParams) => {
+  return axiosInstance.get<ApiEnvelope<FaqFileListResult>>(
     `/admin/faqs/categories/${categoryId}/files/search`,
     { params }
   );

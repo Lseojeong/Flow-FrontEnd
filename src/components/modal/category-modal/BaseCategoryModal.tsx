@@ -96,6 +96,11 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
       });
 
       handleClose();
+
+      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
+      setTimeout(() => {
+        w.showToast?.(CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE, 'success');
+      }, MODAL_STYLE.TOAST_DELAY);
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const data = (err as AxiosError<ErrorBody>)?.response?.data;
@@ -105,7 +110,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         if (code === 'CATEGORY400' || msg.includes('중복')) {
           setIsServerDuplicate(true);
           setErrorType('serverDuplicate');
-          setIsSubmitting(false);
           return;
         }
       }

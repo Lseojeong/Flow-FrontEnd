@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
@@ -17,7 +18,6 @@ import Divider from '@/components/common/divider/Divider';
 import { colors, fontWeight } from '@/styles/index';
 import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
 import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
-import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Department } from '@/components/common/department/Department.types';
@@ -27,7 +27,7 @@ import {
   createFaqCategory,
   deleteFaqCategories,
   searchFaqCategories,
-  SearchParams,
+  updateFaqCategory,
 } from '@/apis/faq/api';
 import type { FaqCategory } from '@/apis/faq/types';
 
@@ -54,6 +54,8 @@ const CELL_WIDTHS = {
 
 export default function FaqPage() {
   const [activeMenuId, setActiveMenuId] = useState('faq');
+  const { profile } = useAuthStore();
+  const isRootAdmin = profile?.permission === 'ROOT';
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
@@ -63,14 +65,18 @@ export default function FaqPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [editingCategory, setEditingCategory] = useState<{
-    id: number;
+    id: string;
     name: string;
     description: string;
     departments: { departmentId: string; departmentName: string }[];
   } | null>(null);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-  const isSearching = !!debouncedSearchKeyword || !!startDate || !!endDate || !!selectedDepartment;
+  const debouncedDepartment = useDebounce(selectedDepartment ?? '', DEBOUNCE_DELAY);
+  const debouncedStartDate = useDebounce(startDate ?? '', DEBOUNCE_DELAY);
+  const debouncedEndDate = useDebounce(endDate ?? '', DEBOUNCE_DELAY);
+  const isSearching =
+    !!debouncedSearchKeyword || !!debouncedStartDate || !!debouncedEndDate || !!debouncedDepartment;
 
   const {
     data: categories,
@@ -78,11 +84,16 @@ export default function FaqPage() {
     isLoading,
     reset,
   } = useInfiniteScroll<FaqCategory & { timestamp: string }, HTMLTableRowElement>({
-    queryKey: ['faq-categories', debouncedSearchKeyword, startDate, endDate, selectedDepartment],
+    queryKey: [
+      'faq-categories',
+      debouncedSearchKeyword,
+      debouncedStartDate,
+      debouncedEndDate,
+      debouncedDepartment,
+    ],
     fetchFn: async (cursor) => {
-      const normalizeStatus = (item: FaqCategory): FaqCategory['status'] => {
-        return item.status ?? { total: 0, completed: 0, processing: 0, fail: 0 };
-      };
+      const normalizeStatus = (item: FaqCategory): FaqCategory['fileStatus'] =>
+        item.fileStatus ?? { total: 0, completed: 0, processing: 0, fail: 0 };
 
       const normalizeDate = (c: FaqCategory): string =>
         (c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '').slice(0, 10);
@@ -96,11 +107,11 @@ export default function FaqPage() {
         }));
 
       if (isSearching) {
-        const searchParams: SearchParams = {
-          keyword: debouncedSearchKeyword || undefined,
+        const searchParams = {
+          name: debouncedSearchKeyword || undefined,
           startDate: startDate || undefined,
           endDate: endDate || undefined,
-          cursor: cursor || undefined,
+          cursorDate: cursor || undefined,
           departmentId: selectedDepartment || undefined,
         };
 
@@ -114,18 +125,17 @@ export default function FaqPage() {
             nextCursor: res.data.result?.nextCursor,
           },
         };
-      } else {
-        const res = await getAllFaqCategories(cursor);
-
-        return {
-          code: res.data.code,
-          result: {
-            historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
-            pagination: res.data.result?.pagination ?? { last: true },
-            nextCursor: res.data.result?.nextCursor,
-          },
-        };
       }
+
+      const res = await getAllFaqCategories(cursor);
+      return {
+        code: res.data.code,
+        result: {
+          historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
+          pagination: res.data.result?.pagination ?? { last: true },
+          nextCursor: res.data.result?.nextCursor,
+        },
+      };
     },
   });
 
@@ -134,8 +144,18 @@ export default function FaqPage() {
       try {
         const res = await getDepartments();
         setDepartments(res.data.result.departmentList as unknown as Department[]);
-      } catch (e) {
-        console.error('부서 목록 조회 실패', e);
+      } catch (error: unknown) {
+        const errorMessage =
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          '부서 목록 조회에 실패했습니다.';
+
+        if (
+          typeof window !== 'undefined' &&
+          'showErrorToast' in window &&
+          typeof window.showErrorToast === 'function'
+        ) {
+          window.showErrorToast(errorMessage);
+        }
       }
     })();
   }, []);
@@ -187,18 +207,19 @@ export default function FaqPage() {
   const handleEdit = (id: string) => {
     const category = categories.find((cat) => cat.id === id);
     if (!category) return;
-    const departments =
-      (category as { departmentList?: string[] }).departmentList?.map((name) => ({
-        departmentId: name,
-        departmentName: name,
-      })) ?? [];
+
+    const selectedDeptIds: string[] = category.departmentList ?? [];
+    const selectedDepartments: Department[] = departments.filter((dept) =>
+      selectedDeptIds.includes(dept.departmentId)
+    );
 
     setEditingCategory({
-      id: Number.NaN as unknown as number,
+      id: category.id,
       name: category.name,
       description: category.description ?? '',
-      departments,
+      departments: selectedDepartments,
     });
+
     setIsEditModalOpen(true);
   };
 
@@ -211,11 +232,7 @@ export default function FaqPage() {
 
     try {
       const res = await deleteFaqCategories(selectedIds);
-      const ok =
-        (res.status >= 200 && res.status < 300) ||
-        res.data?.code === 'FAQ200' ||
-        res.data?.code === 'CATEGORY200' ||
-        res.data?.code === '200';
+      const ok = res.data?.code === 'COMMON200';
 
       if (ok) {
         (window as { showToast?: (_: string) => void }).showToast!(
@@ -224,14 +241,28 @@ export default function FaqPage() {
         setCheckedItems({});
         reset();
       } else {
-        console.error('카테고리 삭제 실패:', res.data);
-        (window as { showToast?: (_: string) => void }).showToast!('삭제에 실패했습니다.');
+        const errorMessage = (res.data as { message?: string })?.message || '삭제에 실패했습니다.';
+
+        if (
+          typeof window !== 'undefined' &&
+          'showErrorToast' in window &&
+          typeof window.showErrorToast === 'function'
+        ) {
+          window.showErrorToast(errorMessage);
+        }
       }
-    } catch (e) {
-      console.error('카테고리 삭제 에러:', e);
-      (window as { showToast?: (_: string) => void }).showToast!(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '삭제 요청 중 에러가 발생했습니다.';
+
+      if (
+        typeof window !== 'undefined' &&
+        'showErrorToast' in window &&
+        typeof window.showErrorToast === 'function'
+      ) {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -242,9 +273,15 @@ export default function FaqPage() {
   }) => {
     try {
       if (existingCategoryNames.includes(form.name.trim())) {
-        (window as { showToast?: (_message: string) => void }).showToast!(
-          '이미 존재하는 카테고리명입니다.'
-        );
+        const errorMessage = '이미 존재하는 카테고리명입니다.';
+
+        if (
+          typeof window !== 'undefined' &&
+          'showErrorToast' in window &&
+          typeof window.showErrorToast === 'function'
+        ) {
+          window.showErrorToast(errorMessage);
+        }
         return;
       }
 
@@ -263,11 +300,7 @@ export default function FaqPage() {
 
       const res = await createFaqCategory(payload);
 
-      const ok =
-        (res.status >= 200 && res.status < 300) ||
-        res.data?.code === 'CATEGORY200' ||
-        res.data?.code === 'FAQ200' ||
-        res.data?.code === '200';
+      const ok = res.data?.code === 'COMMON200';
 
       if (ok) {
         (window as { showToast?: (_message: string) => void }).showToast!(
@@ -278,16 +311,29 @@ export default function FaqPage() {
           await reset();
         }
       } else {
-        console.error('카테고리 등록 실패:', res.data);
-        (window as { showToast?: (_message: string) => void }).showToast!(
-          '카테고리 등록에 실패했습니다.'
-        );
+        const errorMessage =
+          (res.data as { message?: string })?.message || '카테고리 등록에 실패했습니다.';
+
+        if (
+          typeof window !== 'undefined' &&
+          'showErrorToast' in window &&
+          typeof window.showErrorToast === 'function'
+        ) {
+          window.showErrorToast(errorMessage);
+        }
       }
-    } catch (e) {
-      console.error('카테고리 등록 에러:', e);
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        '카테고리 등록 중 오류가 발생했습니다.'
-      );
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '카테고리 등록 중 오류가 발생했습니다.';
+
+      if (
+        typeof window !== 'undefined' &&
+        'showErrorToast' in window &&
+        typeof window.showErrorToast === 'function'
+      ) {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -344,9 +390,9 @@ export default function FaqPage() {
           <StatusWrapper>
             <StatusSummary
               items={[
-                { type: 'Completed', count: category.status.completed },
-                { type: 'Processing', count: category.status.processing },
-                { type: 'Fail', count: category.status.fail },
+                { type: 'Completed', count: category.fileStatus.Completed },
+                { type: 'Processing', count: category.fileStatus.Processing },
+                { type: 'Fail', count: category.fileStatus.Fail },
               ]}
             />
           </StatusWrapper>
@@ -451,10 +497,17 @@ export default function FaqPage() {
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
             <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            <DepartmentSelect
-              value={selectedDepartment ?? ''} // 단일 값
-              onChange={(id) => setSelectedDepartment(id ?? null)} // id는 string | null
-            />
+            {isRootAdmin && (
+              <DepartmentSelect
+                options={departments.map((dept) => ({
+                  departmentId: dept.departmentId,
+                  departmentName: dept.departmentName,
+                }))}
+                value={selectedDepartment ?? ''}
+                onChange={(id) => setSelectedDepartment(id ?? null)}
+                showAllOption={true}
+              />
+            )}
           </FilterBar>
 
           <CheckBox
@@ -487,25 +540,52 @@ export default function FaqPage() {
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
         departments={departments}
-        existingCategoryNames={existingCategoryNames}
       />
 
       {editingCategory && (
         <FaqCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSubmit={() => {
-            if ((window as { showToast?: (_message: string) => void }).showToast) {
-              (window as { showToast?: (_message: string) => void }).showToast!(
+          onSubmit={async (form) => {
+            try {
+              const depIds: string[] = Array.isArray(form.departments)
+                ? form.departments.map((d) => {
+                    if (typeof d === 'object' && d !== null && 'departmentId' in d) {
+                      return (d as { departmentId: string }).departmentId;
+                    }
+                    return d as string;
+                  })
+                : [];
+              await updateFaqCategory(editingCategory.id, {
+                name: form.name.trim(),
+                description: form.description?.trim() || undefined,
+                departmentList: depIds.map((id) => ({ id })),
+              });
+
+              (window as { showToast?: (_: string) => void }).showToast?.(
                 '카테고리가 수정되었습니다.'
               );
+              setIsEditModalOpen(false);
+              setEditingCategory(null);
+              await reset();
+            } catch (error: unknown) {
+              const errorMessage =
+                (error as { response?: { data?: { message?: string } } })?.response?.data
+                  ?.message || '카테고리 수정에 실패했습니다.';
+
+              if (
+                typeof window !== 'undefined' &&
+                'showErrorToast' in window &&
+                typeof window.showErrorToast === 'function'
+              ) {
+                window.showErrorToast(errorMessage);
+              }
             }
-            setIsEditModalOpen(false);
           }}
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
           initialDepartments={editingCategory.departments.map((d) => d.departmentId)}
-          departments={mockDepartments}
+          departments={departments}
         />
       )}
     </PageWrapper>

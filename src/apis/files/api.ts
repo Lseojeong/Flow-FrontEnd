@@ -1,6 +1,6 @@
 import { axiosInstance } from '@/apis/axiosInstance';
 
-export type FolderType = 'faqs' | 'docs' | 'dict' | 'others';
+export type FolderType = 'faq' | 'docs' | 'dict' | 'others';
 
 export interface CreatePresignedUrlBody {
   fileName: string;
@@ -166,7 +166,7 @@ export const registerFileByFolderType = (folderType: FolderType, body: RegisterF
     case 'docs':
       endpoint = '/admin/docs/files';
       break;
-    case 'faqs':
+    case 'faq':
       endpoint = '/admin/faqs/files';
       break;
     default:

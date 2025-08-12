@@ -20,6 +20,13 @@ interface BaseUploadEditModalProps {
   children?: React.ReactNode;
 }
 
+const isTrulyEmpty = (v: string) =>
+  (v ?? '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u200B/g, '')
+    .trim() === '';
+
 const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   isOpen,
   onClose,
@@ -35,22 +42,38 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   const [description, setDescription] = useState('');
   const [version, setVersion] = useState(originalVersion);
   const [isVersionSelected, setIsVersionSelected] = useState(false);
+  const [descTouched, setDescTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setFile(null);
+      setDescription('');
+      setVersion(originalVersion);
+      setIsVersionSelected(false);
+      setDescTouched(false);
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [isOpen, originalVersion]);
 
   const handleConfirm = async () => {
     if (submitting) return;
+
+    const descEmpty = isTrulyEmpty(description);
+    if (descEmpty) {
+      setDescTouched(true);
+      return;
+    }
+    if (!isVersionSelected || !version || version.trim() === '') {
+      return;
+    }
+
     setSubmitting(true);
     try {
       await Promise.resolve(
@@ -98,7 +121,8 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     setIsVersionSelected(true);
   };
 
-  const isDisabled = (!file && !originalFileName) || !isVersionSelected || submitting;
+  const descEmpty = isTrulyEmpty(description);
+  const isDisabled = descEmpty || !isVersionSelected || submitting;
 
   return (
     <>
@@ -134,16 +158,24 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
                 </Button>
               </UploadButtonWrapper>
             </UploadRow>
+
             <DescriptionInput
               label="히스토리 설명"
               placeholder="히스토리 설명을 작성해주세요."
               maxLength={30}
               value={description}
-              onChange={setDescription}
-              errorMessage="히스토리 설명을 입력해주세요."
+              onChange={(v) => {
+                setDescription(v);
+                if (descTouched && !isTrulyEmpty(v)) setDescTouched(false);
+              }}
+              onBlur={() => setDescTouched(true)}
+              errorMessage={descTouched && descEmpty ? '히스토리 설명을 입력해주세요.' : ''}
             />
+
             <VersionSelector onSelect={handleVersionSelect} />
+
             {children}
+
             <ButtonRow>
               <Button variant="dark" onClick={onClose} disabled={submitting}>
                 {UPLOAD_MODAL_CONSTANTS.CANCEL_BUTTON}
