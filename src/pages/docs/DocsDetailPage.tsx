@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -25,9 +25,13 @@ import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getDocsCategoryById } from '@/apis/docs/api';
-import { getDocsCategoryFiles } from '@/apis/docs_detail/api';
+import {
+  getDocsCategoryFiles,
+  deleteDocsCategoryFile,
+  searchDocsCategoryFiles,
+} from '@/apis/docs_detail/api';
 import type { DocsFile } from '@/apis/docs_detail/types';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDate, formatDateTime } from '@/utils/index';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -57,14 +61,18 @@ const CELL_WIDTHS = {
 interface EditTargetFile {
   title: string;
   version: string;
+  fileId: string;
+  fileUrl: string;
 }
 
 export default function DocsDetailPage() {
   const { docId: categoryId } = useParams<{ docId: string }>();
+  const queryClient = useQueryClient();
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
+  const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
@@ -78,15 +86,41 @@ export default function DocsDetailPage() {
 
   const categoryDetail = categoryDetailResponse?.data?.result;
 
+  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+
   const { data: paginatedFiles, observerRef } = useInfiniteScroll<
     DocsFile & { timestamp: string },
     HTMLTableRowElement
   >({
-    queryKey: ['docs-detail-files', categoryId],
+    queryKey: ['docs-detail-files', categoryId, debouncedSearchKeyword],
     fetchFn: async (cursor) => {
       if (!categoryId) {
         throw new Error('categoryId is required');
       }
+
+      if (debouncedSearchKeyword.trim()) {
+        const response = await searchDocsCategoryFiles(categoryId, debouncedSearchKeyword, cursor);
+        const res = response.data;
+
+        const fileList: (DocsFile & { timestamp: string })[] = (res?.result?.fileList ?? []).map(
+          (item: DocsFile) => ({
+            ...item,
+            timestamp: item.updatedAt ?? item.createdAt ?? '',
+          })
+        );
+
+        return {
+          code: res.code ?? 'COMMON200',
+          result: {
+            historyList: fileList,
+            pagination: {
+              isLast: res.result?.pagination?.last ?? true,
+            },
+            nextCursor: res.result?.pagination?.nextCursor,
+          },
+        };
+      }
+
       const response = await getDocsCategoryFiles(categoryId, cursor);
       const res = response.data;
 
@@ -111,14 +145,7 @@ export default function DocsDetailPage() {
     enabled: !!categoryId,
   });
 
-  const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-
-  const filteredFiles = useMemo(() => {
-    if (!paginatedFiles) return [];
-    return paginatedFiles.filter((file) =>
-      file.fileName.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
-    );
-  }, [paginatedFiles, debouncedSearchKeyword]);
+  // 서버 사이드 검색을 사용하므로 클라이언트 사이드 필터링 제거
 
   if (!categoryId) {
     return <NoData>카테고리 ID가 없습니다.</NoData>;
@@ -146,21 +173,37 @@ export default function DocsDetailPage() {
     setEditTargetFile({
       title: file.fileName,
       version: '1.0.0',
+      fileId: file.fileId,
+      fileUrl: file.fileUrl,
     });
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteFile = (fileName: string) => {
-    setTargetFileName(fileName);
+  const handleDeleteFile = (file: DocsFile) => {
+    setTargetFileName(file.fileName);
+    setTargetFileId(file.fileId);
     setIsDeletePopupOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    setIsDeletePopupOpen(false);
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        `${targetFileName} 파일이 삭제되었습니다.`
-      );
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteDocsCategoryFile(targetFileId);
+      if ((window as { showToast?: (_message: string) => void }).showToast) {
+        (window as { showToast?: (_message: string) => void }).showToast!(
+          `${targetFileName} 파일이 삭제되었습니다.`
+        );
+      }
+      setIsDeletePopupOpen(false);
+      setTargetFileName('');
+      setTargetFileId('');
+      // 캐시를 무효화하여 파일 목록을 새로고침합니다
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+    } catch {
+      if ((window as { showErrorToast?: (_message: string) => void }).showErrorToast) {
+        (window as { showErrorToast?: (_message: string) => void }).showErrorToast!(
+          '파일 삭제 중 오류가 발생했습니다.'
+        );
+      }
     }
   };
 
@@ -169,18 +212,29 @@ export default function DocsDetailPage() {
     setEditTargetFile(null);
   };
 
-  const handleEditModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
-    }
+  const handleEditModalSubmit = (updatedFile?: DocsFile) => {
     setIsEditModalOpen(false);
     setEditTargetFile(null);
+
+    if (updatedFile) {
+      // 캐시를 무효화하고 히스토리 모달을 엽니다
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+      queryClient.invalidateQueries({ queryKey: ['file-history', updatedFile.fileId] });
+      setTimeout(() => {
+        setSelectedFile(updatedFile);
+      }, 100);
+    } else {
+      // 파일 목록을 새로고침합니다
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+    }
   };
 
   const handleUploadModalSuccess = () => {
     if ((window as { showToast?: (_message: string) => void }).showToast) {
       (window as { showToast?: (_message: string) => void }).showToast!('파일이 등록되었습니다.');
     }
+    // 캐시를 무효화하여 파일 목록을 새로고침합니다
+    queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
   };
 
   const handleFileDetailClose = () => {
@@ -224,7 +278,16 @@ export default function DocsDetailPage() {
       <td
         style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
       >
-        <DownloadIconWrapper>
+        <DownloadIconWrapper
+          onClick={() => {
+            const link = document.createElement('a');
+            link.href = file.fileUrl;
+            link.download = file.fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}
+        >
           <DownloadIcon />
         </DownloadIconWrapper>
       </td>
@@ -235,7 +298,7 @@ export default function DocsDetailPage() {
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
           </ActionButton>
-          <ActionButton onClick={() => handleDeleteFile(file.fileName)}>
+          <ActionButton onClick={() => handleDeleteFile(file)}>
             <DeleteIcon />
           </ActionButton>
         </ActionButtons>
@@ -252,12 +315,6 @@ export default function DocsDetailPage() {
   );
 
   const renderFileList = () => {
-    if (searchKeyword.trim().length > 0) {
-      return filteredFiles.length === 0
-        ? renderEmptyState()
-        : filteredFiles.map((file, index) => renderFileRow(file, index));
-    }
-
     return paginatedFiles.length === 0
       ? renderEmptyState()
       : paginatedFiles.map((file, index) => {
@@ -388,28 +445,44 @@ export default function DocsDetailPage() {
           isOpen={isEditModalOpen}
           onClose={handleEditModalClose}
           onSubmit={handleEditModalSubmit}
+          fileId={editTargetFile.fileId}
           originalFileName={editTargetFile.title}
           originalVersion={editTargetFile.version}
+          originalFileUrl={editTargetFile.fileUrl}
+          latestVersion="1.0.0"
         />
       )}
 
-      {selectedFile && (
-        <FileDetailPanel
-          file={{
-            id: String(selectedFile.fileId),
-            name: selectedFile.fileName,
-            fileName: selectedFile.fileName,
-            status: selectedFile.status,
-            manager: selectedFile.lastModifierName,
-            registeredAt: selectedFile.createdAt,
-            updatedAt: selectedFile.updatedAt,
-            version: '1.0.0',
-            fileUrl: selectedFile.fileUrl ?? '',
-            timestamp: selectedFile.updatedAt,
-          }}
-          onClose={handleFileDetailClose}
-        />
-      )}
+      {selectedFile &&
+        (() => {
+          // paginatedFiles에서 최신 데이터를 찾습니다
+          const currentFile = paginatedFiles.find((file) => file.fileId === selectedFile.fileId);
+          const fileToShow = currentFile || selectedFile;
+
+          // 파일이 존재하는지 확인
+          if (!fileToShow) {
+            return null;
+          }
+
+          return (
+            <FileDetailPanel
+              key={`${fileToShow.fileId}-${fileToShow.updatedAt}`} // 파일이 업데이트되면 컴포넌트를 다시 마운트
+              file={{
+                id: String(fileToShow.fileId),
+                name: fileToShow.fileName,
+                fileName: fileToShow.fileName,
+                status: fileToShow.status,
+                manager: fileToShow.lastModifierName,
+                registeredAt: fileToShow.createdAt,
+                updatedAt: fileToShow.updatedAt,
+                version: '1.0.0',
+                fileUrl: fileToShow.fileUrl ?? '',
+                timestamp: fileToShow.updatedAt,
+              }}
+              onClose={handleFileDetailClose}
+            />
+          );
+        })()}
     </PageWrapper>
   );
 }

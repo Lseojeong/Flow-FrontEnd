@@ -78,6 +78,10 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     }
 
     setSubmitting(true);
+
+    // 모달을 즉시 닫습니다
+    onClose();
+
     try {
       await Promise.resolve(
         onSubmit({
@@ -89,7 +93,6 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
       setFile(null);
       setDescription('');
       setVersion('');
-      onClose();
       setTimeout(() => {
         (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
           UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
@@ -178,7 +181,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
               errorMessage={descTouched && descEmpty ? '히스토리 설명을 입력해주세요.' : ''}
             />
 
-            <VersionSelector onSelect={handleVersionSelect} />
+            <VersionSelector onSelect={handleVersionSelect} latestVersion={latestVersion} />
 
             {children}
 

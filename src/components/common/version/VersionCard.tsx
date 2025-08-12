@@ -3,10 +3,11 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { VersionSelectorProps, VersionType } from './VersionCard.types';
 
-export const VersionSelector: React.FC<VersionSelectorProps> = ({ onSelect }) => {
+export const VersionSelector: React.FC<VersionSelectorProps> = ({
+  onSelect,
+  latestVersion = '1.0.0',
+}) => {
   const [selectedVersionType, setSelectedVersionType] = useState<VersionType | null>(null);
-
-  const latestVersion = '1.0.0';
   const [latestMajor, latestMinor, latestPatch] = latestVersion.split('.').map(Number);
 
   const versionOptions = useMemo(
