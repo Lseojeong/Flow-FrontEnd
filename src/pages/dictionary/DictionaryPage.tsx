@@ -196,7 +196,8 @@ export default function DictionaryPage() {
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
     try {
       const res = await createDictCategory(data);
-      if (res.data?.code === 'COMMON200') {
+
+      if (res.data?.code !== 'COMMON200') {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
 
@@ -207,16 +208,12 @@ export default function DictionaryPage() {
       setCheckedItems?.({});
 
       await refetch();
-
-      (window as { showToast?: (_: string) => void }).showToast?.('카테고리를 등록했습니다.');
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 등록에 실패했습니다.';
 
-      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
-        window.showErrorToast(errorMessage);
-      }
+      window.showErrorToast?.(errorMessage);
     }
   };
 
@@ -549,11 +546,11 @@ const EmptyMessage = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 200px;
+  height: 400px;
   text-align: center;
   color: ${colors.BoxText};
   font-size: 14px;
-  transform: translateX(50px);
+  transform: translateX(500px);
 `;
 
 const StatusWrapper = styled.div`

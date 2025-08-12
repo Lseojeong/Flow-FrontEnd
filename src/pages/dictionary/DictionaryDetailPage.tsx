@@ -408,14 +408,18 @@ export default function DictionaryDetailPage() {
             <InfoItemColumn>
               <Label>등록일:</Label>
               <Value>
-                {(category.createdAt ?? category.registeredDate ?? '').slice(0, 10) || '-'}
+                {category.createdAt || category.registeredDate
+                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                  : '-'}
               </Value>
             </InfoItemColumn>
 
             <InfoItemColumn>
               <Label>최종 수정일:</Label>
               <Value>
-                {(category.lastModifiedDate ?? category.updatedAt ?? '').slice(0, 10) || '-'}
+                {category.createdAt || category.registeredDate
+                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                  : '-'}
               </Value>
             </InfoItemColumn>
 
