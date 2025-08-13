@@ -75,4 +75,5 @@ export interface DocsCategoryDetail {
   lastModifierId: string;
   lastModifierName: string;
   departmentList: string[];
+  latestVersion: string;
 }

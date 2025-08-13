@@ -187,7 +187,10 @@ const CategoryInfo: React.FC<{
 
       <InfoItemColumn>
         <Label>최종 수정자:</Label>
-        <Value>{categoryDetail?.lastModifierName || '-'}</Value>
+        <Value>
+          {categoryDetail?.lastModifierName}
+          {}
+        </Value>
       </InfoItemColumn>
 
       <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
@@ -378,6 +381,7 @@ export default function DocsDetailPage() {
       version: '1.0.0',
       fileId: file.fileId,
       fileUrl: file.fileUrl,
+      latestVersion: file.latestVersion || '1.0.0',
     });
     setIsEditModalOpen(true);
   };
@@ -495,6 +499,7 @@ export default function DocsDetailPage() {
         onClose={() => setIsCsvModalOpen(false)}
         onSuccess={handleUploadModalSuccess}
         categoryId={categoryId}
+        latestVersion={categoryDetail.latestVersion || '1.0.0'}
       />
 
       {editTargetFile && (
@@ -506,7 +511,7 @@ export default function DocsDetailPage() {
           originalFileName={editTargetFile.title}
           originalVersion={editTargetFile.version}
           originalFileUrl={editTargetFile.fileUrl}
-          latestVersion="1.0.0"
+          latestVersion={editTargetFile.latestVersion || '1.0.0'}
         />
       )}
 

@@ -30,6 +30,7 @@ export interface DocsFile {
   createdAt: string;
   updatedAt: string;
   fileUrl: string;
+  latestVersion: string;
 }
 
 export interface DocsFileListResult {
@@ -61,4 +62,5 @@ export interface EditTargetFile {
   version: string;
   fileId: string;
   fileUrl: string;
+  latestVersion: string;
 }

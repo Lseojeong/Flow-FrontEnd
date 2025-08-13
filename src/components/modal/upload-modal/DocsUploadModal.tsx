@@ -7,6 +7,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   categoryId?: string;
+  latestVersion?: string;
   onSubmit?: (_args: {
     fileUrl: string;
     fileName: string;
@@ -16,7 +17,13 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId, onSuccess }) => {
+export const DocsUploadModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  categoryId,
+  latestVersion,
+  onSuccess,
+}) => {
   const handlePresignedSubmit = async (data: {
     file: File;
     description: string;
@@ -60,7 +67,7 @@ export const DocsUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId, 
       onSubmit={handlePresignedSubmit}
       title="사내문서 데이터 등록"
       fileType="pdf"
-      latestVersion="1.0.0"
+      latestVersion={latestVersion || '1.0.0'}
     />
   );
 };

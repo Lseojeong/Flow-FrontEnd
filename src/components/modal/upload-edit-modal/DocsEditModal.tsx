@@ -66,6 +66,7 @@ export const DocsEditModal: React.FC<Props> = ({
         lastModifierId: 'temp-id', // API에서 제공하지 않는 경우 기본값
         createdAt: responseData.createdAt || new Date().toISOString(),
         updatedAt: responseData.updatedAt || new Date().toISOString(),
+        latestVersion: responseData.latestVersion || latestVersion || '1.0.0',
       };
 
       onSubmit(updatedFile);
