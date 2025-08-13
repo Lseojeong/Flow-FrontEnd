@@ -1,45 +1,68 @@
 import { axiosInstance } from '@/apis/axiosInstance';
 import type {
-  FaqFileSearchParams,
-  FaqCategoryFileCreateBody,
-  FaqCategoryFileUpdateBody,
-  ApiEnvelope,
+  ApiResponse,
+  FaqFileCreateRequest,
+  FaqFileCreateResponse,
   FaqFileListResult,
-} from '@/apis/faq_detail/types';
+  FaqCategoryDetail,
+} from './types';
 
-// 파일 생성
-export const createFaqCategoryFile = (categoryId: string, body: FaqCategoryFileCreateBody) => {
-  return axiosInstance.post<ApiEnvelope<string>>(
+export const createFaqCategoryFile = async (categoryId: string, data: FaqFileCreateRequest) => {
+  const response = await axiosInstance.post<ApiResponse<FaqFileCreateResponse>>(
     `/admin/faqs/categories/${categoryId}/files`,
-    body
+    data
   );
+  return response;
 };
 
-// 파일 수정
-export const updateFaqCategoryFile = (fileId: string, body: FaqCategoryFileUpdateBody) => {
-  return axiosInstance.put<ApiEnvelope<string>>(`/admin/faqs/categories/files/${fileId}`, body);
-};
-
-// 파일 삭제
-export const deleteFaqCategoryFile = (fileId: string) => {
-  return axiosInstance.delete<ApiEnvelope<Record<string, never>>>(
-    `/admin/faqs/categories/files/${fileId}`
-  );
-};
-
-export const getFaqCategoryFiles = (categoryId: string, cursorDate?: string) => {
-  const dateParam = cursorDate?.trim() ? cursorDate : '2025-01-01T00:00:00';
-
-  return axiosInstance.get<ApiEnvelope<FaqFileListResult>>(
+export const getFaqCategoryFiles = async (categoryId: string, cursor?: string) => {
+  const params = {
+    cursorDate: cursor ?? new Date().toISOString(),
+  };
+  return axiosInstance.get<ApiResponse<FaqFileListResult>>(
     `/admin/faqs/categories/${categoryId}/files`,
-    { params: { cursorDate: dateParam } }
+    { params }
   );
 };
 
-// 파일 검색
-export const searchFaqCategoryFiles = (categoryId: string, params: FaqFileSearchParams) => {
-  return axiosInstance.get<ApiEnvelope<FaqFileListResult>>(
+export const searchFaqCategoryFiles = async (
+  categoryId: string,
+  fileName: string,
+  cursor?: string
+) => {
+  const params = {
+    name: fileName,
+    cursorDate: cursor ?? new Date().toISOString(),
+  };
+  return axiosInstance.get<ApiResponse<FaqFileListResult>>(
     `/admin/faqs/categories/${categoryId}/files/search`,
     { params }
   );
+};
+
+export const updateFaqCategoryFile = async (
+  fileId: string,
+  data: {
+    fileUrl: string;
+    fileName: string;
+    description: string;
+    version: string;
+  }
+) => {
+  const response = await axiosInstance.put<ApiResponse<FaqFileCreateResponse>>(
+    `/admin/faqs/categories/files/${fileId}`,
+    data
+  );
+  return response;
+};
+
+export const deleteFaqCategoryFile = async (fileId: string) => {
+  const response = await axiosInstance.delete<ApiResponse<object>>(
+    `/admin/faqs/categories/files/${fileId}`
+  );
+  return response;
+};
+
+export const getFaqCategoryById = (categoryId: string) => {
+  return axiosInstance.get<ApiResponse<FaqCategoryDetail>>(`/admin/faqs/categories/${categoryId}`);
 };

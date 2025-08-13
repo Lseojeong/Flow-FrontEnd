@@ -27,6 +27,7 @@ import {
   SearchParams,
 } from '@/apis/dictcategory/api';
 import type { DictCategory } from '@/apis/dictcategory/types';
+import { formatDateTime } from '@/utils/formatDateTime';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -98,7 +99,7 @@ export default function DictionaryPage() {
         data.result?.categoryList ?? []
       ).map((c: DictCategory) => ({
         ...c,
-        lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+        lastModifiedDate: formatDateTime(c.lastModifiedDate ?? c.updatedAt ?? '').slice(0, 10),
         status: c.fileStatus ??
           c.status ?? {
             total: 0,
@@ -532,8 +533,7 @@ const FilterBar = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: 20px;
-  margin-bottom: 28px;
+  margin: 0 0 24px 20px;
 `;
 
 const EmptyRow = styled.tr`

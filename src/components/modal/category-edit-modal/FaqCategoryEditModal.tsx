@@ -5,7 +5,7 @@ import BaseCategoryEditModal from './BaseCategoryEditModal';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_: { name: string; description: string; departments?: string[] }) => void;
+  onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
   initialName: string;
   initialDescription: string;
   initialDepartments: string[];
@@ -31,7 +31,7 @@ const FaqCategoryEditModal: React.FC<Props> = ({
       initialDepartments={initialDepartments}
       departments={departments}
       showDepartmentCheck={true}
-      title="카테고리 수정"
+      title="FAQ 카테고리 수정"
     />
   );
 };
