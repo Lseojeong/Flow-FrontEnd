@@ -46,7 +46,7 @@ const COLOR_SCHEME = {
     },
     text: {
       normal: colors.Black,
-      disabled: colors.BoxStroke,
+      disabled: colors.Black,
     },
     checkMark: 'white',
   },
@@ -88,14 +88,6 @@ const getBackgroundColor = (checked: boolean, variant: CheckBoxVariant): string 
   return checked
     ? COLOR_SCHEME.default.background.checked
     : COLOR_SCHEME.default.background.unchecked;
-};
-
-const getTextColor = (disabled: boolean, variant: CheckBoxVariant): string => {
-  if (disabled) {
-    return COLOR_SCHEME.default.text.disabled;
-  }
-
-  return variant === 'outline' ? COLOR_SCHEME.outline.text : COLOR_SCHEME.default.text.normal;
 };
 
 const getCheckMarkColor = (variant: CheckBoxVariant): string => {
@@ -232,7 +224,7 @@ const CheckBoxIndicator = styled.span<StyledProps>`
 
 const CheckBoxLabel = styled.span<Omit<StyledProps, '$checked'>>`
   font-size: ${({ $size }) => getSizeConfig($size).fontSize};
-  color: ${({ $disabled, $variant }) => getTextColor($disabled, $variant)};
+  color: ${({ $variant }) => ($variant === 'outline' ? colors.Black : colors.Black)};
   font-weight: ${fontWeight.Regular};
   line-height: 1.4;
   user-select: none;

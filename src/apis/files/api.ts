@@ -35,7 +35,12 @@ function getContentTypeByExt(fileName: string): string {
   return 'application/octet-stream';
 }
 
-// Presigned URL 기반 Public URL 생성 (쿼리스트링 제거)
+// S3 버킷 URL과 fileKey를 조합하여 Public URL 생성
+export function buildPublicUrlFromFileKey(fileKey: string): string {
+  return `https://flow-file-bucket.s3.ap-northeast-2.amazonaws.com/${fileKey}`;
+}
+
+// Presigned URL 기반 Public URL 생성 (쿼리스트링 제거) - 기존 호환성 유지
 export function buildPublicUrlFromPresigned(presignedUrl: string): string {
   try {
     const urlObj = new URL(presignedUrl);
@@ -138,8 +143,8 @@ export async function uploadViaPresigned({
   console.log('[3] 파일 PUT 업로드 시작');
   await putFileToPresignedUrl(presignedPutUrl, file, mime);
 
-  // Public URL 생성
-  const publicUrl = buildPublicUrlFromPresigned(presignedPutUrl);
+  // Public URL 생성 (S3 버킷 URL + fileKey)
+  const publicUrl = buildPublicUrlFromFileKey(fileKey);
   console.log('[4] Public URL 생성 완료:', publicUrl);
   console.log('=== uploadViaPresigned 완료 ===');
 
@@ -177,7 +182,7 @@ export const registerFileByFolderType = (folderType: FolderType, body: RegisterF
 };
 
 export interface UploadAndRegisterArgs extends UploadViaPresignedArgs {
-  categoryId: string; // ✅ 필수
+  categoryId: string;
 }
 
 // 업로드 후 DB 등록까지

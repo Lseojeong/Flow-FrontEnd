@@ -7,6 +7,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   categoryId?: string;
+  latestVersion?: string;
   onSubmit?: (_args: {
     fileUrl: string;
     fileName: string;
@@ -16,7 +17,12 @@ interface Props {
   onSuccess?: () => void;
 }
 
-export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }) => {
+export const DictUploadModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  categoryId,
+  latestVersion,
+}) => {
   const handlePresignedSubmit = async (data: {
     file: File;
     description: string;
@@ -52,7 +58,8 @@ export const DictUploadModal: React.FC<Props> = ({ isOpen, onClose, categoryId }
       onSubmit={handlePresignedSubmit}
       title="용어사전 데이터 등록"
       fileType="csv"
-      downloadLink="/assets/dict-template.csv"
+      downloadLink="https://objectstorage.kr-central-2.kakaocloud.com/v1/8b70d156b8334e4fb16a680a47e8dc79/flow-file-bucket/dict_example.csv"
+      latestVersion={latestVersion || '1.0.0'}
     />
   );
 };

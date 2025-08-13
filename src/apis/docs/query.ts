@@ -1,36 +1,45 @@
-import { getAllDocsCategories } from './api';
-import type { DocsCategory } from './types';
+import { useQuery } from '@tanstack/react-query';
+import { getAllDocsCategories, getDocsCategoryById } from './api';
+import type { DocsCategoryListResult } from './types';
 
-const loadedFaqIdSet = new Set<string>();
+const loadedCategoryIdSet = new Set<string>();
 
-export const fetchDocsCategories = async (cursor?: string) => {
+export const fetchDocsCategories = async (cursor?: string): Promise<DocsCategoryListResult> => {
   const res = await getAllDocsCategories(cursor ?? new Date().toISOString());
+  const data = res.data;
 
-  type Resp = {
-    code: string;
-    message: string;
-    result: {
-      categoryList: DocsCategory[];
-      pagination: { last: boolean };
-      nextCursor?: string;
-    };
-  };
-
-  const data = res.data as Resp;
-
-  const dedupedList = (data.result?.categoryList ?? []).filter((cat) => {
-    if (!cat.id) return true;
-    if (loadedFaqIdSet.has(cat.id)) return false;
-    loadedFaqIdSet.add(cat.id);
+  const dedupedList = (data.result?.categoryList ?? []).filter((category) => {
+    if (!category.id) return true;
+    if (loadedCategoryIdSet.has(category.id)) return false;
+    loadedCategoryIdSet.add(category.id);
     return true;
   });
 
   return {
-    code: data.code,
-    result: {
-      categoryList: dedupedList,
-      pagination: data.result?.pagination ?? { last: true },
-      nextCursor: data.result?.nextCursor,
-    },
+    categoryList: dedupedList,
+    pagination: data.result?.pagination ?? { last: true },
   };
+};
+
+export const clearLoadedCategories = () => {
+  loadedCategoryIdSet.clear();
+};
+
+export const useDocsCategories = (cursor?: string) => {
+  return useQuery({
+    queryKey: ['docs-categories', cursor],
+    queryFn: () => fetchDocsCategories(cursor),
+    staleTime: 1 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+};
+
+export const useDocsCategoryById = (categoryId: string) => {
+  return useQuery({
+    queryKey: ['docs-category', categoryId],
+    queryFn: () => getDocsCategoryById(categoryId).then((res) => res.data.result),
+    enabled: !!categoryId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 };

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
-import axios, { AxiosError } from 'axios';
-import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
+import { Department } from '@/components/common/department/Department.types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface BaseCategoryEditModalProps {
   isOpen: boolean;
@@ -15,20 +16,19 @@ interface BaseCategoryEditModalProps {
   onSubmit: (_data: {
     name: string;
     description: string;
-    departments?: string[];
+    departments: string[];
   }) => void | Promise<unknown>;
   onSuccess?: () => void;
   initialName: string;
   initialDescription: string;
+  initialDepartments?: string[];
+  departments?: Department[];
+  showDepartmentCheck?: boolean;
   title?: string;
   children?: React.ReactNode;
 }
 
-type ErrorType = '' | 'required' | 'serverDuplicate';
-type ErrorBody = {
-  code?: string;
-  message?: string;
-};
+type ErrorType = '' | 'required';
 
 const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   isOpen,
@@ -37,27 +37,39 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   onSuccess,
   initialName,
   initialDescription,
+  initialDepartments = [],
+  departments = [],
+  showDepartmentCheck = false,
   title = '카테고리 수정',
   children,
 }) => {
+  const { profile } = useAuthStore();
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [errorType, setErrorType] = useState<ErrorType>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isServerDuplicate, setIsServerDuplicate] = useState(false);
+
   const [isTouched, setIsTouched] = useState(false);
-  const [errorToastMessage, setErrorToastMessage] = useState<string | null>(null);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
 
   const isDisabled =
-    trimmedName === '' || trimmedDescription === '' || isServerDuplicate || isSubmitting;
+    trimmedName === '' || trimmedDescription === '' || isSubmitting || errorType !== '';
 
   useEffect(() => {
     if (isOpen) {
       setCategoryName(initialName ?? '');
       setDescription(initialDescription ?? '');
+
+      // 자신의 부서가 포함되도록 초기 부서 설정
+      const initialDepts = [...(initialDepartments || [])];
+      if (profile?.departmentId && !initialDepts.includes(profile.departmentId)) {
+        initialDepts.push(profile.departmentId);
+      }
+      setSelectedDepartments(initialDepts);
+
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -65,20 +77,39 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialName, initialDescription]);
+  }, [isOpen, initialName, initialDescription, initialDepartments, profile?.departmentId]);
+
+  // 자신의 부서가 항상 선택되도록 보장
+  useEffect(() => {
+    if (profile?.departmentId && !selectedDepartments.includes(profile.departmentId)) {
+      setSelectedDepartments((prev) => [...prev, profile.departmentId]);
+    }
+  }, [profile?.departmentId]);
+
+  // 부서 선택 변경 시 자신의 부서가 제거되지 않도록 보장
+  const handleDepartmentChange = (newSelectedDepartments: string[]) => {
+    let finalDepartments = [...newSelectedDepartments];
+
+    // 자신의 부서가 포함되지 않았다면 추가
+    if (profile?.departmentId && !finalDepartments.includes(profile.departmentId)) {
+      finalDepartments.push(profile.departmentId);
+    }
+
+    setSelectedDepartments(finalDepartments);
+  };
 
   const handleNameChange = (val: string) => {
     setCategoryName(val);
-    if (isServerDuplicate) setIsServerDuplicate(false);
-    if (isTouched && val.trim() !== '' && errorType === 'required') {
+    if (isTouched && val.trim() !== '') {
       setErrorType('');
     }
-    if (errorType === 'serverDuplicate') setErrorType('');
   };
 
   const handleNameBlur = () => {
     setIsTouched(true);
-    if (trimmedName === '') setErrorType('required');
+    if (trimmedName === '') {
+      setErrorType('required');
+    }
   };
 
   const handleConfirm = async () => {
@@ -95,23 +126,12 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
+        departments: selectedDepartments,
       });
 
+      // 성공 시에만 모달을 닫고 onSuccess 콜백 호출
       onSuccess?.();
       handleClose();
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const data = (err as AxiosError<ErrorBody>)?.response?.data;
-        const code = data?.code;
-        const msg = data?.message ?? '';
-        if (code === 'CATEGORY400' || msg.includes('중복')) {
-          setIsServerDuplicate(true);
-          setErrorType('serverDuplicate');
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      setErrorToastMessage('수정에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -125,8 +145,8 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   const handleClose = () => {
     setCategoryName('');
     setDescription('');
+    setSelectedDepartments([]);
     setErrorType('');
-    setIsServerDuplicate(false);
     setIsSubmitting(false);
     setIsTouched(false);
     onClose();
@@ -140,12 +160,6 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
             <Title>{title}</Title>
             <Divider />
 
-            {errorType === 'serverDuplicate' && (
-              <InlineError role="alert" aria-live="polite">
-                이미 존재하는 카테고리입니다.
-              </InlineError>
-            )}
-
             <CategoryInput
               value={categoryName}
               onChange={handleNameChange}
@@ -154,6 +168,15 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
             />
 
             {children}
+
+            {showDepartmentCheck && (
+              <DepartmentCheck
+                departments={departments}
+                selectedDepartmentIds={selectedDepartments}
+                onChange={handleDepartmentChange}
+                userDepartmentId={profile?.departmentId}
+              />
+            )}
 
             <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
 
@@ -172,12 +195,6 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
               </Button>
             </ButtonRow>
           </ModalBox>
-
-          {errorToastMessage && (
-            <ErrorToastWrapper>
-              <ErrorToast message={errorToastMessage} onClose={() => setErrorToastMessage(null)} />
-            </ErrorToastWrapper>
-          )}
         </Overlay>
       )}
     </>
@@ -222,25 +239,4 @@ const ButtonRow = styled.div`
   justify-content: center;
   gap: ${MODAL_STYLE.BUTTON_GAP_EDIT};
   margin-top: ${MODAL_STYLE.BUTTON_ROW_MARGIN_TOP};
-`;
-
-const ErrorToastWrapper = styled.div`
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 9999;
-  pointer-events: none;
-`;
-
-const InlineError = styled.p`
-  width: 100%;
-  color: ${colors.MainRed};
-  font-size: 12px;
-  margin: -4px 0 4px;
-  text-align: left;
 `;

@@ -5,7 +5,7 @@ import { UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (_data: { title: string; description: string; version: string }) => void;
+  onSubmit: (_data: { file?: File; description: string; version: string }) => void;
   originalFileName: string;
   originalVersion: string;
 }

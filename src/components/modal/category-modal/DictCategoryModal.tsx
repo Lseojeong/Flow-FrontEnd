@@ -8,18 +8,12 @@ interface Props {
   existingCategoryNames: string[];
 }
 
-const DictCategoryModal: React.FC<Props> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  existingCategoryNames,
-}) => {
+const DictCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit }) => {
   return (
     <BaseCategoryModal
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={onSubmit}
-      existingCategoryNames={existingCategoryNames}
       title="카테고리 등록"
     />
   );

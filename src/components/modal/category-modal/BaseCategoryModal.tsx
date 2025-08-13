@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { CategoryInput } from '@/components/common/category-input/CategoryInput';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
+import { DepartmentCheck } from '@/components/common/department/DepartmentCheck';
 import { Button } from '../../common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
 import Divider from '@/components/common/divider/FlatDivider';
 import { CATEGORY_MODAL_CONSTANTS, MODAL_STYLE } from '@/constants/Modal.constants';
-import axios, { AxiosError } from 'axios';
+
+import { Department } from '@/components/common/department/Department.types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface BaseCategoryModalProps {
   isOpen: boolean;
@@ -16,37 +19,35 @@ interface BaseCategoryModalProps {
     description: string;
     departments?: string[];
   }) => void | Promise<unknown>;
-  existingCategoryNames: string[];
   title?: string;
-  children?: React.ReactNode;
+  departments?: Department[];
+  showDepartmentCheck?: boolean;
 }
 
-type ErrorType = '' | 'required' | 'serverDuplicate';
-
-type ErrorBody = {
-  code?: string;
-  message?: string;
-};
+type ErrorType = '' | 'required';
 
 const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   title = '카테고리 등록',
-  children,
+  departments = [],
+  showDepartmentCheck = false,
 }) => {
+  const { profile } = useAuthStore();
   const [categoryName, setCategoryName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [errorType, setErrorType] = useState<ErrorType>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isServerDuplicate, setIsServerDuplicate] = useState(false);
+
   const [isTouched, setIsTouched] = useState(false);
 
   const trimmedName = categoryName.trim();
   const trimmedDescription = description.trim();
 
   const isDisabled =
-    trimmedName === '' || trimmedDescription === '' || isServerDuplicate || isSubmitting;
+    trimmedName === '' || trimmedDescription === '' || isSubmitting || errorType !== '';
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset';
@@ -57,9 +58,6 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
   const handleNameChange = (val: string) => {
     setCategoryName(val);
-    if (isServerDuplicate) {
-      setIsServerDuplicate(false);
-    }
     if (isTouched && val.trim() !== '') {
       setErrorType('');
     }
@@ -86,28 +84,11 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
+        departments: selectedDepartments,
       });
 
+      // 성공 시에만 모달을 닫음 (토스트는 페이지에서 처리)
       handleClose();
-
-      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
-      setTimeout(() => {
-        w.showToast?.(CATEGORY_MODAL_CONSTANTS.SUCCESS_REGISTER_MESSAGE, 'success');
-      }, MODAL_STYLE.TOAST_DELAY);
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const data = (err as AxiosError<ErrorBody>)?.response?.data;
-        const code = data?.code;
-        const msg = data?.message ?? '';
-
-        if (code === 'CATEGORY400' || msg.includes('중복')) {
-          setIsServerDuplicate(true);
-          setErrorType('serverDuplicate');
-          return;
-        }
-      }
-      const w = window as Window & { showToast?: (_message: string, _type: string) => void };
-      w.showToast?.('등록에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -115,15 +96,14 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
   const getErrorMessage = () => {
     if (errorType === 'required') return '카테고리를 등록해주세요.';
-    if (errorType === 'serverDuplicate') return '이미 존재하는 카테고리입니다.';
     return '';
   };
 
   const handleClose = () => {
     setCategoryName('');
     setDescription('');
+    setSelectedDepartments([]);
     setErrorType('');
-    setIsServerDuplicate(false);
     setIsSubmitting(false);
     setIsTouched(false);
     onClose();
@@ -143,7 +123,14 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
                 onBlur={handleNameBlur}
                 error={getErrorMessage()}
               />
-              {children}
+              {showDepartmentCheck && (
+                <DepartmentCheck
+                  departments={departments}
+                  selectedDepartmentIds={selectedDepartments}
+                  onChange={setSelectedDepartments}
+                  userDepartmentId={profile?.departmentId}
+                />
+              )}
               <DescriptionInput value={description} onChange={setDescription} onBlur={() => {}} />
             </Container>
             <ButtonRow>

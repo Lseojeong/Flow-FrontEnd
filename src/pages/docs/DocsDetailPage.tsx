@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -19,16 +19,22 @@ import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
 import { StatusItemData } from '@/components/common/status/Status.types';
-import { dictMockData, DictFile } from '@/pages/mock/dictMock';
 import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getAllDictCategories } from '@/apis/dictcategory/api';
-import type { DictCategory } from '@/pages/mock/dictMock';
+import { getDocsCategoryById } from '@/apis/docs/api';
+import {
+  getDocsCategoryFiles,
+  deleteDocsCategoryFile,
+  searchDocsCategoryFiles,
+} from '@/apis/docs_detail/api';
+import type { DocsFile, EditTargetFile } from '@/apis/docs_detail/types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { formatDate, formatDateTime } from '@/utils/index';
 
-const menuItems = [...commonMenuItems, ...settingsMenuItems];
+const MENU_ITEMS = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
   { label: '번호', width: '72px', align: 'left' as const },
@@ -52,111 +58,351 @@ const CELL_WIDTHS = {
   ACTIONS: '95px',
 } as const;
 
-interface EditTargetFile {
-  title: string;
-  version: string;
+const TOOLTIP_CONTENT = {
+  title: '업로드한 파일의 상태를 종합한 내용입니다.',
+  description: (
+    <>
+      Completed는 학습 및 등록 완료,
+      <br />
+      Processing은 파일 처리 중,
+      <br />
+      Fail은 학습 실패를 의미합니다.
+    </>
+  ),
+};
+
+interface FileDetailPanelProps {
+  file: DocsFile;
+  onClose: () => void;
 }
+
+const createFileListWithTimestamp = (files: DocsFile[]): (DocsFile & { timestamp: string })[] => {
+  return files.map((item) => ({
+    ...item,
+    timestamp: item.updatedAt ?? item.createdAt ?? '',
+  }));
+};
+
+const createApiResponse = (
+  data: { code?: string; result?: { pagination?: { last?: boolean; nextCursor?: string } } },
+  fileList: (DocsFile & { timestamp: string })[]
+) => ({
+  code: data.code ?? 'COMMON200',
+  result: {
+    historyList: fileList,
+    pagination: {
+      isLast: data.result?.pagination?.last ?? true,
+    },
+    nextCursor: data.result?.pagination?.nextCursor,
+  },
+});
+
+const downloadFile = (fileUrl: string, fileName: string) => {
+  const link = document.createElement('a');
+  link.href = fileUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const showToast = (message: string) => {
+  (window as { showToast?: (_message: string) => void }).showToast?.(message);
+};
+
+const showErrorToast = (message: string) => {
+  (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(message);
+};
+
+const useDocsCategoryDetail = (categoryId: string | undefined) => {
+  return useQuery({
+    queryKey: ['docs-category-detail', categoryId],
+    queryFn: () => getDocsCategoryById(categoryId!),
+    enabled: !!categoryId,
+  });
+};
+
+const useDocsFiles = (categoryId: string | undefined, searchKeyword: string) => {
+  return useInfiniteScroll<DocsFile & { timestamp: string }, HTMLTableRowElement>({
+    queryKey: ['docs-detail-files', categoryId, searchKeyword],
+    fetchFn: async (cursor) => {
+      if (!categoryId) {
+        throw new Error('categoryId is required');
+      }
+
+      if (searchKeyword.trim()) {
+        const response = await searchDocsCategoryFiles(categoryId, searchKeyword, cursor);
+        const fileList = createFileListWithTimestamp(response.data?.result?.fileList ?? []);
+        return createApiResponse(response.data, fileList);
+      }
+
+      const response = await getDocsCategoryFiles(categoryId, cursor);
+      const fileList = createFileListWithTimestamp(response.data?.result?.fileList ?? []);
+      return createApiResponse(response.data, fileList);
+    },
+    enabled: !!categoryId,
+  });
+};
+
+const CategoryInfo: React.FC<{
+  categoryDetail: {
+    status?: { Completed?: number; Processing?: number; Fail?: number };
+    createdAt: string;
+    updatedAt: string;
+    lastModifierName?: string;
+    departmentList?: string[];
+  };
+}> = ({ categoryDetail }) => {
+  const statusItems: StatusItemData[] = [
+    { type: 'Completed', count: categoryDetail?.status?.Completed ?? 0 },
+    { type: 'Processing', count: categoryDetail?.status?.Processing ?? 0 },
+    { type: 'Fail', count: categoryDetail?.status?.Fail ?? 0 },
+  ];
+
+  return (
+    <InfoBox>
+      <InfoItemColumn>
+        <LabelContainer>
+          <Label>파일 현황:</Label>
+          <Tooltip content={TOOLTIP_CONTENT.title} description={TOOLTIP_CONTENT.description}>
+            <InfoIcon>
+              <InformationIcon />
+            </InfoIcon>
+          </Tooltip>
+        </LabelContainer>
+        <Value>
+          <StatusSummary items={statusItems} />
+        </Value>
+      </InfoItemColumn>
+
+      <InfoItemColumn>
+        <Label>등록일:</Label>
+        <Value>{formatDate(categoryDetail.createdAt)}</Value>
+      </InfoItemColumn>
+
+      <InfoItemColumn>
+        <Label>최종 수정일:</Label>
+        <Value>{formatDate(categoryDetail.updatedAt)}</Value>
+      </InfoItemColumn>
+
+      <InfoItemColumn>
+        <Label>최종 수정자:</Label>
+        <Value>
+          {categoryDetail?.lastModifierName}
+          {}
+        </Value>
+      </InfoItemColumn>
+
+      <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
+        <Label>포함 부서:</Label>
+        <Value>
+          <DepartmentTagList
+            departments={
+              categoryDetail.departmentList?.map((name: string) => ({
+                departmentId: name,
+                departmentName: name,
+              })) ?? []
+            }
+          />
+        </Value>
+      </InfoItemColumn>
+    </InfoBox>
+  );
+};
+
+const FileTableRow: React.FC<{
+  file: DocsFile;
+  index: number;
+  isLast?: boolean;
+  observerRef: React.RefObject<HTMLTableRowElement | null>;
+  onFileClick: (_file: DocsFile) => void;
+  onEditFile: (_file: DocsFile) => void;
+  onDeleteFile: (_file: DocsFile) => void;
+}> = ({ file, index, isLast, observerRef, onFileClick, onEditFile, onDeleteFile }) => (
+  <TableRow key={`file-${file.fileId}`} ref={isLast ? observerRef : undefined}>
+    <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
+      {index + 1}
+    </td>
+    <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
+      <StyledLink onClick={() => onFileClick(file)}>{file.fileName}</StyledLink>
+    </ScrollableCell>
+    <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
+      <StatusWrapper>
+        <StatusBadge status={file.status}>{file.status}</StatusBadge>
+      </StatusWrapper>
+    </td>
+    <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
+      {file.lastModifierId}({file.lastModifierName})
+    </td>
+    <td
+      style={{
+        width: CELL_WIDTHS.REGISTERED_AT,
+        minWidth: CELL_WIDTHS.REGISTERED_AT,
+        textAlign: 'left',
+      }}
+    >
+      {formatDateTime(file.createdAt)}
+    </td>
+    <td
+      style={{ width: CELL_WIDTHS.UPDATED_AT, minWidth: CELL_WIDTHS.UPDATED_AT, textAlign: 'left' }}
+    >
+      {formatDateTime(file.updatedAt)}
+    </td>
+    <td
+      style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
+    >
+      <DownloadIconWrapper onClick={() => downloadFile(file.fileUrl, file.fileName)}>
+        <DownloadIcon />
+      </DownloadIconWrapper>
+    </td>
+    <td style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
+      <ActionButtons>
+        <ActionButton onClick={() => onEditFile(file)}>
+          <EditIcon />
+        </ActionButton>
+        <ActionButton onClick={() => onDeleteFile(file)}>
+          <DeleteIcon />
+        </ActionButton>
+      </ActionButtons>
+    </td>
+  </TableRow>
+);
+
+const EmptyState: React.FC = () => (
+  <EmptyRow>
+    <EmptyCell colSpan={8}>
+      <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+    </EmptyCell>
+  </EmptyRow>
+);
+
+const FileTable: React.FC<{
+  files: (DocsFile & { timestamp: string })[];
+  observerRef: React.RefObject<HTMLTableRowElement | null>;
+  onFileClick: (_file: DocsFile) => void;
+  onEditFile: (_file: DocsFile) => void;
+  onDeleteFile: (_file: DocsFile) => void;
+}> = ({ files, observerRef, onFileClick, onEditFile, onDeleteFile }) => (
+  <TableWrapper>
+    <TableHeaderSection>
+      <TableLayout>
+        <thead>
+          <TableHeader columns={TABLE_COLUMNS} />
+        </thead>
+      </TableLayout>
+    </TableHeaderSection>
+    <TableScrollWrapper>
+      <TableLayout>
+        <tbody>
+          {files.length === 0 ? (
+            <EmptyState />
+          ) : (
+            files.map((file, index) => {
+              const isLast = index === files.length - 1;
+              return (
+                <FileTableRow
+                  key={file.fileId}
+                  file={file}
+                  index={index}
+                  isLast={isLast}
+                  observerRef={observerRef}
+                  onFileClick={onFileClick}
+                  onEditFile={onEditFile}
+                  onDeleteFile={onDeleteFile}
+                />
+              );
+            })
+          )}
+        </tbody>
+      </TableLayout>
+    </TableScrollWrapper>
+  </TableWrapper>
+);
+
+const FileDetailPanelWrapper: React.FC<FileDetailPanelProps> = ({ file, onClose }) => {
+  return (
+    <FileDetailPanel
+      key={`${file.fileId}-${file.updatedAt}`} // 파일이 업데이트되면 컴포넌트를 다시 마운트하여 히스토리 새로고침
+      file={{
+        id: String(file.fileId),
+        name: file.fileName,
+        fileName: file.fileName,
+        status: file.status,
+        manager: `${file.lastModifierId}(${file.lastModifierName})`,
+        registeredAt: file.createdAt,
+        updatedAt: file.updatedAt,
+        version: '1.0.0',
+        fileUrl: file.fileUrl ?? '',
+        timestamp: file.updatedAt,
+      }}
+      onClose={onClose}
+    />
+  );
+};
 
 export default function DocsDetailPage() {
   const { docId: categoryId } = useParams<{ docId: string }>();
+  const queryClient = useQueryClient();
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
+  const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
-  const [selectedFile, setSelectedFile] = useState<DictFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<DocsFile | null>(null);
 
-  const { data: paginatedFiles, observerRef } = useInfiniteScroll<
-    DictFile & { timestamp: string; fileName: string; fileUrl: string },
-    HTMLTableRowElement
-  >({
-    queryKey: ['docs-detail-files', categoryId],
-    fetchFn: async (cursor) => {
-      const response = await getAllDictCategories(cursor);
-      const res = response.data;
-
-      const categoryList: (DictFile & {
-        timestamp: string;
-        fileName: string;
-        fileUrl: string;
-      })[] = (res?.result?.categoryList ?? []).map((item: DictCategory) => ({
-        ...item,
-        status: {
-          completed: item.status?.completed ?? 0,
-          processing: item.status?.processing ?? 0,
-          fail: item.status?.fail ?? 0,
-        },
-        fileName: item.name ?? '-',
-        fileUrl: (item as { fileUrl?: string }).fileUrl ?? '-',
-        timestamp:
-          (item as { updatedAt?: string }).updatedAt ??
-          (item as { createdAt?: string }).createdAt ??
-          '',
-      }));
-
-      return {
-        code: res.code ?? '200',
-        result: {
-          historyList: categoryList,
-          pagination: {
-            isLast: res.result?.pagination?.last ?? true,
-          },
-          nextCursor: res.result?.pagination?.nextCursor,
-        },
-      };
-    },
-  });
-
+  const { data: categoryDetailResponse } = useDocsCategoryDetail(categoryId);
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
+  const { data: paginatedFiles, observerRef } = useDocsFiles(categoryId, debouncedSearchKeyword);
 
-  const detailData = dictMockData.find((item) => item.id.toString() === categoryId);
+  const categoryDetail = categoryDetailResponse?.data?.result;
 
-  const filteredFiles = useMemo(() => {
-    if (!detailData) return [];
-    return detailData.files.filter((file) =>
-      file.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase())
-    );
-  }, [detailData, debouncedSearchKeyword]);
-
-  if (!detailData) {
-    return <NoData>데이터가 없습니다.</NoData>;
+  if (!categoryId) {
+    return <NoData>카테고리 ID가 없습니다.</NoData>;
   }
 
-  const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: detailData.status.completed },
-    { type: 'Processing', count: detailData.status.processing },
-    { type: 'Fail', count: detailData.status.fail },
-  ];
+  if (!categoryDetail) {
+    return <NoData>데이터를 불러오는 중...</NoData>;
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
 
-  const handleFileClick = (file: DictFile) => {
+  const handleFileClick = (file: DocsFile) => {
     setSelectedFile(file);
   };
 
-  const handleEditFile = (file: DictFile) => {
+  const handleEditFile = (file: DocsFile) => {
     setEditTargetFile({
-      title: file.name,
-      version: file.version,
+      title: file.fileName,
+      version: '1.0.0',
+      fileId: file.fileId,
+      fileUrl: file.fileUrl,
+      latestVersion: file.latestVersion || '1.0.0',
     });
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteFile = (fileName: string) => {
-    setTargetFileName(fileName);
+  const handleDeleteFile = (file: DocsFile) => {
+    setTargetFileName(file.fileName);
+    setTargetFileId(file.fileId);
     setIsDeletePopupOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    setIsDeletePopupOpen(false);
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!(
-        `${targetFileName} 파일이 삭제되었습니다.`
-      );
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteDocsCategoryFile(targetFileId);
+      showToast(`${targetFileName} 파일이 삭제되었습니다.`);
+      setIsDeletePopupOpen(false);
+      setTargetFileName('');
+      setTargetFileId('');
+      // 파일 삭제 후 파일 목록 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+    } catch {
+      showErrorToast('파일 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -165,102 +411,37 @@ export default function DocsDetailPage() {
     setEditTargetFile(null);
   };
 
-  const handleEditModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
-    }
+  const handleEditModalSubmit = (updatedFile?: DocsFile) => {
     setIsEditModalOpen(false);
     setEditTargetFile(null);
+
+    if (updatedFile) {
+      // 파일 수정 후 파일 목록과 히스토리 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+      queryClient.invalidateQueries({ queryKey: ['file-history', updatedFile.fileId] });
+      // 캐시 무효화 후 약간의 지연을 두고 히스토리 모달을 오픈
+      setTimeout(() => setSelectedFile(updatedFile), 100);
+    } else {
+      // 파일 목록 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
+    }
   };
 
-  const handleUploadModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 등록되었습니다.');
-    }
-    setIsCsvModalOpen(false);
+  const handleUploadModalSuccess = () => {
+    showToast('파일이 등록되었습니다.');
+    // 파일 업로드 후 파일 목록 캐시를 무효화하여 새로고침
+    queryClient.invalidateQueries({ queryKey: ['docs-detail-files', categoryId] });
   };
 
   const handleFileDetailClose = () => {
     setSelectedFile(null);
   };
 
-  const renderFileRow = (file: DictFile, index: number, isLast?: boolean) => (
-    <TableRow key={`file-${file.id}`} ref={isLast ? observerRef : undefined}>
-      <td style={{ width: CELL_WIDTHS.NUMBER, minWidth: CELL_WIDTHS.NUMBER, textAlign: 'center' }}>
-        {index + 1}
-      </td>
-      <ScrollableCell width={CELL_WIDTHS.FILENAME} align="left">
-        <StyledLink onClick={() => handleFileClick(file)}>{file.name}</StyledLink>
-      </ScrollableCell>
-      <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
-        <StatusWrapper>
-          <StatusBadge status={file.status}>{file.status}</StatusBadge>
-        </StatusWrapper>
-      </td>
-      <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
-        {file.manager}
-      </td>
-      <td
-        style={{
-          width: CELL_WIDTHS.REGISTERED_AT,
-          minWidth: CELL_WIDTHS.REGISTERED_AT,
-          textAlign: 'left',
-        }}
-      >
-        {file.registeredAt}
-      </td>
-      <td
-        style={{
-          width: CELL_WIDTHS.UPDATED_AT,
-          minWidth: CELL_WIDTHS.UPDATED_AT,
-          textAlign: 'left',
-        }}
-      >
-        {file.updatedAt}
-      </td>
-      <td
-        style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
-      >
-        <DownloadIconWrapper>
-          <DownloadIcon />
-        </DownloadIconWrapper>
-      </td>
-      <td
-        style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
-      >
-        <ActionButtons>
-          <ActionButton onClick={() => handleEditFile(file)}>
-            <EditIcon />
-          </ActionButton>
-          <ActionButton onClick={() => handleDeleteFile(file.name)}>
-            <DeleteIcon />
-          </ActionButton>
-        </ActionButtons>
-      </td>
-    </TableRow>
-  );
-
-  const renderEmptyState = () => (
-    <EmptyRow>
-      <EmptyCell colSpan={8}>
-        <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
-      </EmptyCell>
-    </EmptyRow>
-  );
-
-  const renderFileList = () => {
-    if (searchKeyword.trim().length > 0) {
-      return filteredFiles.length === 0
-        ? renderEmptyState()
-        : filteredFiles.map((file, index) => renderFileRow(file, index));
-    }
-
-    return paginatedFiles.length === 0
-      ? renderEmptyState()
-      : paginatedFiles.map((file, index) => {
-          const isLast = index === paginatedFiles.length - 1;
-          return renderFileRow(file, index, isLast);
-        });
+  const getCurrentFile = () => {
+    if (!selectedFile) return null;
+    // paginatedFiles에서 최신 데이터를 찾아서 히스토리 모달에 반영
+    const currentFile = paginatedFiles.find((file) => file.fileId === selectedFile.fileId);
+    return currentFile || selectedFile;
   };
 
   return (
@@ -268,7 +449,7 @@ export default function DocsDetailPage() {
       <SideBarWrapper>
         <SideBar
           logoSymbol={symbolTextLogo}
-          menuItems={menuItems}
+          menuItems={MENU_ITEMS}
           activeMenuId="docs"
           onMenuClick={() => {}}
         />
@@ -277,9 +458,9 @@ export default function DocsDetailPage() {
       <Content>
         <ContentWrapper>
           <HeaderSection>
-            <PageTitle>{detailData.name}</PageTitle>
+            <PageTitle>{categoryDetail.name}</PageTitle>
             <DescriptionRow>
-              <Description>{detailData.description}</Description>
+              <Description>{categoryDetail.description}</Description>
               <Button onClick={() => setIsCsvModalOpen(true)} size="small" variant="primary">
                 + 데이터 등록
               </Button>
@@ -287,73 +468,20 @@ export default function DocsDetailPage() {
           </HeaderSection>
           <Divider />
 
-          <InfoBox>
-            <InfoItemColumn>
-              <LabelContainer>
-                <Label>파일 현황:</Label>
-                <Tooltip
-                  content="업로드한 파일의 상태를 종합한 내용입니다."
-                  description={
-                    <>
-                      Completed는 학습 및 등록 완료,
-                      <br />
-                      Processing은 파일 처리 중,
-                      <br />
-                      Fail은 학습 실패를 의미합니다.
-                    </>
-                  }
-                >
-                  <InfoIcon>
-                    <InformationIcon />
-                  </InfoIcon>
-                </Tooltip>
-              </LabelContainer>
-              <Value>
-                <StatusSummary items={statusItems} />
-              </Value>
-            </InfoItemColumn>
-
-            <InfoItemColumn>
-              <Label>등록일:</Label>
-              <Value>{detailData.registeredDate}</Value>
-            </InfoItemColumn>
-
-            <InfoItemColumn>
-              <Label>최종 수정일:</Label>
-              <Value>{detailData.lastModified}</Value>
-            </InfoItemColumn>
-
-            <InfoItemColumn>
-              <Label>최종 수정자:</Label>
-              <Value>{detailData.lastEditor}</Value>
-            </InfoItemColumn>
-            <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
-              <Label>포함 부서:</Label>
-              <Value>
-                <DepartmentTagList departments={detailData.departments} />
-              </Value>
-            </InfoItemColumn>
-          </InfoBox>
+          <CategoryInfo categoryDetail={categoryDetail} />
 
           <FileSectionHeader>
             <SectionTitle>파일 관리</SectionTitle>
             <FileSearch value={searchKeyword} onChange={handleSearchChange} />
           </FileSectionHeader>
 
-          <TableWrapper>
-            <TableHeaderSection>
-              <TableLayout>
-                <thead>
-                  <TableHeader columns={TABLE_COLUMNS} />
-                </thead>
-              </TableLayout>
-            </TableHeaderSection>
-            <TableScrollWrapper>
-              <TableLayout>
-                <tbody>{renderFileList()}</tbody>
-              </TableLayout>
-            </TableScrollWrapper>
-          </TableWrapper>
+          <FileTable
+            files={paginatedFiles}
+            observerRef={observerRef}
+            onFileClick={handleFileClick}
+            onEditFile={handleEditFile}
+            onDeleteFile={handleDeleteFile}
+          />
         </ContentWrapper>
       </Content>
 
@@ -369,7 +497,9 @@ export default function DocsDetailPage() {
       <DocsUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSubmit={handleUploadModalSubmit}
+        onSuccess={handleUploadModalSuccess}
+        categoryId={categoryId}
+        latestVersion={categoryDetail.latestVersion || '1.0.0'}
       />
 
       {editTargetFile && (
@@ -377,22 +507,16 @@ export default function DocsDetailPage() {
           isOpen={isEditModalOpen}
           onClose={handleEditModalClose}
           onSubmit={handleEditModalSubmit}
+          fileId={editTargetFile.fileId}
           originalFileName={editTargetFile.title}
           originalVersion={editTargetFile.version}
+          originalFileUrl={editTargetFile.fileUrl}
+          latestVersion={editTargetFile.latestVersion || '1.0.0'}
         />
       )}
 
-      {selectedFile && (
-        <FileDetailPanel
-          file={{
-            ...selectedFile,
-            fileName: selectedFile.name,
-            fileUrl: selectedFile.fileUrl ?? '',
-            timestamp: selectedFile.updatedAt,
-            id: String(selectedFile.id),
-          }}
-          onClose={handleFileDetailClose}
-        />
+      {getCurrentFile() && (
+        <FileDetailPanelWrapper file={getCurrentFile()!} onClose={handleFileDetailClose} />
       )}
     </PageWrapper>
   );
@@ -528,6 +652,7 @@ const SectionTitle = styled.h3`
 
 const DownloadIconWrapper = styled.div`
   color: ${colors.BoxText};
+  cursor: pointer;
 
   &:hover {
     svg {

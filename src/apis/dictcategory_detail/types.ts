@@ -30,18 +30,6 @@ export interface DictCategoryFile {
   updatedAt: string;
 }
 
-export interface ApiEnvelope<T> {
-  code: string;
-  message: string;
-  result: T;
-}
-
-export interface FileListResult {
-  fileList: DictCategoryFile[];
-  pagination: { last: boolean };
-  nextCursor?: string;
-}
-
 export interface FileItem {
   id: string;
   name: string;
@@ -53,4 +41,16 @@ export interface FileItem {
   version: string;
   fileUrl: string;
   timestamp?: string;
+}
+
+export interface ApiEnvelope<T> {
+  code: string;
+  message: string;
+  result: T;
+}
+
+export interface FileListResult {
+  fileList: DictCategoryFile[];
+  pagination: { last: boolean };
+  nextCursor?: string;
 }

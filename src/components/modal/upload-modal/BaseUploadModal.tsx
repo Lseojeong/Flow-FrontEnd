@@ -3,11 +3,11 @@ import styled from 'styled-components';
 import { DescriptionInput } from '@/components/common/description-input/DescriptionInput';
 import { Button } from '@/components/common/button/Button';
 import { colors, fontWeight } from '@/styles/index';
-import { VersionSelector } from '@/components/common/version/VersionCard';
 import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
+import { VersionText } from '@/components/common/version/VersionText';
 
 interface BaseUploadModalProps {
   isOpen: boolean;
@@ -24,6 +24,7 @@ interface BaseUploadModalProps {
   fileType: 'csv' | 'pdf';
   downloadLink?: string;
   children?: React.ReactNode;
+  latestVersion?: string;
 }
 
 const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
@@ -35,10 +36,11 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   fileType,
   downloadLink,
   children,
+  latestVersion,
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
-  const [version, setVersion] = useState('');
+  const [version, setVersion] = useState('1.0.0');
   const [fileError, setFileError] = useState<string>('');
   const [fileUrl, setFileUrl] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +56,10 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const handleConfirm = async () => {
     if (!file || isSubmitting) return;
     setIsSubmitting(true);
+
+    // 모달을 즉시 닫습니다
+    onClose();
+
     try {
       await Promise.resolve(
         onSubmit({
@@ -72,7 +78,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
       setVersion('');
       setFileError('');
       setFileUrl('');
-      onClose();
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
@@ -90,10 +95,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
     setFileUrl(localUrl);
   };
 
-  const handleVersionSelect = (ver: string) => {
-    setVersion(ver);
-  };
-
   const isDisabled = !file || version === '' || !!fileError || isSubmitting;
 
   return (
@@ -101,7 +102,10 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
       {isOpen && (
         <Overlay>
           <ModalBox>
-            <Title>{title}</Title>
+            <TitleRow>
+              <Title>{title}</Title>
+              <VersionText latestVersion={latestVersion || '1.0.0'} />
+            </TitleRow>
             <Divider />
 
             {downloadLink && (
@@ -143,7 +147,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
               onChange={setDescription}
               errorMessage="히스토리 설명을 입력해주세요."
             />
-            <VersionSelector onSelect={handleVersionSelect} />
 
             {children}
 
@@ -192,6 +195,13 @@ const ModalBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-end;
 `;
 
 const Title = styled.h3`

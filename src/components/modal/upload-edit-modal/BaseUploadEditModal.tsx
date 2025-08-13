@@ -8,6 +8,7 @@ import { UploadInput } from '@/components/common/file-upload/FileUpload';
 import Divider from '@/components/common/divider/FlatDivider';
 import { MODAL_STYLE, UPLOAD_MODAL_CONSTANTS } from '@/constants/Modal.constants';
 import { Toast as ErrorToast } from '@/components/common/toast-popup/ErrorToastPopup';
+import { VersionText } from '@/components/common/version/VersionText';
 
 interface BaseUploadEditModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface BaseUploadEditModalProps {
   title: string;
   acceptFileType: string;
   children?: React.ReactNode;
+  latestVersion?: string;
 }
 
 const isTrulyEmpty = (v: string) =>
@@ -36,6 +38,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
   title,
   acceptFileType,
   children,
+  latestVersion,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -75,6 +78,10 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
     }
 
     setSubmitting(true);
+
+    // 모달을 즉시 닫습니다
+    onClose();
+
     try {
       await Promise.resolve(
         onSubmit({
@@ -86,7 +93,6 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
       setFile(null);
       setDescription('');
       setVersion('');
-      onClose();
       setTimeout(() => {
         (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
           UPLOAD_MODAL_CONSTANTS.SUCCESS_EDIT_MESSAGE,
@@ -129,7 +135,10 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
       {isOpen && (
         <Overlay>
           <ModalBox>
-            <Title>{title}</Title>
+            <TitleRow>
+              <Title>{title}</Title>
+              <VersionText latestVersion={latestVersion || '1.0.0'} />
+            </TitleRow>
             <Divider />
             <UploadRow>
               <FileInputContainer>
@@ -172,7 +181,7 @@ const BaseUploadEditModal: React.FC<BaseUploadEditModalProps> = ({
               errorMessage={descTouched && descEmpty ? '히스토리 설명을 입력해주세요.' : ''}
             />
 
-            <VersionSelector onSelect={handleVersionSelect} />
+            <VersionSelector onSelect={handleVersionSelect} latestVersion={latestVersion} />
 
             {children}
 
@@ -221,6 +230,13 @@ const ModalBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${MODAL_STYLE.MODAL_GAP};
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
 `;
 
 const Title = styled.h3`
