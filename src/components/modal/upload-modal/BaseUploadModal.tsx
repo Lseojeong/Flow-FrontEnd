@@ -56,6 +56,10 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   const handleConfirm = async () => {
     if (!file || isSubmitting) return;
     setIsSubmitting(true);
+
+    // 모달을 즉시 닫습니다
+    onClose();
+
     try {
       await Promise.resolve(
         onSubmit({
@@ -74,7 +78,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
       setVersion('');
       setFileError('');
       setFileUrl('');
-      onClose();
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||

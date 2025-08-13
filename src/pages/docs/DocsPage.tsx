@@ -83,7 +83,7 @@ export default function DocsPage() {
     id: string;
     name: string;
     description: string;
-    departments: { departmentId: string; departmentName: string }[];
+    departmentList: string[];
   } | null>(null);
 
   const { data: departmentData } = useDepartmentList();
@@ -195,7 +195,7 @@ export default function DocsPage() {
         id: category.id,
         name: category.name,
         description: category.description ?? '',
-        departments: departmentList.map((name) => ({ departmentId: name, departmentName: name })),
+        departmentList: departmentList,
       });
       setIsEditModalOpen(true);
     },
@@ -257,11 +257,12 @@ export default function DocsPage() {
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
       try {
-        const res = await updateDocsCategory(editingCategory.id, {
-          name: data.name,
-          description: data.description,
+        const requestBody = {
+          name: data.name.trim(),
+          description: data.description.trim(),
           departmentIdList: data.departments,
-        });
+        };
+        const res = await updateDocsCategory(editingCategory.id, requestBody);
         const code = (res as { data?: { code?: string } }).data?.code;
         if (code === 'COMMON200' || code === '200') {
           (window as { showToast?: (_message: string) => void }).showToast?.(
@@ -273,10 +274,11 @@ export default function DocsPage() {
           return;
         }
         throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
-      } catch {
-        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(
-          '수정 요청 중 오류가 발생했습니다.'
-        );
+      } catch (error) {
+        console.error('카테고리 수정 에러:', error);
+        const errorMessage =
+          error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
+        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
       }
     },
     [editingCategory, refetch]
@@ -400,7 +402,7 @@ export default function DocsPage() {
           onSubmit={handleUpdateCategory}
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
-          initialDepartments={editingCategory.departments.map((d) => d.departmentId)}
+          initialDepartments={editingCategory.departmentList || []}
           departments={departments}
         />
       )}
