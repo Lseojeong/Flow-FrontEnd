@@ -13,14 +13,7 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   title = '부서 선택',
   userDepartmentId,
 }) => {
-  React.useEffect(() => {
-    if (userDepartmentId && departments.length > 0) {
-      const userDepartment = departments.find((dept) => dept.departmentId === userDepartmentId);
-      if (userDepartment && !selectedDepartmentIds.includes(userDepartmentId)) {
-        onChange([...selectedDepartmentIds, userDepartmentId]);
-      }
-    }
-  }, [userDepartmentId, departments, onChange]);
+  // 자신의 부서 강제 추가 로직 제거
 
   const isAllSelected =
     departments.length > 0 &&
@@ -36,16 +29,7 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
     if (checked) {
       newSelectedIds = [...selectedDepartmentIds, departmentId];
     } else {
-      // 자신의 부서는 제거할 수 없음
-      if (departmentId === userDepartmentId) {
-        return;
-      }
       newSelectedIds = selectedDepartmentIds.filter((id) => id !== departmentId);
-    }
-
-    // 자신의 부서가 포함되지 않았다면 추가
-    if (userDepartmentId && !newSelectedIds.includes(userDepartmentId)) {
-      newSelectedIds.push(userDepartmentId);
     }
 
     onChange(newSelectedIds);
@@ -53,15 +37,12 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
 
   const handleSelectAllChange = (checked: boolean) => {
     if (checked) {
-      // 모든 부서를 선택하되, 자신의 부서는 항상 포함
+      // 모든 부서를 선택
       const allDepartmentIds = departments.map((dept) => dept.departmentId);
-      if (userDepartmentId && !allDepartmentIds.includes(userDepartmentId)) {
-        allDepartmentIds.push(userDepartmentId);
-      }
       onChange(allDepartmentIds);
     } else {
-      // 모두 해제할 때는 자신의 부서만 남김
-      onChange(userDepartmentId ? [userDepartmentId] : []);
+      // 모두 해제
+      onChange([]);
     }
   };
 
@@ -99,9 +80,7 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
                 checked={isUserDepartment ? true : isChecked}
                 disabled={isUserDepartment}
                 onChange={(checked) => {
-                  if (!isUserDepartment) {
-                    handleDepartmentChange(department.departmentId, checked);
-                  }
+                  handleDepartmentChange(department.departmentId, checked);
                 }}
               />
             </CheckboxItem>
