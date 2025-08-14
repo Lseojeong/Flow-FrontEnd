@@ -153,6 +153,7 @@ const CategoryInfo: React.FC<{
     status?: { Completed?: number; Processing?: number; Fail?: number };
     createdAt: string;
     updatedAt: string;
+    lastModifierId?: string;
     lastModifierName?: string;
     departmentList?: string[];
   };
@@ -191,7 +192,9 @@ const CategoryInfo: React.FC<{
 
       <InfoItemColumn>
         <Label>최종 수정자:</Label>
-        <Value>{categoryDetail?.lastModifierName}</Value>
+        <Value>
+          {categoryDetail?.lastModifierId}({categoryDetail?.lastModifierName})
+        </Value>
       </InfoItemColumn>
 
       <InfoItemColumn style={{ flexBasis: '100%', marginTop: '28px' }}>
