@@ -76,6 +76,7 @@ export const TestChat: React.FC<TestChatProps> = ({ onTestRun, loading = false }
           onChange={(e) => setTestQuestion(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="질문을 입력해주세요(ex. Flow는 무슨 뜻이야?)"
+          maxLength={50}
         />
         <TestButton
           variant="primary"
