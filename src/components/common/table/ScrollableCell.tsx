@@ -21,7 +21,6 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
 
     const handleWheel = (e: WheelEvent) => {
       e.stopPropagation();
-      e.preventDefault();
     };
 
     const handleMouseDown = (e: MouseEvent) => {
