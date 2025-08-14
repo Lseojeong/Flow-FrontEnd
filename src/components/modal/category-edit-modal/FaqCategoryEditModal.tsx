@@ -31,7 +31,7 @@ const FaqCategoryEditModal: React.FC<Props> = ({
       initialDepartments={initialDepartments}
       departments={departments}
       showDepartmentCheck={true}
-      title="FAQ 카테고리 수정"
+      title="카테고리 수정"
     />
   );
 };

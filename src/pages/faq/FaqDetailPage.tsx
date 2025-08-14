@@ -347,6 +347,7 @@ export default function FaqDetailPage() {
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
@@ -394,6 +395,7 @@ export default function FaqDetailPage() {
   };
 
   const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
     try {
       await deleteFaqCategoryFile(targetFileId);
       showToast(`${targetFileName} 파일이 삭제되었습니다.`);
@@ -403,6 +405,8 @@ export default function FaqDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['faq-detail-files', categoryId] });
     } catch {
       showErrorToast('파일 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -487,6 +491,8 @@ export default function FaqDetailPage() {
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={handleDeleteConfirm}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '' : '삭제'}
       />
 
       <FaqUploadModal

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { colors, fontWeight } from '@/styles/index';
 import { Props } from './Popup.types';
 import { Button } from '@/components/common/button/Button';
+import { Loading } from '@/components/common/loading/Loading';
 
 export const Popup: React.FC<Props> = (props) => {
   const { isOpen, title, message, onClose } = props;
@@ -64,7 +65,11 @@ export const Popup: React.FC<Props> = (props) => {
                   onClick={props.onDelete}
                   disabled={props.disabled}
                 >
-                  {props.confirmText || '삭제'}
+                  {props.disabled ? (
+                    <Loading size={12} color="white" />
+                  ) : (
+                    props.confirmText || '삭제'
+                  )}
                 </Button>
               </>
             )}

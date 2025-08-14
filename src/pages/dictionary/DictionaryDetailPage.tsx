@@ -71,6 +71,7 @@ export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams<{ dictionaryId: string }>();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
@@ -198,6 +199,7 @@ export default function DictionaryDetailPage() {
       return;
     }
 
+    setIsDeleting(true);
     try {
       await deleteDictCategoryFile(dictionaryId, targetFileId);
 
@@ -216,6 +218,7 @@ export default function DictionaryDetailPage() {
         'error'
       );
     } finally {
+      setIsDeleting(false);
       setTargetFileId('');
     }
   };
@@ -471,6 +474,8 @@ export default function DictionaryDetailPage() {
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={handleDeleteConfirm}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '' : '삭제'}
       />
 
       <DictUploadModal

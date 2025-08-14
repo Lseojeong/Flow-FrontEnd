@@ -36,6 +36,7 @@ import DocsCategoryModal from '@/components/modal/category-modal/DocsCategoryMod
 import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { formatDate } from '@/utils/formatDate';
+import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -79,6 +80,8 @@ export default function DocsPage() {
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -218,6 +221,12 @@ export default function DocsPage() {
       );
       return;
     }
+    setIsDeletePopupOpen(true);
+  }, [selectedIds]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
     try {
       const res = await deleteDocsCategories({ categoryIdList: selectedIds });
       const code = (res as { data?: { code?: string } }).data?.code;
@@ -243,6 +252,9 @@ export default function DocsPage() {
       }
 
       (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setIsDeletePopupOpen(false);
     }
   }, [selectedIds, refetch]);
 
@@ -442,6 +454,16 @@ export default function DocsPage() {
           departments={departments}
         />
       )}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="카테고리 삭제"
+        message="카테고리를 삭제하시겠습니까?"
+        warningMessages={['카테고리와 포함된 모든 파일이 함께 삭제됩니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={handleConfirmDelete}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+      />
     </PageWrapper>
   );
 }

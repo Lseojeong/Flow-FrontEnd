@@ -36,6 +36,7 @@ import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal
 import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
 import { formatDate } from '@/utils/formatDate';
+import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -79,6 +80,8 @@ export default function FaqPage() {
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -201,6 +204,12 @@ export default function FaqPage() {
       (window as { showToast?: (_: string) => void }).showToast?.('삭제할 카테고리를 선택하세요.');
       return;
     }
+    setIsDeletePopupOpen(true);
+  }, [selectedIds]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
     try {
       const res = await deleteFaqCategories({ categoryIdList: selectedIds });
       if (res.data?.code === 'COMMON200') {
@@ -225,6 +234,9 @@ export default function FaqPage() {
       }
 
       (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setIsDeletePopupOpen(false);
     }
   }, [selectedIds, refetch]);
 
@@ -428,6 +440,16 @@ export default function FaqPage() {
           departments={departments}
         />
       )}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="카테고리 삭제"
+        message="카테고리를 삭제하시겠습니까?"
+        warningMessages={['카테고리와 포함된 모든 파일이 함께 삭제됩니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={handleConfirmDelete}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+      />
     </PageWrapper>
   );
 }
