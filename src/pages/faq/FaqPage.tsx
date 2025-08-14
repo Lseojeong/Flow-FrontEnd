@@ -380,7 +380,7 @@ export default function FaqPage() {
                     ) : filtered.length === 0 ? (
                       <EmptyRow>
                         <EmptyCell colSpan={headerColumns.length}>
-                          <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+                          <EmptyMessage>등록된 카테고리가 없습니다.</EmptyMessage>
                         </EmptyCell>
                       </EmptyRow>
                     ) : (
