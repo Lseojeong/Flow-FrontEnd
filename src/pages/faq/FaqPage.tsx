@@ -35,7 +35,7 @@ import { colors, fontWeight } from '@/styles';
 import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
 import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
-import { formatDate } from '@/utils/formatDate';
+import { formatDate, convertDepartmentNamesToIds } from '@/utils';
 import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -191,12 +191,7 @@ export default function FaqPage() {
 
       // 부서 이름을 부서 ID로 변환
       const departmentList = category.departmentList ?? [];
-      const departmentIds = departmentList.map((deptName) => {
-        const dept = departments.find(
-          (d: { departmentId: string; departmentName: string }) => d.departmentName === deptName
-        );
-        return dept?.departmentId || deptName;
-      });
+      const departmentIds = convertDepartmentNamesToIds(departmentList, departments);
 
       setEditingCategory({
         id: category.id,
@@ -253,12 +248,7 @@ export default function FaqPage() {
   const handleRegisterCategory = useCallback(
     async (data: { name: string; description: string; departments?: string[] }) => {
       // 부서 이름을 ID로 변환
-      const departmentIds = (data.departments ?? []).map((dept) => {
-        const department = departments.find(
-          (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
-        );
-        return department ? department.departmentId : dept;
-      });
+      const departmentIds = convertDepartmentNamesToIds(data.departments ?? [], departments);
 
       const requestData = {
         name: data.name,
@@ -271,7 +261,6 @@ export default function FaqPage() {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
 
-      // 성공 시에만 모달을 닫고 토스트 표시
       (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
       setIsCategoryModalOpen(false);
       await refetch();
@@ -283,13 +272,7 @@ export default function FaqPage() {
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
       try {
-        // 부서 이름을 ID로 변환
-        const departmentIds = data.departments.map((dept) => {
-          const department = departments.find(
-            (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
-          );
-          return department ? department.departmentId : dept;
-        });
+        const departmentIds = convertDepartmentNamesToIds(data.departments, departments);
 
         const requestData = {
           name: data.name.trim(),

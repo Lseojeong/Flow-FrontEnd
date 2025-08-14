@@ -35,7 +35,7 @@ import { colors, fontWeight } from '@/styles';
 import DocsCategoryModal from '@/components/modal/category-modal/DocsCategoryModal';
 import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
-import { formatDate } from '@/utils/formatDate';
+import { formatDate, convertDepartmentNamesToIds } from '@/utils';
 import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -193,15 +193,9 @@ export default function DocsPage() {
       const category = categories.find((c) => c.id === id);
       if (!category) return;
 
-      // 부서 이름을 부서 ID로 변환
       const departmentList =
         (category as unknown as { departmentList?: string[] }).departmentList ?? [];
-      const departmentIds = departmentList.map((deptName) => {
-        const dept = departments.find(
-          (d: { departmentId: string; departmentName: string }) => d.departmentName === deptName
-        );
-        return dept?.departmentId || deptName;
-      });
+      const departmentIds = convertDepartmentNamesToIds(departmentList, departments);
 
       setEditingCategory({
         id: category.id,
@@ -269,7 +263,6 @@ export default function DocsPage() {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
 
-      // 성공 시에만 모달을 닫고 토스트 표시
       (window as { showToast?: (_message: string) => void }).showToast?.(
         '카테고리가 등록되었습니다.'
       );
