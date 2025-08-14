@@ -6,6 +6,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (_: { name: string; description: string; departments: string[] }) => void;
+  onSuccess?: () => void;
   departments: Department[];
 }
 
@@ -23,7 +24,7 @@ const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, departme
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
-      title="카테고리 등록"
+      title="FAQ 카테고리 등록"
       departments={departments}
       showDepartmentCheck={true}
     />

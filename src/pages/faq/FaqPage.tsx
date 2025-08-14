@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
+
+import SideBar from '@/components/common/layout/SideBar';
 import { CategorySearch } from '@/components/common/category-search/CategorySearch';
 import { DateFilter } from '@/components/common/date-filter/DateFilter';
 import DepartmentSelect from '@/components/common/department/DepartmentSelect';
@@ -10,66 +10,84 @@ import { DepartmentTagList } from '@/components/common/department/DepartmentTagL
 import { CheckBox } from '@/components/common/checkbox/CheckBox';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { Button } from '@/components/common/button/Button';
-import SideBar from '@/components/common/layout/SideBar';
+import { Loading } from '@/components/common/loading/Loading';
 import StatusSummary from '@/components/common/status/StatusSummary';
+import Divider from '@/components/common/divider/Divider';
+
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
-import Divider from '@/components/common/divider/Divider';
-import { colors, fontWeight } from '@/styles/index';
-import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
-import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
-import { EditIcon, DeleteIcon } from '@/assets/icons/common/index';
+import { EditIcon, DeleteIcon } from '@/assets/icons/common';
+
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import type { Department } from '@/components/common/department/Department.types';
-import { getDepartments } from '@/apis/org/api';
+import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
+import { useDepartmentList } from '@/apis/department/query';
 import {
   getAllFaqCategories,
   createFaqCategory,
+  updateFaqCategory,
   deleteFaqCategories,
   searchFaqCategories,
-  updateFaqCategory,
 } from '@/apis/faq/api';
+
 import type { FaqCategory } from '@/apis/faq/types';
+import { useAuthStore } from '@/store/useAuthStore';
+import { colors, fontWeight } from '@/styles';
+import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
+import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
+import { mockDepartments } from '@/pages/mock/mockDepartments';
+import { formatDate } from '@/utils/formatDate';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
-  { label: '카테고리', width: '330px', align: 'left' as const },
-  { label: '상태', width: '205px', align: 'left' as const },
-  { label: '문서 수', width: '80px', align: 'center' as const },
-  { label: '포함 부서', width: '266px', align: 'left' as const },
-  { label: '최종 수정일', width: '165px', align: 'left' as const },
-  { label: '', width: '57px', align: 'center' as const },
-];
+  { label: '카테고리', width: '330px', align: 'left' as const, key: 'name' },
+  { label: '상태', width: '206px', align: 'left' as const, key: 'status' },
+  { label: 'FAQ 수', width: '80px', align: 'center' as const, key: 'faqCount' },
+  { label: '포함 부서', width: '266px', align: 'left' as const, key: 'departments' },
+  { label: '최종 수정일', width: '165px', align: 'left' as const, key: 'lastModifiedDate' },
+  { label: '', width: '57px', align: 'center' as const, key: 'actions' },
+] as const;
 
-const CELL_WIDTHS = {
-  CHECKBOX: '48px',
-  CATEGORY: '330px',
-  STATUS: '206px',
-  DOCUMENT_COUNT: '80px',
-  DEPARTMENTS: '266px',
-  LAST_MODIFIED: '165px',
-  ACTIONS: '57px',
-} as const;
+type GetAllFaqCategoriesResponse = {
+  code: string;
+  message: string;
+  result: { categoryList: FaqCategory[]; pagination: { last: boolean }; nextCursor?: string };
+};
+
+type RowCategory = FaqCategory & {
+  timestamp: string;
+  lastModifiedDate: string;
+  status: NonNullable<FaqCategory['status']>;
+};
+
+const normalizeCategory = (c: FaqCategory): RowCategory => ({
+  ...c,
+  lastModifiedDate: c.lastModifiedDate ?? (c.updatedAt ?? '').slice(0, 10),
+  status: c.status ?? { Total: 0, Completed: 0, Processing: 0, Fail: 0 },
+  timestamp: c.updatedAt ?? c.createdAt ?? '',
+});
 
 export default function FaqPage() {
-  const [activeMenuId, setActiveMenuId] = useState('faq');
   const { profile } = useAuthStore();
   const isRootAdmin = profile?.permission === 'ROOT';
+
+  const [activeMenuId, setActiveMenuId] = useState('faq');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
     description: string;
-    departments: { departmentId: string; departmentName: string }[];
+    departmentList: string[];
   } | null>(null);
+
+  const { data: departmentData } = useDepartmentList();
+  const departments = departmentData?.result?.departmentList || mockDepartments;
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
   const debouncedDepartment = useDebounce(selectedDepartment ?? '', DEBOUNCE_DELAY);
@@ -79,11 +97,11 @@ export default function FaqPage() {
     !!debouncedSearchKeyword || !!debouncedStartDate || !!debouncedEndDate || !!debouncedDepartment;
 
   const {
-    data: categories,
+    data: categoriesRaw = [],
     observerRef,
     isLoading,
-    reset,
-  } = useInfiniteScroll<FaqCategory & { timestamp: string }, HTMLTableRowElement>({
+    refetch,
+  } = useInfiniteScroll<RowCategory, HTMLTableRowElement>({
     queryKey: [
       'faq-categories',
       debouncedSearchKeyword,
@@ -92,355 +110,183 @@ export default function FaqPage() {
       debouncedDepartment,
     ],
     fetchFn: async (cursor) => {
-      const normalizeStatus = (item: FaqCategory): FaqCategory['fileStatus'] =>
-        item.fileStatus ?? { total: 0, completed: 0, processing: 0, fail: 0 };
-
-      const normalizeDate = (c: FaqCategory): string =>
-        (c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '').slice(0, 10);
-
-      const mapWithTimestamp = (list: FaqCategory[]) =>
-        list.map((c) => ({
-          ...c,
-          status: normalizeStatus(c),
-          lastModifiedDate: normalizeDate(c),
-          timestamp: c.updatedAt ?? c.createdAt ?? '',
-        }));
-
       if (isSearching) {
         const searchParams = {
           name: debouncedSearchKeyword || undefined,
           startDate: startDate || undefined,
           endDate: endDate || undefined,
-          cursorDate: cursor || undefined,
+          cursorDate: cursor || new Date().toISOString(),
           departmentId: selectedDepartment || undefined,
         };
 
         const res = await searchFaqCategories(searchParams);
+        const data = res.data as GetAllFaqCategoriesResponse;
+
+        const categoryList: RowCategory[] = (data.result?.categoryList ?? []).map(
+          normalizeCategory
+        );
 
         return {
-          code: res.data.code,
+          code: data.code,
           result: {
-            historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
-            pagination: res.data.result?.pagination ?? { last: true },
-            nextCursor: res.data.result?.nextCursor,
+            historyList: categoryList,
+            pagination: { isLast: data.result?.pagination.last ?? true },
+            nextCursor: data.result?.nextCursor,
           },
         };
       }
 
       const res = await getAllFaqCategories(cursor);
+      const data = res.data as GetAllFaqCategoriesResponse;
+
+      const categoryList: RowCategory[] = (data.result?.categoryList ?? []).map(normalizeCategory);
+
       return {
-        code: res.data.code,
+        code: data.code,
         result: {
-          historyList: mapWithTimestamp(res.data.result?.categoryList ?? []),
-          pagination: res.data.result?.pagination ?? { last: true },
-          nextCursor: res.data.result?.nextCursor,
+          historyList: categoryList,
+          pagination: { isLast: data.result?.pagination.last ?? true },
+          nextCursor: data.result?.nextCursor,
         },
       };
     },
   });
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await getDepartments();
-        setDepartments(res.data.result.departmentList as unknown as Department[]);
-      } catch (error: unknown) {
-        const errorMessage =
-          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          '부서 목록 조회에 실패했습니다.';
+  const categories = categoriesRaw;
+  const filtered = useMemo(() => categories, [categories]);
+  const selectedIds = useMemo(
+    () => filtered.filter((c) => checkedMap[c.id]).map((c) => c.id),
+    [filtered, checkedMap]
+  );
+  const isAllSelected = filtered.length > 0 && selectedIds.length === filtered.length;
 
-        if (
-          typeof window !== 'undefined' &&
-          'showErrorToast' in window &&
-          typeof window.showErrorToast === 'function'
-        ) {
-          window.showErrorToast(errorMessage);
-        }
-      }
-    })();
-  }, []);
-
-  const filteredCategories = useMemo(() => {
-    const isDateInRange = (dateStr: string) => {
-      if (!startDate && !endDate) return true;
-      if (!dateStr) return false;
-      const date = new Date(dateStr);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      return (!start || date >= start) && (!end || date <= end);
-    };
-
-    const normDate = (c: FaqCategory) =>
-      ((c.lastModifiedDate || c.updatedAt || c.createdAt || '') + '').replace(/\./g, '-');
-
-    return categories.filter((item) => {
-      const matchesName = item.name.toLowerCase().includes(debouncedSearchKeyword.toLowerCase());
-      const matchesDept =
-        !selectedDepartment || (item.departmentList ?? []).includes(selectedDepartment);
-      const matchesDate = isDateInRange(normDate(item));
-      return matchesName && matchesDept && matchesDate;
-    });
-  }, [categories, debouncedSearchKeyword, selectedDepartment, startDate, endDate]);
-
-  const selectedCount = filteredCategories.filter((cat) => !!checkedItems[cat.id]).length;
-  const isAllSelected =
-    selectedCount === filteredCategories.length && filteredCategories.length > 0;
-
-  const toggleSelectAll = () => {
+  const handleToggleAll = useCallback(() => {
     if (isAllSelected) {
-      setCheckedItems({});
-    } else {
-      const next: Record<string, boolean> = {};
-      filteredCategories.forEach((cat) => {
-        next[cat.id] = true;
-      });
-      setCheckedItems(next);
-    }
-  };
-
-  const toggleCheckItem = (id: string) => {
-    setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleEdit = (id: string) => {
-    const category = categories.find((cat) => cat.id === id);
-    if (!category) return;
-
-    const selectedDeptIds: string[] = category.departmentList ?? [];
-
-    setEditingCategory({
-      id: category.id,
-      name: category.name,
-      description: category.description ?? '',
-      departments: selectedDeptIds.map((deptId) => ({
-        departmentId: deptId,
-        departmentName: deptId,
-      })),
-    });
-
-    setIsEditModalOpen(true);
-  };
-
-  const handleDeleteSelected = async () => {
-    const selectedIds = Object.keys(checkedItems).filter((id) => checkedItems[id]);
-    if (selectedIds.length === 0) {
-      (window as { showToast?: (_: string) => void }).showToast!('삭제할 카테고리를 선택하세요.');
+      setCheckedMap({});
       return;
     }
+    const next: Record<string, boolean> = {};
+    filtered.forEach((c) => {
+      next[c.id] = true;
+    });
+    setCheckedMap(next);
+  }, [filtered, isAllSelected]);
 
-    try {
-      const res = await deleteFaqCategories(selectedIds);
-      const ok = res.data?.code === 'COMMON200';
+  const handleToggleOne = useCallback((id: string) => {
+    setCheckedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
-      if (ok) {
-        (window as { showToast?: (_: string) => void }).showToast!(
-          '선택한 카테고리를 삭제했습니다.'
-        );
-        setCheckedItems({});
-        reset();
-      } else {
-        const errorMessage = (res.data as { message?: string })?.message || '삭제에 실패했습니다.';
-
-        if (
-          typeof window !== 'undefined' &&
-          'showErrorToast' in window &&
-          typeof window.showErrorToast === 'function'
-        ) {
-          window.showErrorToast(errorMessage);
-        }
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '삭제 요청 중 에러가 발생했습니다.';
-
-      if (
-        typeof window !== 'undefined' &&
-        'showErrorToast' in window &&
-        typeof window.showErrorToast === 'function'
-      ) {
-        window.showErrorToast(errorMessage);
-      }
-    }
-  };
-
-  const handleRegisterCategory = async (form: {
-    name: string;
-    description?: string;
-    departments: string[] | { departmentId: string }[];
-  }) => {
-    try {
-      const depIds =
-        Array.isArray(form.departments) &&
-        form.departments.length > 0 &&
-        typeof form.departments[0] === 'object'
-          ? (form.departments as { departmentId: string }[]).map((d) => d.departmentId)
-          : (form.departments as string[]);
-
-      const payload = {
-        name: form.name.trim(),
-        description: form.description?.trim() || undefined,
-        departmentList: depIds.map((id) => ({ id })),
-      };
-
-      const res = await createFaqCategory(payload);
-
-      const ok = res.data?.code === 'COMMON200';
-
-      if (ok) {
-        (window as { showToast?: (_message: string) => void }).showToast!(
-          '카테고리가 등록되었습니다.'
-        );
-        setIsCategoryModalOpen(false);
-        if (typeof reset === 'function') {
-          await reset();
-        }
-      } else {
-        const errorMessage =
-          (res.data as { message?: string })?.message || '카테고리 등록에 실패했습니다.';
-
-        if (
-          typeof window !== 'undefined' &&
-          'showErrorToast' in window &&
-          typeof window.showErrorToast === 'function'
-        ) {
-          window.showErrorToast(errorMessage);
-        }
-      }
-    } catch (error: unknown) {
-      console.error('카테고리 등록 에러:', error);
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 등록 중 오류가 발생했습니다.';
-
-      if (
-        typeof window !== 'undefined' &&
-        'showErrorToast' in window &&
-        typeof window.showErrorToast === 'function'
-      ) {
-        window.showErrorToast(errorMessage);
-      }
-    }
-  };
-
-  const handleDateChange = (start: string | null, end: string | null) => {
+  const handleDateChange = useCallback((start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
-  };
+  }, []);
 
-  const columns = [
-    {
-      label: (
-        <CheckBox
-          size="medium"
-          variant="outline"
-          id="select-all"
-          checked={isAllSelected}
-          onChange={toggleSelectAll}
-          label=""
-        />
-      ),
-      width: CELL_WIDTHS.CHECKBOX,
-      align: 'center' as const,
+  const handleEditOpen = useCallback(
+    (id: string) => {
+      const category = categories.find((c) => c.id === id);
+      if (!category) return;
+      setEditingCategory({
+        id: category.id,
+        name: category.name,
+        description: category.description ?? '',
+        departmentList: category.departmentList ?? [],
+      });
+      setIsEditModalOpen(true);
     },
-    ...TABLE_COLUMNS,
-  ];
-
-  const renderTableRow = (category: FaqCategory, index: number) => {
-    const isChecked = !!checkedItems[category.id];
-    const isLast = index === filteredCategories.length - 1;
-
-    return (
-      <TableRow key={category.id} ref={isLast ? observerRef : undefined}>
-        <td
-          style={{
-            width: CELL_WIDTHS.CHECKBOX,
-            minWidth: CELL_WIDTHS.CHECKBOX,
-            textAlign: 'center',
-          }}
-        >
-          <CheckBox
-            size="medium"
-            id={`check-${category.id}`}
-            checked={isChecked}
-            onChange={() => toggleCheckItem(category.id)}
-            label=""
-          />
-        </td>
-        <td
-          style={{ width: CELL_WIDTHS.CATEGORY, minWidth: CELL_WIDTHS.CATEGORY, textAlign: 'left' }}
-        >
-          <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
-        </td>
-        <td style={{ width: CELL_WIDTHS.STATUS, minWidth: CELL_WIDTHS.STATUS, textAlign: 'left' }}>
-          <StatusWrapper>
-            <StatusSummary
-              items={[
-                { type: 'Completed', count: category.fileStatus.Completed },
-                { type: 'Processing', count: category.fileStatus.Processing },
-                { type: 'Fail', count: category.fileStatus.Fail },
-              ]}
-            />
-          </StatusWrapper>
-        </td>
-        <td
-          style={{
-            width: CELL_WIDTHS.DOCUMENT_COUNT,
-            minWidth: CELL_WIDTHS.DOCUMENT_COUNT,
-            textAlign: 'center',
-          }}
-        >
-          {category.documentCount}
-        </td>
-        <ScrollableCell
-          width={CELL_WIDTHS.DEPARTMENTS}
-          maxWidth={CELL_WIDTHS.DEPARTMENTS}
-          align="left"
-        >
-          <DepartmentTagList
-            departments={
-              (category as { departmentList?: string[] }).departmentList?.map((name) => ({
-                departmentId: name,
-                departmentName: name,
-              })) ?? []
-            }
-          />
-        </ScrollableCell>
-        <td
-          style={{
-            width: CELL_WIDTHS.LAST_MODIFIED,
-            minWidth: CELL_WIDTHS.LAST_MODIFIED,
-            textAlign: 'left',
-            paddingLeft: ' 34px',
-          }}
-        >
-          {category.lastModifiedDate}
-        </td>
-        <td
-          style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}
-        >
-          <EditIconWrapper>
-            <EditIcon onClick={() => handleEdit(category.id)} />
-          </EditIconWrapper>
-        </td>
-      </TableRow>
-    );
-  };
-
-  const renderEmptyState = () => (
-    <EmptyRow>
-      <EmptyCell colSpan={columns.length}>
-        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
-      </EmptyCell>
-    </EmptyRow>
+    [categories]
   );
 
-  const renderLoadingState = () => (
-    <tr>
-      <td colSpan={columns.length} style={{ textAlign: 'center', padding: '16px' }}>
-        불러오는 중...
-      </td>
-    </tr>
+  const handleDeleteSelected = useCallback(async () => {
+    if (selectedIds.length === 0) {
+      (window as { showToast?: (_: string) => void }).showToast?.('삭제할 카테고리를 선택하세요.');
+      return;
+    }
+    try {
+      const res = await deleteFaqCategories({ categoryIdList: selectedIds });
+      if (res.data?.code === 'COMMON200') {
+        (window as { showToast?: (_: string) => void }).showToast?.(
+          '선택한 카테고리가 삭제되었습니다.'
+        );
+        setCheckedMap({});
+        await refetch();
+      } else {
+        throw new Error(res.data?.message || '삭제 실패');
+      }
+    } catch {
+      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
+        '삭제 요청 중 오류가 발생했습니다.'
+      );
+    }
+  }, [selectedIds, refetch]);
+
+  const handleRegisterCategory = useCallback(
+    async (data: { name: string; description: string; departments?: string[] }) => {
+      try {
+        const res = await createFaqCategory({
+          name: data.name,
+          description: data.description,
+          departmentIdList: data.departments ?? [],
+        });
+        if (res.data?.code !== 'COMMON200') {
+          throw new Error(res.data?.message || '카테고리 등록 실패');
+        }
+        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+        setIsCategoryModalOpen(false);
+        await refetch();
+      } catch {
+        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
+          '등록 요청 중 오류가 발생했습니다.'
+        );
+      }
+    },
+    [refetch]
+  );
+
+  const handleUpdateCategory = useCallback(
+    async (data: { name: string; description: string; departments: string[] }) => {
+      if (!editingCategory) return;
+      try {
+        const res = await updateFaqCategory(editingCategory.id, {
+          name: data.name.trim(),
+          description: data.description.trim(),
+          departmentIdList: data.departments,
+        });
+        if (res.data?.code === 'COMMON200' || res.data?.code === '200') {
+          (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
+          setIsEditModalOpen(false);
+          setEditingCategory(null);
+          await refetch();
+        } else {
+          throw new Error(res.data?.message || '수정 실패');
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
+        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(msg);
+      }
+    },
+    [editingCategory, refetch]
+  );
+
+  const headerColumns = useMemo(
+    () => [
+      {
+        label: (
+          <CheckBox
+            size="medium"
+            variant="outline"
+            id="select-all"
+            checked={isAllSelected}
+            onChange={handleToggleAll}
+            label=""
+          />
+        ),
+        width: '48px',
+        align: 'center' as const,
+        key: '__checkbox',
+      },
+      ...TABLE_COLUMNS,
+    ],
+    [isAllSelected, handleToggleAll]
   );
 
   return (
@@ -453,131 +299,196 @@ export default function FaqPage() {
           onMenuClick={setActiveMenuId}
         />
       </SideBarWrapper>
-
       <Content>
-        <ContentWrapper>
+        <ContentInner>
           <PageTitle>FAQ 관리</PageTitle>
-          <Description>자주 묻는 질문의 데이터를 Flow에 등록, 관리하는 어드민입니다.</Description>
+          <Description>Flow에서 사용되는 FAQ 데이터를 관리하는 어드민입니다.</Description>
           <Divider />
-
           <TopBar>
             <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
               + 카테고리 등록
             </Button>
           </TopBar>
-
-          <FilterBar>
-            <DeleteIcon
-              style={{
-                cursor: selectedCount > 0 ? 'pointer' : 'default',
-                color: selectedCount > 0 ? colors.Normal : colors.BoxText,
-                pointerEvents: selectedCount > 0 ? 'auto' : 'none',
-                marginRight: 6,
-                width: 24,
-                height: 24,
-              }}
-              onClick={handleDeleteSelected}
-            />
-            <CategorySearch
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-            />
-            <DateFilter startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
-            {isRootAdmin && (
-              <DepartmentSelect
-                options={departments.map((dept) => ({
-                  departmentId: dept.departmentId,
-                  departmentName: dept.departmentName,
-                }))}
-                value={selectedDepartment ?? ''}
-                onChange={(id) => setSelectedDepartment(id ?? null)}
-                showAllOption={true}
-              />
-            )}
-          </FilterBar>
-
-          <CheckBox
-            size="medium"
-            variant="outline"
-            id="select-all"
-            checked={isAllSelected}
-            onChange={toggleSelectAll}
-            label=""
+          <FilterBar
+            selectedCount={selectedIds.length}
+            isRootAdmin={isRootAdmin}
+            searchKeyword={searchKeyword}
+            onChangeKeyword={setSearchKeyword}
+            onDelete={handleDeleteSelected}
+            startDate={startDate}
+            endDate={endDate}
+            onDateChange={handleDateChange}
+            selectedDepartment={selectedDepartment}
+            onChangeDepartment={setSelectedDepartment}
+            departments={departments}
           />
-
           <TableLayout>
             <thead>
-              <TableHeader columns={columns} />
+              <TableHeader columns={headerColumns} />
             </thead>
-            <TableScrollWrapper>
-              <tbody>
-                {filteredCategories.length === 0
-                  ? renderEmptyState()
-                  : filteredCategories.map((category, index) => renderTableRow(category, index))}
-                {isLoading && renderLoadingState()}
-              </tbody>
-            </TableScrollWrapper>
+            <tbody>
+              <tr>
+                <td colSpan={headerColumns.length} style={{ padding: 0 }}>
+                  <TableScrollWrapper>
+                    {isLoading ? (
+                      <LoadingWrapper>
+                        <Loading size={32} color="#555" />
+                        <span style={{ fontSize: '14px', color: '#555' }}>
+                          FAQ 카테고리 불러오는 중...
+                        </span>
+                      </LoadingWrapper>
+                    ) : filtered.length === 0 ? (
+                      <EmptyRow>
+                        <EmptyCell colSpan={headerColumns.length}>
+                          <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+                        </EmptyCell>
+                      </EmptyRow>
+                    ) : (
+                      filtered.map((category, index) => (
+                        <FaqRow
+                          key={category.id}
+                          category={category}
+                          checked={!!checkedMap[category.id]}
+                          onToggle={() => handleToggleOne(category.id)}
+                          onEdit={() => handleEditOpen(category.id)}
+                          observerRef={index === filtered.length - 1 ? observerRef : undefined}
+                        />
+                      ))
+                    )}
+                  </TableScrollWrapper>
+                </td>
+              </tr>
+            </tbody>
           </TableLayout>
-        </ContentWrapper>
+        </ContentInner>
       </Content>
-
       <FaqCategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleRegisterCategory}
+        onSuccess={() => setIsCategoryModalOpen(false)}
         departments={departments}
       />
-
       {editingCategory && (
         <FaqCategoryModalEdit
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          onSubmit={async (form) => {
-            try {
-              const depIds: string[] = Array.isArray(form.departments)
-                ? form.departments.map((d) => {
-                    if (typeof d === 'object' && d !== null && 'departmentId' in d) {
-                      return (d as { departmentId: string }).departmentId;
-                    }
-                    return d as string;
-                  })
-                : [];
-              await updateFaqCategory(editingCategory.id, {
-                name: form.name.trim(),
-                description: form.description?.trim() || undefined,
-                departmentList: depIds.map((id) => ({ id })),
-              });
-
-              (window as { showToast?: (_: string) => void }).showToast?.(
-                '카테고리가 수정되었습니다.'
-              );
-              setIsEditModalOpen(false);
-              setEditingCategory(null);
-              await reset();
-            } catch (error: unknown) {
-              console.error('카테고리 수정 에러:', error);
-              const errorMessage =
-                (error as { response?: { data?: { message?: string } } })?.response?.data
-                  ?.message || '카테고리 수정에 실패했습니다.';
-
-              if (
-                typeof window !== 'undefined' &&
-                'showErrorToast' in window &&
-                typeof window.showErrorToast === 'function'
-              ) {
-                window.showErrorToast(errorMessage);
-              }
-            }
-          }}
+          onSubmit={handleUpdateCategory}
           initialName={editingCategory.name}
           initialDescription={editingCategory.description}
-          initialDepartments={editingCategory.departments.map((d) => d.departmentId)}
+          initialDepartments={editingCategory.departmentList || []}
           departments={departments}
         />
       )}
     </PageWrapper>
   );
 }
+
+type FilterBarProps = {
+  selectedCount: number;
+  isRootAdmin?: boolean;
+  searchKeyword: string;
+  onChangeKeyword: (_v: string) => void;
+  onDelete: () => void;
+  startDate: string | null;
+  endDate: string | null;
+  onDateChange: (_start: string | null, _end: string | null) => void;
+  selectedDepartment: string | null;
+  onChangeDepartment: (_id: string | null) => void;
+  departments: { departmentId: string; departmentName: string }[];
+};
+
+const FilterBar: React.FC<FilterBarProps> = ({
+  selectedCount,
+  isRootAdmin,
+  searchKeyword,
+  onChangeKeyword,
+  onDelete,
+  startDate,
+  endDate,
+  onDateChange,
+  selectedDepartment,
+  onChangeDepartment,
+  departments,
+}) => (
+  <FilterBarBox>
+    <DeleteIcon
+      style={{
+        cursor: selectedCount > 0 ? 'pointer' : 'default',
+        color: selectedCount > 0 ? colors.Normal : colors.BoxText,
+        pointerEvents: selectedCount > 0 ? 'auto' : 'none',
+        marginRight: 6,
+        width: 24,
+        height: 24,
+      }}
+      onClick={onDelete}
+    />
+    <CategorySearch value={searchKeyword} onChange={(e) => onChangeKeyword(e.target.value)} />
+    <DateFilter startDate={startDate} endDate={endDate} onDateChange={onDateChange} />
+    {isRootAdmin && (
+      <DepartmentSelect
+        options={departments}
+        value={selectedDepartment ?? ''}
+        onChange={(id) => onChangeDepartment(id ?? null)}
+        showAllOption={false}
+      />
+    )}
+  </FilterBarBox>
+);
+
+type FaqRowProps = {
+  category: RowCategory;
+  checked: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  observerRef?: React.RefObject<HTMLTableRowElement | null>;
+};
+
+const FaqRow: React.FC<FaqRowProps> = ({ category, checked, onToggle, onEdit, observerRef }) => {
+  const deptTags =
+    category.departmentList?.map((name) => ({ departmentId: name, departmentName: name })) ?? [];
+  return (
+    <TableRow ref={observerRef}>
+      <Cell w={48} align="center">
+        <CheckBox
+          size="medium"
+          id={`check-${category.id}`}
+          checked={checked}
+          onChange={onToggle}
+          label=""
+        />
+      </Cell>
+      <Cell w={330} align="left">
+        <StyledLink to={`/faq/${category.id}`}>{category.name}</StyledLink>
+      </Cell>
+      <Cell w={206} align="left">
+        <StatusWrapper>
+          <StatusSummary
+            items={[
+              { type: 'Completed', count: category.status.Completed },
+              { type: 'Processing', count: category.status.Processing },
+              { type: 'Fail', count: category.status.Fail },
+            ]}
+          />
+        </StatusWrapper>
+      </Cell>
+      <Cell w={80} align="center">
+        {category.faqCount}
+      </Cell>
+      <ScrollableCell width="266px" maxWidth="266px" align="left">
+        <DepartmentTagList departments={deptTags} />
+      </ScrollableCell>
+      <Cell w={165} align="left">
+        {formatDate(category.lastModifiedDate)}
+      </Cell>
+      <Cell w={57} align="center">
+        <EditIconWrapper>
+          <EditIcon onClick={onEdit} />
+        </EditIconWrapper>
+      </Cell>
+    </TableRow>
+  );
+};
 
 const PageWrapper = styled.div`
   display: flex;
@@ -596,7 +507,12 @@ const Content = styled.div`
   flex: 1;
   min-width: 1158px;
   padding: 0 36px;
-  background-color: ${colors.background};
+`;
+
+const ContentInner = styled.div`
+  max-width: 1158px;
+  margin: 0 auto;
+  width: 100%;
 `;
 
 const PageTitle = styled.h1`
@@ -612,33 +528,17 @@ const Description = styled.p`
   font-weight: ${fontWeight.Regular};
   color: ${colors.BoxText};
 `;
+
 const TopBar = styled.div`
   display: flex;
   justify-content: flex-end;
 `;
 
-const ContentWrapper = styled.div`
-  max-width: 1158px;
-  margin: 0 auto;
-  width: 100%;
-`;
-
-const FilterBar = styled.div`
+const FilterBarBox = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 0 5px 20px;
-`;
-const EmptyRow = styled.tr`
-  height: 200px;
-`;
-
-const EmptyCell = styled.td<{ colSpan: number }>`
-  text-align: center;
-  vertical-align: middle;
-  color: ${colors.BoxText};
-  font-size: 14px;
-  padding: 80px 0;
+  margin: 0 0 24px 20px;
 `;
 
 const StatusWrapper = styled.div`
@@ -651,12 +551,10 @@ const StatusWrapper = styled.div`
 
 const EditIconWrapper = styled.div`
   cursor: pointer;
-
   svg {
     color: ${colors.BoxText};
     transition: color 0.2s;
   }
-
   &:hover svg {
     color: ${colors.Normal};
   }
@@ -666,7 +564,6 @@ const StyledLink = styled(Link)`
   color: ${colors.Black};
   text-decoration: none;
   cursor: pointer;
-
   &:hover {
     color: ${colors.Normal};
   }
@@ -679,6 +576,39 @@ const TableScrollWrapper = styled.div`
   background: ${colors.White};
 `;
 
+const EmptyRow = styled.tr`
+  height: calc(100vh - 450px);
+`;
+
+const EmptyCell = styled.td<{ colSpan: number }>`
+  padding: 0;
+`;
+
 const EmptyMessage = styled.div`
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 400px;
+  text-align: center;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  transform: translateX(500px);
+`;
+
+const LoadingWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 450px);
+  gap: 8px;
+  transform: translateX(50px);
+`;
+
+const Cell = styled.td<{ w: number; align: 'left' | 'center' | 'right' }>`
+  width: ${({ w }) => `${w}px`};
+  min-width: ${({ w }) => `${w}px`};
+  text-align: ${({ align }) => align};
 `;

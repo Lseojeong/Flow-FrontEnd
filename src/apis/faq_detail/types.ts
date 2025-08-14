@@ -1,58 +1,66 @@
-export interface FaqFileSearchParams {
-  keyword?: string;
-  cursor?: string;
-}
-
-export type FaqFileStatus = 'Completed' | 'Processing' | 'Fail';
-
-export interface FaqCategoryFileCreateBody {
-  fileUrl: string;
-  fileName: string;
-  version: string;
-  description?: string;
-}
-
-export interface FaqCategoryFileUpdateBody {
-  fileUrl?: string;
-  fileName?: string;
-  version?: string;
-  description?: string;
-}
-
-export interface FaqCategoryFile {
-  fileId: string;
-  fileName: string;
-  fileUrl: string;
-  latestVersion: string;
-  status: FaqFileStatus;
-  lastModifier?: string;
-  createdAt: string;
-  updatedAt: string;
-  departmentList: string[];
-}
-
-export interface ApiEnvelope<T> {
+export interface ApiResponse<T> {
   code: string;
   message: string;
   result: T;
 }
 
-export interface FaqFileListResult {
-  fileList: FaqCategoryFile[];
-  pagination: { last: boolean };
-  nextCursor?: string;
+export interface FaqFileCreateRequest {
+  fileUrl: string;
+  fileName: string;
+  description: string;
+  version: string;
 }
 
-export interface FileItem {
-  id: string;
-  name: string;
+export interface FaqFileCreateResponse {
+  fileId: string;
   fileName: string;
-  status: FaqFileStatus | string;
-  manager: string;
-  registeredAt: string;
-  updatedAt: string;
-  version: string;
   fileUrl: string;
-  timestamp?: string;
+  latestVersion: string;
+  status: 'Completed' | 'Processing' | 'Fail';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FaqFile {
+  fileId: string;
+  fileName: string;
+  status: 'Completed' | 'Processing' | 'Fail';
+  lastModifierName: string;
+  lastModifierId: string;
+  createdAt: string;
+  updatedAt: string;
+  fileUrl: string;
+  latestVersion: string;
+}
+
+export interface FaqFileListResult {
+  fileList: FaqFile[];
+  pagination: {
+    last: boolean;
+    nextCursor?: string;
+  };
+}
+
+export interface FaqCategoryDetail {
+  name: string;
+  description: string;
+  status: {
+    Total: number;
+    Completed: number;
+    Processing: number;
+    Fail: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+  lastModifierId: string;
+  lastModifierName: string;
   departmentList: string[];
+}
+
+export interface EditTargetFile {
+  title: string;
+  version: string;
+  fileId: string;
+  fileUrl: string;
+  latestVersion: string;
 }
