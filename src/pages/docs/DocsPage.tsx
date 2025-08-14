@@ -314,7 +314,6 @@ export default function DocsPage() {
         }
         throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
       } catch (error) {
-        console.error('카테고리 수정 에러:', error);
         let errorMessage = '수정 요청 중 오류가 발생했습니다.';
 
         if (error && typeof error === 'object' && 'response' in error) {
