@@ -230,10 +230,19 @@ export default function DocsPage() {
         return;
       }
       throw new Error((res as { data?: { message?: string } })?.data?.message || '삭제 실패');
-    } catch {
-      (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error) {
+      let errorMessage = '삭제 요청 중 오류가 발생했습니다.';
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = (error as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          errorMessage = response.data.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
     }
   }, [selectedIds, refetch]);
 
@@ -253,10 +262,19 @@ export default function DocsPage() {
         );
         setIsCategoryModalOpen(false);
         await refetch();
-      } catch {
-        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(
-          '등록 요청 중 오류가 발생했습니다.'
-        );
+      } catch (error) {
+        let errorMessage = '등록 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
       }
     },
     [refetch]
@@ -285,8 +303,17 @@ export default function DocsPage() {
         throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
       } catch (error) {
         console.error('카테고리 수정 에러:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
+        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
         (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
       }
     },

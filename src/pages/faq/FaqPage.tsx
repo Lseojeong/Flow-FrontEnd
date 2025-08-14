@@ -212,45 +212,83 @@ export default function FaqPage() {
       } else {
         throw new Error(res.data?.message || '삭제 실패');
       }
-    } catch {
-      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error) {
+      let errorMessage = '삭제 요청 중 오류가 발생했습니다.';
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = (error as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          errorMessage = response.data.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
     }
   }, [selectedIds, refetch]);
 
   const handleRegisterCategory = useCallback(
     async (data: { name: string; description: string; departments?: string[] }) => {
       try {
-        const res = await createFaqCategory({
+        // 부서 이름을 ID로 변환
+        const departmentIds = (data.departments ?? []).map((dept) => {
+          const department = departments.find(
+            (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
+          );
+          return department ? department.departmentId : dept;
+        });
+
+        const requestData = {
           name: data.name,
           description: data.description,
-          departmentIdList: data.departments ?? [],
-        });
+          departmentIdList: departmentIds,
+        };
+
+        const res = await createFaqCategory(requestData);
         if (res.data?.code !== 'COMMON200') {
           throw new Error(res.data?.message || '카테고리 등록 실패');
         }
         (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
         setIsCategoryModalOpen(false);
         await refetch();
-      } catch {
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
-          '등록 요청 중 오류가 발생했습니다.'
-        );
+      } catch (error) {
+        let errorMessage = '등록 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
       }
     },
-    [refetch]
+    [refetch, departments]
   );
 
   const handleUpdateCategory = useCallback(
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
       try {
-        const res = await updateFaqCategory(editingCategory.id, {
+        // 부서 이름을 ID로 변환
+        const departmentIds = data.departments.map((dept) => {
+          const department = departments.find(
+            (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
+          );
+          return department ? department.departmentId : dept;
+        });
+
+        const requestData = {
           name: data.name.trim(),
           description: data.description.trim(),
-          departmentIdList: data.departments,
-        });
+          departmentIdList: departmentIds,
+        };
+
+        const res = await updateFaqCategory(editingCategory.id, requestData);
         if (res.data?.code === 'COMMON200' || res.data?.code === '200') {
           (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
           setIsEditModalOpen(false);
@@ -260,11 +298,21 @@ export default function FaqPage() {
           throw new Error(res.data?.message || '수정 실패');
         }
       } catch (error) {
-        const msg = error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(msg);
+        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
       }
     },
-    [editingCategory, refetch]
+    [editingCategory, refetch, departments]
   );
 
   const headerColumns = useMemo(
