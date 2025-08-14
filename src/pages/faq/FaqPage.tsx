@@ -302,7 +302,7 @@ export default function FaqPage() {
       <Content>
         <ContentInner>
           <PageTitle>FAQ 관리</PageTitle>
-          <Description>Flow에서 사용되는 FAQ 데이터를 관리하는 어드민입니다.</Description>
+          <Description>자주 묻는 질문의 데이터를 Flow에 등록, 관리하는 어드민입니다.</Description>
           <Divider />
           <TopBar>
             <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
