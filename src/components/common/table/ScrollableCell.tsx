@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { colors } from '@/styles/index';
 import { ScrollableCellProps } from './Table.types';
@@ -13,20 +13,35 @@ export const ScrollableCell: React.FC<ScrollableCellProps> = ({
   maxWidth = '200px',
   width,
 }) => {
-  const handleWheel = (e: React.WheelEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
+  const scrollableRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
+  useEffect(() => {
+    const element = scrollableRef.current;
+    if (!element) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      e.stopPropagation();
+    };
+
+    element.addEventListener('wheel', handleWheel, { passive: false });
+    element.addEventListener('mousedown', handleMouseDown);
+
+    return () => {
+      element.removeEventListener('wheel', handleWheel);
+      element.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
 
   const finalWidth = width || maxWidth;
 
   return (
     <CellContainer $align={align} $width={finalWidth}>
-      <ScrollableContent $align={align} onWheel={handleWheel} onMouseDown={handleMouseDown}>
+      <ScrollableContent ref={scrollableRef} $align={align}>
         {children}
       </ScrollableContent>
     </CellContainer>
