@@ -81,10 +81,15 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     try {
       setIsSubmitting(true);
 
+      let finalDepartments = [...selectedDepartments];
+      if (profile?.departmentId && !finalDepartments.includes(profile.departmentId)) {
+        finalDepartments.push(profile.departmentId);
+      }
+
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
-        departments: selectedDepartments,
+        departments: finalDepartments,
       });
 
       // 성공 시에만 모달을 닫음 (토스트는 페이지에서 처리)

@@ -103,10 +103,15 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     try {
       setIsSubmitting(true);
 
+      let finalDepartments = [...selectedDepartments];
+      if (profile?.departmentId && !finalDepartments.includes(profile.departmentId)) {
+        finalDepartments.push(profile.departmentId);
+      }
+
       await onSubmit({
         name: trimmedName,
         description: trimmedDescription,
-        departments: selectedDepartments,
+        departments: finalDepartments,
       });
 
       onSuccess?.();
