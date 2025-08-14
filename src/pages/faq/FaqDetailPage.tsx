@@ -426,7 +426,7 @@ export default function FaqDetailPage() {
 
   const handleUploadModalSuccess = () => {
     showToast('파일이 등록되었습니다.');
-    queryClient.refetchQueries({ queryKey: ['faq-detail-files', categoryId], exact: true });
+    queryClient.invalidateQueries({ queryKey: ['faq-detail-files', categoryId] });
   };
 
   const handleFileDetailClose = () => {
@@ -493,7 +493,7 @@ export default function FaqDetailPage() {
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         categoryId={categoryId}
-        onSubmit={() => {}}
+        onSubmit={handleUploadModalSuccess}
         onSuccess={handleUploadModalSuccess}
       />
 
