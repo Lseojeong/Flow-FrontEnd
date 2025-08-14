@@ -41,8 +41,6 @@ export const DictUploadModal: React.FC<Props> = ({
         description: data.description,
         version: data.version,
       });
-
-      onClose();
     } catch {
       (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
         '파일 업로드 또는 DB 등록 중 오류가 발생했습니다.',
