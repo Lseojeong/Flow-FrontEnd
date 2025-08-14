@@ -28,6 +28,7 @@ import {
 } from '@/apis/dictcategory/api';
 import type { DictCategory } from '@/apis/dictcategory/types';
 import { formatDateTime } from '@/utils/formatDateTime';
+import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -57,6 +58,8 @@ export default function DictionaryPage() {
   const [endDate, setEndDate] = useState<string | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -195,35 +198,34 @@ export default function DictionaryPage() {
   };
 
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
-    try {
-      const res = await createDictCategory(data);
+    const res = await createDictCategory(data);
 
-      if (res.data?.code !== 'COMMON200') {
-        throw new Error(res.data?.message || '카테고리 등록 실패');
-      }
-
-      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-      setIsCategoryModalOpen(false);
-      setSearchKeyword('');
-      setStartDate(null);
-      setEndDate(null);
-      setCheckedItems?.({});
-
-      await refetch();
-    } catch (error: unknown) {
-      console.error('카테고리 등록 에러:', error);
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 등록에 실패했습니다.';
-
-      window.showErrorToast?.(errorMessage);
+    if (res.data?.code !== 'COMMON200') {
+      throw new Error(res.data?.message || '카테고리 등록 실패');
     }
+
+    // 성공 시에만 모달을 닫고 토스트 표시
+    (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+    setIsCategoryModalOpen(false);
+    setSearchKeyword('');
+    setStartDate(null);
+    setEndDate(null);
+    setCheckedItems?.({});
+
+    await refetch();
   };
 
   const handleDeleteSelected = async () => {
     const selected = filteredCategories.filter((cat, idx) => checkedItems[rowKeyOf(cat, idx)]);
     if (selected.length === 0) return;
+    setIsDeletePopupOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const selected = filteredCategories.filter((cat, idx) => checkedItems[rowKeyOf(cat, idx)]);
+    if (selected.length === 0) return;
     const ids = selected.map((cat) => cat.id);
+    setIsDeleting(true);
     try {
       const res = await deleteDictCategories(ids);
       if (res.data?.code === 'COMMON200') {
@@ -243,6 +245,9 @@ export default function DictionaryPage() {
       if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
         window.showErrorToast(errorMessage);
       }
+    } finally {
+      setIsDeleting(false);
+      setIsDeletePopupOpen(false);
     }
   };
 
@@ -263,7 +268,6 @@ export default function DictionaryPage() {
         throw new Error(res as unknown as string);
       }
     } catch (error: unknown) {
-      console.error('카테고리 수정 에러:', error);
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 수정에 실패했습니다.';
@@ -466,6 +470,16 @@ export default function DictionaryPage() {
           initialDescription={editingCategory.description}
         />
       )}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="카테고리 삭제"
+        message="카테고리를 삭제하시겠습니까?"
+        warningMessages={['카테고리와 포함된 모든 파일이 함께 삭제됩니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={handleConfirmDelete}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+      />
     </PageWrapper>
   );
 }

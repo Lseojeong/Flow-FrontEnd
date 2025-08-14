@@ -14,7 +14,6 @@ import DictEditModal from '@/components/modal/upload-edit-modal/DictEditModal';
 import { FileDetailPanel } from '@/pages/history/FileDetailPanel';
 import { TableLayout, TableHeader, TableRow, ScrollableCell } from '@/components/common/table';
 import { Tooltip } from '@/components/flow-setting/tooltip/Tooltip';
-import { Loading } from '@/components/common/loading/Loading';
 import { symbolTextLogo } from '@/assets/logo';
 import { commonMenuItems, settingsMenuItems } from '@/constants/SideBar.constants';
 import { colors, fontWeight } from '@/styles/index';
@@ -23,6 +22,7 @@ import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useQuery } from '@tanstack/react-query';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
 import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
@@ -71,42 +71,35 @@ export default function DictionaryDetailPage() {
   const { dictionaryId } = useParams<{ dictionaryId: string }>();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
-  const [isFilesLoading, setIsFilesLoading] = useState<boolean>(true);
   const [category, setCategory] = useState<DictCategory | null>(null);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
+  const { data: categoryData, isLoading: isCategoryLoading } = useQuery({
+    queryKey: ['dict-category', categoryId],
+    queryFn: async () => {
+      const res = await getDictCategoryById(categoryId);
+      const data = (res.data?.result ?? res.data) as DictCategory;
+      return {
+        ...data,
+        lastModifiedDate: data.lastModifiedDate ?? (data.updatedAt ?? '').slice(0, 10),
+      };
+    },
+    enabled: !!categoryId,
+  });
+
   useEffect(() => {
-    const ac = new AbortController();
-    setIsFilesLoading(true);
-
-    (async () => {
-      try {
-        const res = await getDictCategoryById(categoryId);
-        const data = (res.data?.result ?? res.data) as DictCategory;
-        if (ac.signal.aborted) return;
-
-        setCategory({
-          ...data,
-          lastModifiedDate: data.lastModifiedDate ?? (data.updatedAt ?? '').slice(0, 10),
-        });
-      } catch (e) {
-        if (!ac.signal.aborted) {
-          console.error(e);
-        }
-      } finally {
-        if (!ac.signal.aborted) setIsFilesLoading(false);
-      }
-    })();
-
-    return () => ac.abort();
-  }, [categoryId]);
+    if (categoryData) {
+      setCategory(categoryData);
+    }
+  }, [categoryData]);
 
   const {
     data: paginatedFiles,
@@ -117,47 +110,44 @@ export default function DictionaryDetailPage() {
   } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
     queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword],
     fetchFn: async (cursor) => {
-      setIsFilesLoading(true);
-      try {
-        const hasKeyword = !!debouncedSearchKeyword.trim();
+      const hasKeyword = !!debouncedSearchKeyword.trim();
 
-        const res = hasKeyword
-          ? await searchDictCategoryFiles(categoryId, { keyword: debouncedSearchKeyword, cursor })
-          : await getDictCategoryFiles(categoryId, cursor);
+      const res = hasKeyword
+        ? await searchDictCategoryFiles(categoryId, { keyword: debouncedSearchKeyword, cursor })
+        : await getDictCategoryFiles(categoryId, cursor);
 
-        const data = res.data;
+      const data = res.data;
 
-        const list: (FileItem & { timestamp: string })[] = (data.result?.fileList ?? []).map(
-          (f: DictCategoryFile) => ({
-            id: f.fileId,
-            name: f.fileName,
-            fileName: f.fileName,
-            status: f.status,
-            manager: f.lastModifier ?? '-',
-            registeredAt: formatDateTime(f.createdAt),
-            updatedAt: formatDateTime(f.updatedAt),
-            version: f.latestVersion ?? '-',
-            fileUrl: f.fileUrl,
-            timestamp: f.updatedAt,
-          })
-        );
+      const list: (FileItem & { timestamp: string })[] = (data.result?.fileList ?? []).map(
+        (f: DictCategoryFile) => ({
+          id: f.fileId,
+          name: f.fileName,
+          fileName: f.fileName,
+          status: f.status,
+          manager: f.lastModifier ?? '-',
+          registeredAt: formatDateTime(f.createdAt),
+          updatedAt: formatDateTime(f.updatedAt),
+          version: f.latestVersion ?? '-',
+          fileUrl: f.fileUrl,
+          timestamp: f.updatedAt,
+        })
+      );
 
-        return {
-          code: data.code,
-          result: {
-            historyList: list,
-            pagination: {
-              isLast: data.result?.pagination?.last ?? true,
-            },
+      return {
+        code: data.code,
+        result: {
+          historyList: list,
+          pagination: {
+            isLast: data.result?.pagination?.last ?? true,
           },
-        };
-      } finally {
-        setIsFilesLoading(false);
-      }
+        },
+      };
     },
   });
 
-  if (!category) return renderEmptyState();
+  if (isCategoryLoading || !category) {
+    return null;
+  }
 
   const statusItems: StatusItemData[] = [
     { type: 'Completed', count: category.status?.Completed ?? 0 },
@@ -198,6 +188,7 @@ export default function DictionaryDetailPage() {
       return;
     }
 
+    setIsDeleting(true);
     try {
       await deleteDictCategoryFile(dictionaryId, targetFileId);
 
@@ -216,6 +207,7 @@ export default function DictionaryDetailPage() {
         'error'
       );
     } finally {
+      setIsDeleting(false);
       setTargetFileId('');
     }
   };
@@ -440,24 +432,11 @@ export default function DictionaryDetailPage() {
             </thead>
             <TableScrollWrapper>
               <tbody>
-                {isFilesLoading ? (
-                  <tr>
-                    <td colSpan={TABLE_COLUMNS.length} style={{ padding: 0 }}>
-                      <LoadingWrapper>
-                        <Loading size={32} color="#555" />
-                        <span style={{ fontSize: '14px', color: '#555' }}>
-                          카테고리 파일 불러오는 중...
-                        </span>
-                      </LoadingWrapper>
-                    </td>
-                  </tr>
-                ) : !paginatedFiles || paginatedFiles.length === 0 ? (
-                  renderEmptyState()
-                ) : (
-                  paginatedFiles.map((file, index) =>
-                    renderFileRow(file, index, index === paginatedFiles.length - 1)
-                  )
-                )}
+                {!paginatedFiles || paginatedFiles.length === 0
+                  ? renderEmptyState()
+                  : paginatedFiles.map((file, index) =>
+                      renderFileRow(file, index, index === paginatedFiles.length - 1)
+                    )}
               </tbody>
             </TableScrollWrapper>
           </TableLayout>
@@ -471,6 +450,8 @@ export default function DictionaryDetailPage() {
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={handleDeleteConfirm}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '' : '삭제'}
       />
 
       <DictUploadModal
@@ -707,15 +688,4 @@ const TableScrollWrapper = styled.div`
   overflow-y: auto;
   border-radius: 8px;
   background: ${colors.White};
-`;
-
-const LoadingWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: calc(100vh - 450px);
-  gap: 8px;
-  transform: translateX(500px);
 `;

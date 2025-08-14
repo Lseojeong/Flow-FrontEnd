@@ -347,6 +347,7 @@ export default function FaqDetailPage() {
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [targetFileName, setTargetFileName] = useState<string>('');
   const [targetFileId, setTargetFileId] = useState<string>('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
@@ -354,9 +355,14 @@ export default function FaqDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<FaqFile | null>(null);
 
-  const { data: categoryDetailResponse } = useFaqCategoryDetail(categoryId);
+  const { data: categoryDetailResponse, isLoading: isCategoryLoading } =
+    useFaqCategoryDetail(categoryId);
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-  const { data: paginatedFiles, observerRef } = useFaqFiles(categoryId, debouncedSearchKeyword);
+  const {
+    data: paginatedFiles,
+    observerRef,
+    isLoading: isFilesLoading,
+  } = useFaqFiles(categoryId, debouncedSearchKeyword);
 
   const categoryDetail = categoryDetailResponse?.data?.result;
 
@@ -364,8 +370,8 @@ export default function FaqDetailPage() {
     return <NoData>카테고리 ID가 없습니다.</NoData>;
   }
 
-  if (!categoryDetail) {
-    return <NoData>데이터를 불러오는 중...</NoData>;
+  if (isCategoryLoading || isFilesLoading || !categoryDetail) {
+    return null;
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -394,6 +400,7 @@ export default function FaqDetailPage() {
   };
 
   const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
     try {
       await deleteFaqCategoryFile(targetFileId);
       showToast(`${targetFileName} 파일이 삭제되었습니다.`);
@@ -403,6 +410,8 @@ export default function FaqDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['faq-detail-files', categoryId] });
     } catch {
       showErrorToast('파일 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -426,7 +435,7 @@ export default function FaqDetailPage() {
 
   const handleUploadModalSuccess = () => {
     showToast('파일이 등록되었습니다.');
-    queryClient.refetchQueries({ queryKey: ['faq-detail-files', categoryId], exact: true });
+    queryClient.invalidateQueries({ queryKey: ['faq-detail-files', categoryId] });
   };
 
   const handleFileDetailClose = () => {
@@ -487,13 +496,15 @@ export default function FaqDetailPage() {
         warningMessages={['삭제한 파일은 복구할 수 없습니다.']}
         onClose={() => setIsDeletePopupOpen(false)}
         onDelete={handleDeleteConfirm}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '' : '삭제'}
       />
 
       <FaqUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         categoryId={categoryId}
-        onSubmit={() => {}}
+        onSubmit={handleUploadModalSuccess}
         onSuccess={handleUploadModalSuccess}
       />
 

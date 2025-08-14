@@ -35,7 +35,8 @@ import { colors, fontWeight } from '@/styles';
 import FaqCategoryModal from '@/components/modal/category-modal/FaqCategoryModal';
 import FaqCategoryModalEdit from '@/components/modal/category-edit-modal/FaqCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
-import { formatDate } from '@/utils/formatDate';
+import { formatDate, convertDepartmentNamesToIds } from '@/utils';
+import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -79,6 +80,8 @@ export default function FaqPage() {
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -185,15 +188,20 @@ export default function FaqPage() {
     (id: string) => {
       const category = categories.find((c) => c.id === id);
       if (!category) return;
+
+      // 부서 이름을 부서 ID로 변환
+      const departmentList = category.departmentList ?? [];
+      const departmentIds = convertDepartmentNamesToIds(departmentList, departments);
+
       setEditingCategory({
         id: category.id,
         name: category.name,
         description: category.description ?? '',
-        departmentList: category.departmentList ?? [],
+        departmentList: departmentIds,
       });
       setIsEditModalOpen(true);
     },
-    [categories]
+    [categories, departments]
   );
 
   const handleDeleteSelected = useCallback(async () => {
@@ -201,6 +209,12 @@ export default function FaqPage() {
       (window as { showToast?: (_: string) => void }).showToast?.('삭제할 카테고리를 선택하세요.');
       return;
     }
+    setIsDeletePopupOpen(true);
+  }, [selectedIds]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
     try {
       const res = await deleteFaqCategories({ categoryIdList: selectedIds });
       if (res.data?.code === 'COMMON200') {
@@ -212,45 +226,61 @@ export default function FaqPage() {
       } else {
         throw new Error(res.data?.message || '삭제 실패');
       }
-    } catch {
-      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error) {
+      let errorMessage = '삭제 요청 중 오류가 발생했습니다.';
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = (error as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          errorMessage = response.data.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setIsDeletePopupOpen(false);
     }
   }, [selectedIds, refetch]);
 
   const handleRegisterCategory = useCallback(
     async (data: { name: string; description: string; departments?: string[] }) => {
-      try {
-        const res = await createFaqCategory({
-          name: data.name,
-          description: data.description,
-          departmentIdList: data.departments ?? [],
-        });
-        if (res.data?.code !== 'COMMON200') {
-          throw new Error(res.data?.message || '카테고리 등록 실패');
-        }
-        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-        setIsCategoryModalOpen(false);
-        await refetch();
-      } catch {
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(
-          '등록 요청 중 오류가 발생했습니다.'
-        );
+      // 부서 이름을 ID로 변환
+      const departmentIds = convertDepartmentNamesToIds(data.departments ?? [], departments);
+
+      const requestData = {
+        name: data.name,
+        description: data.description,
+        departmentIdList: departmentIds,
+      };
+
+      const res = await createFaqCategory(requestData);
+      if (res.data?.code !== 'COMMON200') {
+        throw new Error(res.data?.message || '카테고리 등록 실패');
       }
+
+      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+      setIsCategoryModalOpen(false);
+      await refetch();
     },
-    [refetch]
+    [refetch, departments]
   );
 
   const handleUpdateCategory = useCallback(
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
       try {
-        const res = await updateFaqCategory(editingCategory.id, {
+        const departmentIds = convertDepartmentNamesToIds(data.departments, departments);
+
+        const requestData = {
           name: data.name.trim(),
           description: data.description.trim(),
-          departmentIdList: data.departments,
-        });
+          departmentIdList: departmentIds,
+        };
+
+        const res = await updateFaqCategory(editingCategory.id, requestData);
         if (res.data?.code === 'COMMON200' || res.data?.code === '200') {
           (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
           setIsEditModalOpen(false);
@@ -260,11 +290,21 @@ export default function FaqPage() {
           throw new Error(res.data?.message || '수정 실패');
         }
       } catch (error) {
-        const msg = error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(msg);
+        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
       }
     },
-    [editingCategory, refetch]
+    [editingCategory, refetch, departments]
   );
 
   const headerColumns = useMemo(
@@ -302,7 +342,7 @@ export default function FaqPage() {
       <Content>
         <ContentInner>
           <PageTitle>FAQ 관리</PageTitle>
-          <Description>Flow에서 사용되는 FAQ 데이터를 관리하는 어드민입니다.</Description>
+          <Description>자주 묻는 질문의 데이터를 Flow에 등록, 관리하는 어드민입니다.</Description>
           <Divider />
           <TopBar>
             <Button size="small" onClick={() => setIsCategoryModalOpen(true)}>
@@ -380,6 +420,16 @@ export default function FaqPage() {
           departments={departments}
         />
       )}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="카테고리 삭제"
+        message="카테고리를 삭제하시겠습니까?"
+        warningMessages={['카테고리와 포함된 모든 파일이 함께 삭제됩니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={handleConfirmDelete}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+      />
     </PageWrapper>
   );
 }
@@ -427,10 +477,16 @@ const FilterBar: React.FC<FilterBarProps> = ({
     <DateFilter startDate={startDate} endDate={endDate} onDateChange={onDateChange} />
     {isRootAdmin && (
       <DepartmentSelect
-        options={departments}
-        value={selectedDepartment ?? ''}
-        onChange={(id) => onChangeDepartment(id ?? null)}
-        showAllOption={false}
+        options={departments.map((dept) => ({
+          departmentId: dept.departmentId,
+          departmentName: dept.departmentName,
+        }))}
+        value={selectedDepartment}
+        onChange={(id) => {
+          onChangeDepartment(id);
+        }}
+        showAllOption={true}
+        placeholder=""
       />
     )}
   </FilterBarBox>

@@ -35,7 +35,8 @@ import { colors, fontWeight } from '@/styles';
 import DocsCategoryModal from '@/components/modal/category-modal/DocsCategoryModal';
 import DocsCategoryModalEdit from '@/components/modal/category-edit-modal/DocsCategoryEditModal';
 import { mockDepartments } from '@/pages/mock/mockDepartments';
-import { formatDate } from '@/utils/formatDate';
+import { formatDate, convertDepartmentNamesToIds } from '@/utils';
+import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -79,6 +80,8 @@ export default function DocsPage() {
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [editingCategory, setEditingCategory] = useState<{
     id: string;
     name: string;
@@ -190,15 +193,9 @@ export default function DocsPage() {
       const category = categories.find((c) => c.id === id);
       if (!category) return;
 
-      // 부서 이름을 부서 ID로 변환
       const departmentList =
         (category as unknown as { departmentList?: string[] }).departmentList ?? [];
-      const departmentIds = departmentList.map((deptName) => {
-        const dept = departments.find(
-          (d: { departmentId: string; departmentName: string }) => d.departmentName === deptName
-        );
-        return dept?.departmentId || deptName;
-      });
+      const departmentIds = convertDepartmentNamesToIds(departmentList, departments);
 
       setEditingCategory({
         id: category.id,
@@ -218,6 +215,12 @@ export default function DocsPage() {
       );
       return;
     }
+    setIsDeletePopupOpen(true);
+  }, [selectedIds]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setIsDeleting(true);
     try {
       const res = await deleteDocsCategories({ categoryIdList: selectedIds });
       const code = (res as { data?: { code?: string } }).data?.code;
@@ -230,34 +233,41 @@ export default function DocsPage() {
         return;
       }
       throw new Error((res as { data?: { message?: string } })?.data?.message || '삭제 실패');
-    } catch {
-      (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(
-        '삭제 요청 중 오류가 발생했습니다.'
-      );
+    } catch (error) {
+      let errorMessage = '삭제 요청 중 오류가 발생했습니다.';
+
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = (error as { response?: { data?: { message?: string } } }).response;
+        if (response?.data?.message) {
+          errorMessage = response.data.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setIsDeletePopupOpen(false);
     }
   }, [selectedIds, refetch]);
 
   const handleRegisterCategory = useCallback(
     async (data: { name: string; description: string; departments?: string[] }) => {
-      try {
-        const res = await createDocsCategory({
-          name: data.name,
-          description: data.description,
-          departmentIdList: data.departments ?? [],
-        });
-        if (!(res.data?.code === 'COMMON200')) {
-          throw new Error(res.data?.message || '카테고리 등록 실패');
-        }
-        (window as { showToast?: (_message: string) => void }).showToast?.(
-          '카테고리가 등록되었습니다.'
-        );
-        setIsCategoryModalOpen(false);
-        await refetch();
-      } catch {
-        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(
-          '등록 요청 중 오류가 발생했습니다.'
-        );
+      const res = await createDocsCategory({
+        name: data.name,
+        description: data.description,
+        departmentIdList: data.departments ?? [],
+      });
+      if (!(res.data?.code === 'COMMON200')) {
+        throw new Error(res.data?.message || '카테고리 등록 실패');
       }
+
+      (window as { showToast?: (_message: string) => void }).showToast?.(
+        '카테고리가 등록되었습니다.'
+      );
+      setIsCategoryModalOpen(false);
+      await refetch();
     },
     [refetch]
   );
@@ -284,9 +294,17 @@ export default function DocsPage() {
         }
         throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
       } catch (error) {
-        console.error('카테고리 수정 에러:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : '수정 요청 중 오류가 발생했습니다.';
+        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
+
+        if (error && typeof error === 'object' && 'response' in error) {
+          const response = (error as { response?: { data?: { message?: string } } }).response;
+          if (response?.data?.message) {
+            errorMessage = response.data.message;
+          }
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
         (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
       }
     },
@@ -415,6 +433,16 @@ export default function DocsPage() {
           departments={departments}
         />
       )}
+      <Popup
+        isOpen={isDeletePopupOpen}
+        title="카테고리 삭제"
+        message="카테고리를 삭제하시겠습니까?"
+        warningMessages={['카테고리와 포함된 모든 파일이 함께 삭제됩니다.']}
+        onClose={() => setIsDeletePopupOpen(false)}
+        onDelete={handleConfirmDelete}
+        disabled={isDeleting}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+      />
     </PageWrapper>
   );
 }
@@ -467,9 +495,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
             departmentId: dept.departmentId,
             departmentName: dept.departmentName,
           }))}
-          value={selectedDepartment ?? ''}
-          onChange={(id) => onChangeDepartment(id ?? null)}
-          showAllOption={false}
+          value={selectedDepartment}
+          onChange={(id) => {
+            onChangeDepartment(id);
+          }}
+          showAllOption={true}
+          placeholder=""
         />
       )}
     </FilterBarBox>
