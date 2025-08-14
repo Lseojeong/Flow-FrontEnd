@@ -497,10 +497,16 @@ const FilterBar: React.FC<FilterBarProps> = ({
     <DateFilter startDate={startDate} endDate={endDate} onDateChange={onDateChange} />
     {isRootAdmin && (
       <DepartmentSelect
-        options={departments}
-        value={selectedDepartment ?? ''}
-        onChange={(id) => onChangeDepartment(id ?? null)}
-        showAllOption={false}
+        options={departments.map((dept) => ({
+          departmentId: dept.departmentId,
+          departmentName: dept.departmentName,
+        }))}
+        value={selectedDepartment}
+        onChange={(id) => {
+          onChangeDepartment(id);
+        }}
+        showAllOption={true}
+        placeholder=""
       />
     )}
   </FilterBarBox>
