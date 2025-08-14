@@ -31,8 +31,8 @@ export default function DashBoardPage() {
   const [endDate, setEndDate] = useState<string>(getTodayDate());
 
   const { data: dashboardData, isLoading } = useDashboardData({
-    startTime: startDate?.replace('Z', ''),
-    endTime: endDate?.replace('Z', ''),
+    startDate: startDate ? formatDateForAPI(startDate) : '',
+    endDate: endDate ? formatDateForAPI(endDate) : '',
   });
 
   const handleDateChange = (start: string | null, end: string | null) => {
@@ -173,6 +173,14 @@ function getWeekAgoDate(): string {
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const koreaTime = new Date(weekAgo.getTime() + 9 * 60 * 60 * 1000);
   return koreaTime.toISOString().replace('Z', '');
+}
+
+function formatDateForAPI(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 const PageWrapper = styled.div`

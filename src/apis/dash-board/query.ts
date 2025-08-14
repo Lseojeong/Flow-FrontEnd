@@ -13,7 +13,7 @@ export const useHistoryFilterMenu = () => {
 
 export const useDashboardData = (params: DashboardParams) => {
   return useQuery({
-    queryKey: ['dashboardData', params.startTime, params.endTime],
+    queryKey: ['dashboardData', params.startDate, params.endDate],
     queryFn: () => getDashboardData(params),
     staleTime: 1 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
