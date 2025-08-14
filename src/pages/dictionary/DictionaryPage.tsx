@@ -198,28 +198,21 @@ export default function DictionaryPage() {
   };
 
   const handleRegisterCategory = async (data: { name: string; description: string }) => {
-    try {
-      const res = await createDictCategory(data);
+    const res = await createDictCategory(data);
 
-      if (res.data?.code !== 'COMMON200') {
-        throw new Error(res.data?.message || '카테고리 등록 실패');
-      }
-
-      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-      setIsCategoryModalOpen(false);
-      setSearchKeyword('');
-      setStartDate(null);
-      setEndDate(null);
-      setCheckedItems?.({});
-
-      await refetch();
-    } catch (error: unknown) {
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 등록에 실패했습니다.';
-
-      window.showErrorToast?.(errorMessage);
+    if (res.data?.code !== 'COMMON200') {
+      throw new Error(res.data?.message || '카테고리 등록 실패');
     }
+
+    // 성공 시에만 모달을 닫고 토스트 표시
+    (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+    setIsCategoryModalOpen(false);
+    setSearchKeyword('');
+    setStartDate(null);
+    setEndDate(null);
+    setCheckedItems?.({});
+
+    await refetch();
   };
 
   const handleDeleteSelected = async () => {

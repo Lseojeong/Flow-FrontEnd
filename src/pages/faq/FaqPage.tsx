@@ -242,42 +242,29 @@ export default function FaqPage() {
 
   const handleRegisterCategory = useCallback(
     async (data: { name: string; description: string; departments?: string[] }) => {
-      try {
-        // 부서 이름을 ID로 변환
-        const departmentIds = (data.departments ?? []).map((dept) => {
-          const department = departments.find(
-            (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
-          );
-          return department ? department.departmentId : dept;
-        });
+      // 부서 이름을 ID로 변환
+      const departmentIds = (data.departments ?? []).map((dept) => {
+        const department = departments.find(
+          (d: { departmentId: string; departmentName: string }) => d.departmentName === dept
+        );
+        return department ? department.departmentId : dept;
+      });
 
-        const requestData = {
-          name: data.name,
-          description: data.description,
-          departmentIdList: departmentIds,
-        };
+      const requestData = {
+        name: data.name,
+        description: data.description,
+        departmentIdList: departmentIds,
+      };
 
-        const res = await createFaqCategory(requestData);
-        if (res.data?.code !== 'COMMON200') {
-          throw new Error(res.data?.message || '카테고리 등록 실패');
-        }
-        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
-        setIsCategoryModalOpen(false);
-        await refetch();
-      } catch (error) {
-        let errorMessage = '등록 요청 중 오류가 발생했습니다.';
-
-        if (error && typeof error === 'object' && 'response' in error) {
-          const response = (error as { response?: { data?: { message?: string } } }).response;
-          if (response?.data?.message) {
-            errorMessage = response.data.message;
-          }
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
+      const res = await createFaqCategory(requestData);
+      if (res.data?.code !== 'COMMON200') {
+        throw new Error(res.data?.message || '카테고리 등록 실패');
       }
+
+      // 성공 시에만 모달을 닫고 토스트 표시
+      (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 등록되었습니다.');
+      setIsCategoryModalOpen(false);
+      await refetch();
     },
     [refetch, departments]
   );

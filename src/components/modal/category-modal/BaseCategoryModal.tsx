@@ -24,7 +24,7 @@ interface BaseCategoryModalProps {
   showDepartmentCheck?: boolean;
 }
 
-type ErrorType = '' | 'required';
+type ErrorType = '' | 'required' | 'duplicate';
 
 const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
@@ -92,8 +92,17 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         departments: finalDepartments,
       });
 
-      // 성공 시에만 모달을 닫음 (토스트는 페이지에서 처리)
+      // 성공 시에만 모달을 닫음
       handleClose();
+    } catch (error: unknown) {
+      // CATEGORY400 에러 처리 (중복 에러)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = error as { response?: { data?: { code?: string } } };
+        if (response.response?.data?.code === 'CATEGORY400') {
+          setErrorType('duplicate');
+        }
+      }
+      // 에러 발생 시 모달을 닫지 않음
     } finally {
       setIsSubmitting(false);
     }
@@ -101,6 +110,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
 
   const getErrorMessage = () => {
     if (errorType === 'required') return '카테고리를 등록해주세요.';
+    if (errorType === 'duplicate') return '중복된 이름은 사용할 수 없습니다.';
     return '';
   };
 

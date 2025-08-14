@@ -28,7 +28,7 @@ interface BaseCategoryEditModalProps {
   children?: React.ReactNode;
 }
 
-type ErrorType = '' | 'required';
+type ErrorType = '' | 'required' | 'duplicate';
 
 const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
   isOpen,
@@ -114,8 +114,18 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
         departments: finalDepartments,
       });
 
+      // 성공 시에만 모달을 닫음
       onSuccess?.();
       handleClose();
+    } catch (error: unknown) {
+      // CATEGORY400 에러 처리 (중복 에러)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = error as { response?: { data?: { code?: string } } };
+        if (response.response?.data?.code === 'CATEGORY400') {
+          setErrorType('duplicate');
+        }
+      }
+      // 에러 발생 시 모달을 닫지 않음
     } finally {
       setIsSubmitting(false);
     }
@@ -123,6 +133,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
   const getErrorMessage = () => {
     if (errorType === 'required') return '카테고리를 입력해주세요.';
+    if (errorType === 'duplicate') return '중복된 이름은 사용할 수 없습니다.';
     return '';
   };
 
