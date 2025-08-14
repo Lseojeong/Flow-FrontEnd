@@ -214,7 +214,6 @@ export default function DictionaryPage() {
 
       await refetch();
     } catch (error: unknown) {
-      console.error('카테고리 등록 에러:', error);
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 등록에 실패했습니다.';
@@ -276,7 +275,6 @@ export default function DictionaryPage() {
         throw new Error(res as unknown as string);
       }
     } catch (error: unknown) {
-      console.error('카테고리 수정 에러:', error);
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         '카테고리 수정에 실패했습니다.';
