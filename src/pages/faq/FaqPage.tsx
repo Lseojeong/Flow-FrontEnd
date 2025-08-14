@@ -188,15 +188,25 @@ export default function FaqPage() {
     (id: string) => {
       const category = categories.find((c) => c.id === id);
       if (!category) return;
+
+      // 부서 이름을 부서 ID로 변환
+      const departmentList = category.departmentList ?? [];
+      const departmentIds = departmentList.map((deptName) => {
+        const dept = departments.find(
+          (d: { departmentId: string; departmentName: string }) => d.departmentName === deptName
+        );
+        return dept?.departmentId || deptName;
+      });
+
       setEditingCategory({
         id: category.id,
         name: category.name,
         description: category.description ?? '',
-        departmentList: category.departmentList ?? [],
+        departmentList: departmentIds,
       });
       setIsEditModalOpen(true);
     },
-    [categories]
+    [categories, departments]
   );
 
   const handleDeleteSelected = useCallback(async () => {

@@ -62,9 +62,9 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     if (isOpen) {
       setCategoryName(initialName ?? '');
       setDescription(initialDescription ?? '');
-
       setSelectedDepartments(initialDepartments || []);
-
+      setErrorType('');
+      setIsTouched(false);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
