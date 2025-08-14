@@ -53,12 +53,21 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setFile(null);
+      setDescription('');
+      setVersion('1.0.0');
+      setFileError('');
+      setFileUrl('');
+      setIsSubmitting(false);
+      setErrorToastMessage(null);
+    }
+  }, [isOpen]);
+
   const handleConfirm = async () => {
     if (!file || isSubmitting) return;
     setIsSubmitting(true);
-
-    // 모달을 즉시 닫습니다
-    onClose();
 
     try {
       await Promise.resolve(
@@ -73,11 +82,8 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
 
       onSuccess?.();
 
-      setFile(null);
-      setDescription('');
-      setVersion('');
-      setFileError('');
-      setFileUrl('');
+      // 성공 시에만 모달을 닫음 (상태는 useEffect에서 초기화됨)
+      onClose();
     } catch (err) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||

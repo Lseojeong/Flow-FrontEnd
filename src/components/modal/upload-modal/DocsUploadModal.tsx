@@ -44,7 +44,6 @@ export const DocsUploadModal: React.FC<Props> = ({
       });
 
       onSuccess?.();
-      onClose();
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
