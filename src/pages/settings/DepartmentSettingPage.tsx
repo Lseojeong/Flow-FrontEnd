@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -31,6 +31,10 @@ export default function DepartmentPage() {
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const { data, isLoading, error, refetch } = useDepartmentSettingList();
   const departments = data?.result?.departmentList ?? [];

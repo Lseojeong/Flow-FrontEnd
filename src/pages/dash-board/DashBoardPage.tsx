@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import SideBar from '@/components/common/layout/SideBar';
 import { symbolTextLogo } from '@/assets/logo';
@@ -29,6 +29,10 @@ export default function DashBoardPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('dashboard');
   const [startDate, setStartDate] = useState<string>(getWeekAgoDate());
   const [endDate, setEndDate] = useState<string>(getTodayDate());
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const { data: dashboardData, isLoading } = useDashboardData({
     startDate: startDate ? formatDateForAPI(startDate) : '',

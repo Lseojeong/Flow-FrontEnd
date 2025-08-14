@@ -341,7 +341,7 @@ export default function DictionaryDetailPage() {
     return (
       <EmptyRow>
         <EmptyCell colSpan={8}>
-          <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+          <EmptyMessage>등록된 파일이 없습니다.</EmptyMessage>
         </EmptyCell>
       </EmptyRow>
     );
@@ -483,7 +483,7 @@ export default function DictionaryDetailPage() {
 const PageWrapper = styled.div`
   display: flex;
   min-height: 100vh;
-  min-width: 1000px;
+  min-width: 1158px;
   overflow-x: auto;
 `;
 
@@ -646,7 +646,7 @@ const ActionButton = styled.button`
 `;
 
 const EmptyRow = styled.tr`
-  height: calc(100vh - 450px);
+  height: calc(100vh - 620px);
 `;
 
 const EmptyCell = styled.td<{ colSpan: number }>`
@@ -658,7 +658,7 @@ const EmptyMessage = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 200px;
+  height: 100px;
   text-align: center;
   color: ${colors.BoxText};
   font-size: 14px;

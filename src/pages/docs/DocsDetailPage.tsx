@@ -271,7 +271,7 @@ const FileTableRow: React.FC<{
 const EmptyState: React.FC = () => (
   <EmptyRow>
     <EmptyCell colSpan={8}>
-      <EmptyMessage>파일을 등록해주세요.</EmptyMessage>
+      <EmptyMessage>등록된 파일이 없습니다.</EmptyMessage>
     </EmptyCell>
   </EmptyRow>
 );

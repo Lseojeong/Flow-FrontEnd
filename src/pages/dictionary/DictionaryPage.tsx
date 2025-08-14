@@ -378,7 +378,7 @@ export default function DictionaryPage() {
   const renderEmptyState = () => (
     <EmptyRow>
       <EmptyCell colSpan={columns.length}>
-        <EmptyMessage>카테고리를 등록해주세요.</EmptyMessage>
+        <EmptyMessage>등록된 카테고리가 없습니다.</EmptyMessage>
       </EmptyCell>
     </EmptyRow>
   );
