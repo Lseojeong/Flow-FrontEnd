@@ -63,12 +63,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
       setCategoryName(initialName ?? '');
       setDescription(initialDescription ?? '');
 
-      // 자신의 부서가 포함되도록 초기 부서 설정
-      const initialDepts = [...(initialDepartments || [])];
-      if (profile?.departmentId && !initialDepts.includes(profile.departmentId)) {
-        initialDepts.push(profile.departmentId);
-      }
-      setSelectedDepartments(initialDepts);
+      setSelectedDepartments(initialDepartments || []);
 
       document.body.style.overflow = 'hidden';
     } else {
@@ -77,25 +72,10 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialName, initialDescription, initialDepartments, profile?.departmentId]);
+  }, [isOpen, initialName, initialDescription, initialDepartments]);
 
-  // 자신의 부서가 항상 선택되도록 보장
-  useEffect(() => {
-    if (profile?.departmentId && !selectedDepartments.includes(profile.departmentId)) {
-      setSelectedDepartments((prev) => [...prev, profile.departmentId]);
-    }
-  }, [profile?.departmentId]);
-
-  // 부서 선택 변경 시 자신의 부서가 제거되지 않도록 보장
   const handleDepartmentChange = (newSelectedDepartments: string[]) => {
-    let finalDepartments = [...newSelectedDepartments];
-
-    // 자신의 부서가 포함되지 않았다면 추가
-    if (profile?.departmentId && !finalDepartments.includes(profile.departmentId)) {
-      finalDepartments.push(profile.departmentId);
-    }
-
-    setSelectedDepartments(finalDepartments);
+    setSelectedDepartments(newSelectedDepartments);
   };
 
   const handleNameChange = (val: string) => {
@@ -129,7 +109,6 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
         departments: selectedDepartments,
       });
 
-      // 성공 시에만 모달을 닫고 onSuccess 콜백 호출
       onSuccess?.();
       handleClose();
     } finally {
