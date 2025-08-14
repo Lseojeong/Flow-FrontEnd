@@ -50,8 +50,8 @@ export interface DashboardResponse {
 }
 
 export interface DashboardParams {
-  startTime: string;
-  endTime: string;
+  startDate: string;
+  endDate: string;
 }
 
 export interface HistoryItem {
