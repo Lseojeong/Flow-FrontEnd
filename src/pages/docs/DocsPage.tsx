@@ -494,9 +494,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
             departmentId: dept.departmentId,
             departmentName: dept.departmentName,
           }))}
-          value={selectedDepartment ?? ''}
-          onChange={(id) => onChangeDepartment(id ?? null)}
-          showAllOption={false}
+          value={selectedDepartment}
+          onChange={(id) => {
+            onChangeDepartment(id);
+          }}
+          showAllOption={true}
+          placeholder=""
         />
       )}
     </FilterBarBox>
