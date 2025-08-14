@@ -27,6 +27,10 @@ export default function FlowSettingPage() {
   const [activeMenuId, setActiveMenuId] = useState<string>('flow-settings');
   const [selectedToken, setSelectedToken] = useState<string>('');
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const { data: spaceResponse, isLoading: isLoadingSpaces } = useSpaceList();
 
   const spaceOptions = useMemo(
