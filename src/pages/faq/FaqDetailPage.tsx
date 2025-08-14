@@ -355,9 +355,14 @@ export default function FaqDetailPage() {
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<FaqFile | null>(null);
 
-  const { data: categoryDetailResponse } = useFaqCategoryDetail(categoryId);
+  const { data: categoryDetailResponse, isLoading: isCategoryLoading } =
+    useFaqCategoryDetail(categoryId);
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
-  const { data: paginatedFiles, observerRef } = useFaqFiles(categoryId, debouncedSearchKeyword);
+  const {
+    data: paginatedFiles,
+    observerRef,
+    isLoading: isFilesLoading,
+  } = useFaqFiles(categoryId, debouncedSearchKeyword);
 
   const categoryDetail = categoryDetailResponse?.data?.result;
 
@@ -365,8 +370,8 @@ export default function FaqDetailPage() {
     return <NoData>카테고리 ID가 없습니다.</NoData>;
   }
 
-  if (!categoryDetail) {
-    return <NoData>데이터를 불러오는 중...</NoData>;
+  if (isCategoryLoading || isFilesLoading || !categoryDetail) {
+    return null;
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
