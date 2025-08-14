@@ -67,6 +67,7 @@ export const FaqUploadModal: React.FC<Props> = ({
       onSubmit={handlePresignedSubmit}
       title="FAQ 데이터 등록"
       fileType="csv"
+      downloadLink="https://objectstorage.kr-central-2.kakaocloud.com/v1/8b70d156b8334e4fb16a680a47e8dc79/flow-file-bucket/faq_example.csv"
       latestVersion={latestVersion || '1.0.0'}
     />
   );
