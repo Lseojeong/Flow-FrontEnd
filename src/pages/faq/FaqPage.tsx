@@ -257,6 +257,7 @@ export default function FaqPage() {
       };
 
       const res = await createFaqCategory(requestData);
+
       if (res.data?.code !== 'COMMON200') {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
@@ -271,37 +272,22 @@ export default function FaqPage() {
   const handleUpdateCategory = useCallback(
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
-      try {
-        const departmentIds = convertDepartmentNamesToIds(data.departments, departments);
+      const departmentIds = convertDepartmentNamesToIds(data.departments, departments);
 
-        const requestData = {
-          name: data.name.trim(),
-          description: data.description.trim(),
-          departmentIdList: departmentIds,
-        };
+      const requestData = {
+        name: data.name.trim(),
+        description: data.description.trim(),
+        departmentIdList: departmentIds,
+      };
 
-        const res = await updateFaqCategory(editingCategory.id, requestData);
-        if (res.data?.code === 'COMMON200' || res.data?.code === '200') {
-          (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
-          setIsEditModalOpen(false);
-          setEditingCategory(null);
-          await refetch();
-        } else {
-          throw new Error(res.data?.message || '수정 실패');
-        }
-      } catch (error) {
-        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
-
-        if (error && typeof error === 'object' && 'response' in error) {
-          const response = (error as { response?: { data?: { message?: string } } }).response;
-          if (response?.data?.message) {
-            errorMessage = response.data.message;
-          }
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
-        (window as { showErrorToast?: (_: string) => void }).showErrorToast?.(errorMessage);
+      const res = await updateFaqCategory(editingCategory.id, requestData);
+      if (res.data?.code === 'COMMON200' || res.data?.code === '200') {
+        (window as { showToast?: (_: string) => void }).showToast?.('카테고리가 수정되었습니다.');
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+        await refetch();
+      } else {
+        throw new Error(res.data?.message || '수정 실패');
       }
     },
     [editingCategory, refetch, departments]

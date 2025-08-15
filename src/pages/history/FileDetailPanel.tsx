@@ -157,7 +157,9 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
                     <td style={{ width: '183px', minWidth: '183px' }}>
                       {item.timestamp?.replace('T', ' ').slice(0, 16)}
                     </td>
-                    <td style={{ width: '80px', minWidth: '80px' }}>{item.work}</td>
+                    <td style={{ width: '80px', minWidth: '80px' }}>
+                      <OperationBadge operation={item.work}>{item.work}</OperationBadge>
+                    </td>
                     <ScrollableCell maxWidth="160px" align="left">
                       {item.description}
                     </ScrollableCell>
@@ -264,4 +266,14 @@ const SideCloseButton = styled.button`
 const TableWrapper = styled.div`
   border-radius: 8px;
   overflow: hidden;
+`;
+
+const OperationBadge = styled.span<{ operation: string }>`
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: ${fontWeight.Medium};
+  color: ${colors.Normal};
+  background-color: ${colors.Light};
 `;

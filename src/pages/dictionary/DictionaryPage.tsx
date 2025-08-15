@@ -253,28 +253,17 @@ export default function DictionaryPage() {
 
   const handleUpdateCategory = async (payload: { name: string; description: string }) => {
     if (!editingCategory) return;
-    try {
-      const res = await updateDictCategory(editingCategory.id, payload);
-      const code = (res as { data?: { code?: string } }).data?.code;
-      if (code === 'COMMON200') {
-        (window as Window & { showToast?: (_m: string) => void }).showToast?.(
-          '카테고리가 수정되었습니다.'
-        );
-        setIsEditModalOpen(false);
-        setEditingCategory(null);
-        reset();
-        await loadMore();
-      } else {
-        throw new Error(res as unknown as string);
-      }
-    } catch (error: unknown) {
-      const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        '카테고리 수정에 실패했습니다.';
-
-      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
-        window.showErrorToast(errorMessage);
-      }
+    const res = await updateDictCategory(editingCategory.id, payload);
+    const code = (res as { data?: { code?: string } }).data?.code;
+    if (code === 'COMMON200') {
+      (window as Window & { showToast?: (_m: string) => void }).showToast?.(
+        '카테고리가 수정되었습니다.'
+      );
+      setIsEditModalOpen(false);
+      setEditingCategory(null);
+      await refetch();
+    } else {
+      throw new Error(res as unknown as string);
     }
   };
 
