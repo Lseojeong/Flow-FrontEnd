@@ -121,7 +121,6 @@ axiosInstance.interceptors.response.use(
 
       return axiosInstance(originalConfig);
     } catch (refreshErr) {
-      console.error('Token refresh failed:', refreshErr);
       processQueue(refreshErr, null);
       setCsrfToken(null);
 

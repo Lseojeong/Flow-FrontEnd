@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useDebounce, DEBOUNCE_DELAY } from '@/hooks/useDebounce';
@@ -22,14 +22,13 @@ import { DownloadIcon, EditIcon, DeleteIcon } from '@/assets/icons/common';
 import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
 import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
 import { formatDateTime } from '@/utils/formatDateTime';
 import {
   getDictCategoryFiles,
-  createDictCategoryFile,
   deleteDictCategoryFile,
   searchDictCategoryFiles,
 } from '@/apis/dictcategory_detail/api';
@@ -63,12 +62,15 @@ type EditTargetFile = {
   fileUrl: string;
   title: string;
   version: string;
+  latestVersion: string;
 };
 
 export default function DictionaryDetailPage() {
   const params = useParams();
   const categoryId = (params.categoryId ?? params.dictionaryId ?? '') as string;
   const { dictionaryId } = useParams<{ dictionaryId: string }>();
+  const queryClient = useQueryClient();
+
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -78,7 +80,6 @@ export default function DictionaryDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editTargetFile, setEditTargetFile] = useState<EditTargetFile | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
-  const [category, setCategory] = useState<DictCategory | null>(null);
 
   const debouncedSearchKeyword = useDebounce(searchKeyword, DEBOUNCE_DELAY);
 
@@ -95,18 +96,11 @@ export default function DictionaryDetailPage() {
     enabled: !!categoryId,
   });
 
-  useEffect(() => {
-    if (categoryData) {
-      setCategory(categoryData);
-    }
-  }, [categoryData]);
-
   const {
     data: paginatedFiles,
     observerRef,
     reset,
     loadMore,
-    refetch,
   } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
     queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword],
     fetchFn: async (cursor) => {
@@ -147,14 +141,14 @@ export default function DictionaryDetailPage() {
     },
   });
 
-  if (isCategoryLoading || !category) {
+  if (isCategoryLoading || !categoryData) {
     return null;
   }
 
   const statusItems: StatusItemData[] = [
-    { type: 'Completed', count: category.status?.Completed ?? 0 },
-    { type: 'Processing', count: category.status?.Processing ?? 0 },
-    { type: 'Fail', count: category.status?.Fail ?? 0 },
+    { type: 'Completed', count: categoryData.status?.Completed ?? 0 },
+    { type: 'Processing', count: categoryData.status?.Processing ?? 0 },
+    { type: 'Fail', count: categoryData.status?.Fail ?? 0 },
   ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,6 +167,7 @@ export default function DictionaryDetailPage() {
       fileUrl: file.fileUrl,
       title: file.name,
       version: file.version ?? '-',
+      latestVersion: file.version ?? '1.0.0',
     });
     setIsEditModalOpen(true);
   };
@@ -184,33 +179,28 @@ export default function DictionaryDetailPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    setIsDeletePopupOpen(false);
-    if (!dictionaryId || !targetFileId) {
-      console.error('카테고리 ID 또는 파일 ID가 없습니다.');
-      return;
-    }
-
     setIsDeleting(true);
     try {
-      await deleteDictCategoryFile(dictionaryId, targetFileId);
-
+      await deleteDictCategoryFile(dictionaryId!, targetFileId);
       (window as { showToast?: (_: string, _type?: 'success' | 'error') => void }).showToast?.(
         `${targetFileName} 파일이 삭제되었습니다.`,
         'success'
       );
-
-      reset();
-      await loadMore();
-    } catch (error) {
-      console.error(error);
-
+      setIsDeletePopupOpen(false);
+      setTargetFileName('');
+      setTargetFileId('');
+      // 파일 삭제 후 파일 목록 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({
+        queryKey: ['dict-category-files', categoryId],
+        exact: false,
+      });
+    } catch {
       (window as { showToast?: (_: string, _type?: 'success' | 'error') => void }).showToast?.(
         `${targetFileName} 파일 삭제 중 오류가 발생했습니다.`,
         'error'
       );
     } finally {
       setIsDeleting(false);
-      setTargetFileId('');
     }
   };
 
@@ -219,52 +209,49 @@ export default function DictionaryDetailPage() {
     setEditTargetFile(null);
   };
 
-  const handleEditModalSubmit = () => {
-    if ((window as { showToast?: (_message: string) => void }).showToast) {
-      (window as { showToast?: (_message: string) => void }).showToast!('파일이 수정되었습니다.');
-    }
+  const handleEditModalSubmit = (updatedFile?: FileItem) => {
     setIsEditModalOpen(false);
     setEditTargetFile(null);
+
+    if (updatedFile) {
+      // 파일 수정 후 파일 목록과 히스토리 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({
+        queryKey: ['dict-category-files', categoryId],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['file-history', updatedFile.id],
+        exact: false,
+      });
+      // 캐시 무효화 후 약간의 지연을 두고 히스토리 모달을 오픈
+      setTimeout(() => setSelectedFile(updatedFile), 100);
+    } else {
+      // 파일 목록 캐시를 무효화하여 새로고침
+      queryClient.invalidateQueries({
+        queryKey: ['dict-category-files', categoryId],
+        exact: false,
+      });
+    }
   };
 
-  const handleUploadModalSubmit = async ({
-    fileUrl,
-    fileName,
-    description,
-    version,
-  }: {
-    fileUrl: string;
-    fileName: string;
-    description: string;
-    version: string;
-  }) => {
-    if (!categoryId) {
-      console.error('카테고리 ID가 없습니다.');
-      return;
-    }
-
-    try {
-      await createDictCategoryFile(categoryId, {
-        fileUrl,
-        fileName,
-        description,
-        version: version || 'v1.0.0',
-      });
-
-      (window as { showToast?: (_: string) => void }).showToast?.('파일이 등록되었습니다.');
-      setIsCsvModalOpen(false);
-
-      await refetch();
-    } catch (e) {
-      console.error(e);
-      (window as { showToast?: (_: string) => void }).showToast?.(
-        '파일 등록 중 오류가 발생했습니다.'
-      );
-    }
+  const handleUploadModalSuccess = () => {
+    (window as { showToast?: (_: string) => void }).showToast?.('파일이 등록되었습니다.');
+    // 파일 업로드 후 파일 목록 캐시를 무효화하여 새로고침
+    queryClient.invalidateQueries({
+      queryKey: ['dict-category-files', categoryId],
+      exact: false,
+    });
   };
 
   const handleFileDetailClose = () => {
     setSelectedFile(null);
+  };
+
+  const getCurrentFile = () => {
+    if (!selectedFile) return null;
+    // paginatedFiles에서 최신 데이터를 찾아서 히스토리 모달에 반영
+    const currentFile = paginatedFiles.find((file) => file.id === selectedFile.id);
+    return currentFile || selectedFile;
   };
 
   const renderFileRow = (file: FileItem, index: number, isLast?: boolean) => (
@@ -285,7 +272,7 @@ export default function DictionaryDetailPage() {
 
       <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
         {file.lastModifierId
-          ? `${file.lastModifierId}${file.lastModifierName ? `(${file.lastModifierName})` : ''}`
+          ? `${file.lastModifierId}${file.lastModifierName ? ` (${file.lastModifierName})` : ''}`
           : '-'}
       </td>
 
@@ -365,9 +352,9 @@ export default function DictionaryDetailPage() {
       <Content>
         <ContentWrapper>
           <HeaderSection>
-            <PageTitle>{category.name}</PageTitle>
+            <PageTitle>{categoryData.name}</PageTitle>
             <DescriptionRow>
-              <Description>{category.description ?? '-'}</Description>
+              <Description>{categoryData.description ?? '-'}</Description>
               <Button onClick={() => setIsCsvModalOpen(true)} size="small" variant="primary">
                 + 데이터 등록
               </Button>
@@ -404,8 +391,11 @@ export default function DictionaryDetailPage() {
             <InfoItemColumn>
               <Label>등록일:</Label>
               <Value>
-                {category.createdAt || category.registeredDate
-                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                {categoryData.createdAt || categoryData.registeredDate
+                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
+                      0,
+                      10
+                    )
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -413,8 +403,11 @@ export default function DictionaryDetailPage() {
             <InfoItemColumn>
               <Label>최종 수정일:</Label>
               <Value>
-                {category.createdAt || category.registeredDate
-                  ? formatDateTime(category.createdAt ?? category.registeredDate).slice(0, 10)
+                {categoryData.createdAt || categoryData.registeredDate
+                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
+                      0,
+                      10
+                    )
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -422,9 +415,8 @@ export default function DictionaryDetailPage() {
             <InfoItemColumn>
               <Label>최종 수정자:</Label>
               <Value>
-                {(category as DictCategory & { lastModifierId?: string; lastModifierName?: string })
-                  .lastModifierId
-                  ? `${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierId}${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierName ? ` (${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierName})` : ''}`
+                {categoryData.lastModifierId
+                  ? `${categoryData.lastModifierId}${categoryData.lastModifierName ? ` (${categoryData.lastModifierName})` : ''}`
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -467,8 +459,8 @@ export default function DictionaryDetailPage() {
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         categoryId={dictionaryId!}
-        onSubmit={handleUploadModalSubmit}
-        onSuccess={refetch}
+        onSuccess={handleUploadModalSuccess}
+        latestVersion={'1.0.0'}
       />
 
       {editTargetFile && (
@@ -481,10 +473,17 @@ export default function DictionaryDetailPage() {
           originalFileUrl={editTargetFile.fileUrl}
           originalFileName={editTargetFile.title}
           originalVersion={editTargetFile.version}
+          latestVersion={editTargetFile.latestVersion}
         />
       )}
 
-      {selectedFile && <FileDetailPanel file={selectedFile} onClose={handleFileDetailClose} />}
+      {getCurrentFile() && (
+        <FileDetailPanel
+          key={`${getCurrentFile()!.id}-${getCurrentFile()!.updatedAt}`}
+          file={getCurrentFile()!}
+          onClose={handleFileDetailClose}
+        />
+      )}
     </PageWrapper>
   );
 }

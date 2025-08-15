@@ -7,14 +7,14 @@ const ButtonPlayground: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = () => {
-    console.log('버튼 클릭됨!');
+    // 버튼 클릭 처리
   };
 
   const handleAsyncClick = async () => {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsLoading(false);
-    console.log('비동기 작업 완료!');
+    // 비동기 작업 완료
   };
 
   return (
@@ -29,7 +29,7 @@ const ButtonPlayground: React.FC = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            console.log('폼 제출됨!');
+            // 폼 제출 처리
           }}
         >
           <FormContainer>
