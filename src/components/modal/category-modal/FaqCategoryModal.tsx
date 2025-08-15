@@ -10,9 +10,19 @@ interface Props {
   departments: Department[];
 }
 
-const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, departments }) => {
-  const handleSubmit = (data: { name: string; description: string; departments?: string[] }) => {
-    onSubmit({
+const FaqCategoryModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  onSuccess,
+  departments,
+}) => {
+  const handleSubmit = async (data: {
+    name: string;
+    description: string;
+    departments?: string[];
+  }) => {
+    await onSubmit({
       name: data.name,
       description: data.description,
       departments: data.departments ?? [],
@@ -24,6 +34,7 @@ const FaqCategoryModal: React.FC<Props> = ({ isOpen, onClose, onSubmit, departme
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
+      onSuccess={onSuccess}
       title="카테고리 등록"
       departments={departments}
       showDepartmentCheck={true}

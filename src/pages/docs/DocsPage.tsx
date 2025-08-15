@@ -259,6 +259,7 @@ export default function DocsPage() {
         description: data.description,
         departmentIdList: data.departments ?? [],
       });
+
       if (!(res.data?.code === 'COMMON200')) {
         throw new Error(res.data?.message || '카테고리 등록 실패');
       }
@@ -275,38 +276,23 @@ export default function DocsPage() {
   const handleUpdateCategory = useCallback(
     async (data: { name: string; description: string; departments: string[] }) => {
       if (!editingCategory) return;
-      try {
-        const requestBody = {
-          name: data.name.trim(),
-          description: data.description.trim(),
-          departmentIdList: data.departments,
-        };
-        const res = await updateDocsCategory(editingCategory.id, requestBody);
-        const code = (res as { data?: { code?: string } }).data?.code;
-        if (code === 'COMMON200' || code === '200') {
-          (window as { showToast?: (_message: string) => void }).showToast?.(
-            '카테고리가 수정되었습니다.'
-          );
-          setIsEditModalOpen(false);
-          setEditingCategory(null);
-          await refetch();
-          return;
-        }
-        throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
-      } catch (error) {
-        let errorMessage = '수정 요청 중 오류가 발생했습니다.';
-
-        if (error && typeof error === 'object' && 'response' in error) {
-          const response = (error as { response?: { data?: { message?: string } } }).response;
-          if (response?.data?.message) {
-            errorMessage = response.data.message;
-          }
-        } else if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
-        (window as { showErrorToast?: (_message: string) => void }).showErrorToast?.(errorMessage);
+      const requestBody = {
+        name: data.name.trim(),
+        description: data.description.trim(),
+        departmentIdList: data.departments,
+      };
+      const res = await updateDocsCategory(editingCategory.id, requestBody);
+      const code = (res as { data?: { code?: string } }).data?.code;
+      if (code === 'COMMON200' || code === '200') {
+        (window as { showToast?: (_message: string) => void }).showToast?.(
+          '카테고리가 수정되었습니다.'
+        );
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+        await refetch();
+        return;
       }
+      throw new Error((res as { data?: { message?: string } })?.data?.message || '수정 실패');
     },
     [editingCategory, refetch]
   );

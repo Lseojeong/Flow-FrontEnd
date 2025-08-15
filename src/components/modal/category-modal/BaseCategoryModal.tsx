@@ -19,6 +19,7 @@ interface BaseCategoryModalProps {
     description: string;
     departments?: string[];
   }) => void | Promise<unknown>;
+  onSuccess?: () => void;
   title?: string;
   departments?: Department[];
   showDepartmentCheck?: boolean;
@@ -30,6 +31,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  onSuccess,
   title = '카테고리 등록',
   departments = [],
   showDepartmentCheck = false,
@@ -93,7 +95,7 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
       });
 
       // 성공 시에만 모달을 닫음
-      handleClose();
+      onSuccess?.();
     } catch (error: unknown) {
       // CATEGORY400 에러 처리 (중복 에러)
       if (error && typeof error === 'object' && 'response' in error) {
