@@ -125,6 +125,8 @@ export default function DictionaryDetailPage() {
           fileName: f.fileName,
           status: f.status,
           manager: f.lastModifier ?? '-',
+          lastModifierId: f.lastModifierId,
+          lastModifierName: f.lastModifierName,
           registeredAt: formatDateTime(f.createdAt),
           updatedAt: formatDateTime(f.updatedAt),
           version: f.latestVersion ?? '-',
@@ -282,7 +284,9 @@ export default function DictionaryDetailPage() {
       </td>
 
       <td style={{ width: CELL_WIDTHS.MANAGER, minWidth: CELL_WIDTHS.MANAGER, textAlign: 'left' }}>
-        {file.manager}
+        {file.lastModifierId
+          ? `${file.lastModifierId}${file.lastModifierName ? `(${file.lastModifierName})` : ''}`
+          : '-'}
       </td>
 
       <td
@@ -417,7 +421,12 @@ export default function DictionaryDetailPage() {
 
             <InfoItemColumn>
               <Label>최종 수정자:</Label>
-              <Value>{category.lastModifier ?? '-'}</Value>
+              <Value>
+                {(category as DictCategory & { lastModifierId?: string; lastModifierName?: string })
+                  .lastModifierId
+                  ? `${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierId}${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierName ? ` (${(category as DictCategory & { lastModifierId?: string; lastModifierName?: string }).lastModifierName})` : ''}`
+                  : '-'}
+              </Value>
             </InfoItemColumn>
           </InfoBox>
 
