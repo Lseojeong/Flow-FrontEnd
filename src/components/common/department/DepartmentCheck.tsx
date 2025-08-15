@@ -13,8 +13,6 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
   title = '부서 선택',
   userDepartmentId,
 }) => {
-  // 자신의 부서 강제 추가 로직 제거
-
   const isAllSelected =
     departments.length > 0 &&
     selectedDepartmentIds.length ===
@@ -37,11 +35,9 @@ export const DepartmentCheck: React.FC<DepartmentCheckProps> = ({
 
   const handleSelectAllChange = (checked: boolean) => {
     if (checked) {
-      // 모든 부서를 선택
       const allDepartmentIds = departments.map((dept) => dept.departmentId);
       onChange(allDepartmentIds);
     } else {
-      // 모두 해제
       onChange([]);
     }
   };

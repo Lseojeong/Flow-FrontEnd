@@ -188,7 +188,6 @@ const CheckBoxContainer = styled.label<StyledProps>`
   align-items: center;
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
   gap: ${({ $size }) => getSizeConfig($size).gap};
-  opacity: ${({ $disabled }) => ($disabled ? DESIGN_TOKENS.disabledOpacity : 1)};
   transition: all ${DESIGN_TOKENS.transitionDuration};
 `;
 
@@ -210,6 +209,7 @@ const CheckBoxIndicator = styled.span<StyledProps>`
   position: relative;
   transition: all ${DESIGN_TOKENS.transitionDuration};
   flex-shrink: 0;
+  opacity: ${({ $disabled }) => ($disabled ? DESIGN_TOKENS.disabledOpacity : 1)};
 
   ${({ $checked, $size, $variant }) =>
     $checked &&
@@ -224,7 +224,7 @@ const CheckBoxIndicator = styled.span<StyledProps>`
 
 const CheckBoxLabel = styled.span<Omit<StyledProps, '$checked'>>`
   font-size: ${({ $size }) => getSizeConfig($size).fontSize};
-  color: ${({ $variant }) => ($variant === 'outline' ? colors.Black : colors.Black)};
+  color: ${colors.Black};
   font-weight: ${fontWeight.Regular};
   line-height: 1.4;
   user-select: none;
