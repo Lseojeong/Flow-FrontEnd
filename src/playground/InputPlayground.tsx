@@ -12,12 +12,12 @@ const InputPlayground: React.FC = () => {
 
   const handleCsvFileSelect = (file: File) => {
     setSelectedCsvFile(file);
-    console.log('선택된 CSV 파일:', file);
+    // 선택된 CSV 파일 처리
   };
 
   const handlePdfFileSelect = (file: File) => {
     setSelectedPdfFile(file);
-    console.log('선택된 PDF 파일:', file);
+    // 선택된 PDF 파일 처리
   };
 
   return (

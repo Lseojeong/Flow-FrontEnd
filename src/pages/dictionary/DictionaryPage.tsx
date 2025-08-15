@@ -26,8 +26,8 @@ import {
   searchDictCategories,
   SearchParams,
 } from '@/apis/dictcategory/api';
+import { formatDate } from '@/utils/formatDate';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import { formatDateTime } from '@/utils/formatDateTime';
 import { Popup } from '@/components/common/popup/Popup';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
@@ -37,7 +37,7 @@ const TABLE_COLUMNS = [
   { label: '상태', width: '204px', align: 'left' as const },
   { label: '문서 수', width: '80px', align: 'center' as const },
   { label: '최종 수정일', width: '180px', align: 'left' as const },
-  { label: '', width: '77px', align: 'center' as const },
+  { label: '', width: '90px', align: 'center' as const },
 ];
 
 const CELL_WIDTHS = {
@@ -46,7 +46,7 @@ const CELL_WIDTHS = {
   STATUS: '204px',
   DOCUMENT_COUNT: '80px',
   LAST_MODIFIED: '180px',
-  ACTIONS: '77px',
+  ACTIONS: '90px',
 } as const;
 
 export default function DictionaryPage() {
@@ -73,8 +73,8 @@ export default function DictionaryPage() {
 
   const fetchFn = useCallback(
     async (cursor?: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
       let data;
+
       const formatStartDate = (dateStr?: string | null) =>
         dateStr ? dateStr.slice(0, 10) : undefined;
       const formatEndDate = (dateStr?: string | null) => {
@@ -89,20 +89,20 @@ export default function DictionaryPage() {
           keyword: debouncedSearchKeyword || undefined,
           startDate: formatStartDate(debouncedStartDate),
           endDate: formatEndDate(debouncedEndDate),
-          cursor: cursor || undefined,
+          cursor: cursor ?? undefined,
         };
         const res = await searchDictCategories(searchParams);
         data = res.data;
       } else {
-        const res = await getAllDictCategories(cursor);
+        const res = await getAllDictCategories(cursor ?? undefined);
         data = res.data;
       }
 
-      const categoryList: (DictCategory & { timestamp: string })[] = (
+      const categoryList: (DictCategory & { timestamp: string; displayDate: string })[] = (
         data.result?.categoryList ?? []
       ).map((c: DictCategory) => ({
         ...c,
-        lastModifiedDate: formatDateTime(c.lastModifiedDate ?? c.updatedAt ?? '').slice(0, 10),
+        timestamp: c.lastModifiedDate ?? c.updatedAt ?? c.createdAt ?? '',
         status: c.fileStatus ??
           c.status ?? {
             total: 0,
@@ -110,7 +110,6 @@ export default function DictionaryPage() {
             Processing: 0,
             Fail: 0,
           },
-        timestamp: c.updatedAt ?? c.createdAt ?? '',
       }));
 
       return {
@@ -118,7 +117,8 @@ export default function DictionaryPage() {
         result: {
           historyList: categoryList,
           pagination: { isLast: data.result?.pagination?.last ?? true },
-          nextCursor: data.result?.nextCursor,
+          nextCursor:
+            data.result?.nextCursor ?? categoryList[categoryList.length - 1]?.timestamp ?? null,
         },
       };
     },
@@ -133,29 +133,22 @@ export default function DictionaryPage() {
     reset,
     loadMore,
   } = useInfiniteScroll<DictCategory & { timestamp: string }, HTMLTableRowElement>({
-    queryKey: ['dict-categories'],
+    queryKey: [
+      'dict-categories',
+      debouncedSearchKeyword || '',
+      debouncedStartDate || '',
+      debouncedEndDate || '',
+    ],
     fetchFn,
   });
 
   const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
 
-  const isDateInRange = useCallback(
-    (dateStr: string) => {
-      if (!startDate && !endDate) return true;
-      const date = new Date(dateStr);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      return (!start || date >= start) && (!end || date <= end);
-    },
-    [startDate, endDate]
-  );
+  // 서버에서 이미 필터링된 데이터를 받으므로 클라이언트 필터링 제거
 
   const filteredCategories = useMemo(() => {
-    const kw = debouncedSearchKeyword.toLowerCase();
-    return categories.filter(
-      (c) => c.name.toLowerCase().includes(kw) && isDateInRange(c.lastModifiedDate)
-    );
-  }, [categories, debouncedSearchKeyword, isDateInRange]);
+    return categories;
+  }, [categories]);
 
   const selectedCount = filteredCategories.filter(
     (cat, idx) => !!checkedItems[rowKeyOf(cat, idx)]
@@ -253,17 +246,27 @@ export default function DictionaryPage() {
 
   const handleUpdateCategory = async (payload: { name: string; description: string }) => {
     if (!editingCategory) return;
-    const res = await updateDictCategory(editingCategory.id, payload);
-    const code = (res as { data?: { code?: string } }).data?.code;
-    if (code === 'COMMON200') {
-      (window as Window & { showToast?: (_m: string) => void }).showToast?.(
-        '카테고리가 수정되었습니다.'
-      );
-      setIsEditModalOpen(false);
-      setEditingCategory(null);
-      await refetch();
-    } else {
-      throw new Error(res as unknown as string);
+    try {
+      const res = await updateDictCategory(editingCategory.id, payload);
+      const code = (res as { data?: { code?: string } }).data?.code;
+      if (code === 'COMMON200') {
+        (window as Window & { showToast?: (_m: string) => void }).showToast?.(
+          '카테고리가 수정되었습니다.'
+        );
+        setIsEditModalOpen(false);
+        setEditingCategory(null);
+        reset();
+      } else {
+        throw new Error(res as unknown as string);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        '카테고리 수정에 실패했습니다.';
+
+      if (typeof window !== 'undefined' && typeof window.showErrorToast === 'function') {
+        window.showErrorToast(errorMessage);
+      }
     }
   };
 
@@ -351,7 +354,7 @@ export default function DictionaryPage() {
             textAlign: 'left',
           }}
         >
-          {category.lastModifiedDate}
+          {formatDate(category.lastModifiedDate)}
         </td>
         <td
           style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}

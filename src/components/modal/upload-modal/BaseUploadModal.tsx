@@ -19,7 +19,6 @@ interface BaseUploadModalProps {
     version: string;
     fileUrl: string;
   }) => Promise<void> | void;
-  onSuccess?: () => void;
   title: string;
   fileType: 'csv' | 'pdf';
   downloadLink?: string;
@@ -31,7 +30,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  onSuccess,
   title,
   fileType,
   downloadLink,
@@ -79,8 +77,6 @@ const BaseUploadModal: React.FC<BaseUploadModalProps> = ({
           fileUrl,
         })
       );
-
-      onSuccess?.();
 
       // 성공 시에만 모달을 닫음 (상태는 useEffect에서 초기화됨)
       onClose();

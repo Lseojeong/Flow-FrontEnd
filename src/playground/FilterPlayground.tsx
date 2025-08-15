@@ -35,11 +35,11 @@ const FilterPlayground: React.FC = () => {
     file: string[];
   }) => {
     setSelectedItems(items);
-    console.log('Selected items:', items);
+    // 선택된 아이템 처리
   };
 
   const handleHistoryFilterCancel = () => {
-    console.log('History filter cancelled');
+    // 필터 취소 처리
   };
 
   const formatDate = (dateString: string | null) => {

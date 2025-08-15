@@ -21,6 +21,9 @@ export interface InputProps {
   value?: string;
   onClick?: () => void;
   onChange?: (_e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDateChange?: (_startDate: string | null, _endDate: string | null) => void;
+  setTempStartDate?: React.Dispatch<React.SetStateAction<Date | null>>;
+  setTempEndDate?: React.Dispatch<React.SetStateAction<Date | null>>;
   placeholder?: string;
   disabled?: boolean;
   error?: boolean;

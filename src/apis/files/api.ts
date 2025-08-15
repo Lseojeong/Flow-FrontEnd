@@ -23,7 +23,6 @@ export interface CreatePresignedUrlResponse {
 
 // Presigned URL 발급 API
 export const createPresignedUrl = (body: CreatePresignedUrlBody) => {
-  console.log('[API 요청] Presigned URL 발급', body);
   return axiosInstance.post<CreatePresignedUrlResponse>('/admin/files/url', body);
 };
 
@@ -53,13 +52,6 @@ export function buildPublicUrlFromPresigned(presignedUrl: string): string {
 
 // Presigned URL에 PUT 업로드
 export const putFileToPresignedUrl = async (url: string, file: File, contentType?: string) => {
-  console.log('=== putFileToPresignedUrl 호출됨 ===');
-  console.log('PUT 업로드 URL:', url);
-  console.log('PUT 요청 헤더:', {
-    'Content-Type': contentType || file.type || 'application/octet-stream',
-  });
-  console.log('PUT 업로드 파일 정보:', { name: file.name, size: file.size, type: file.type });
-
   const res = await fetch(url, {
     method: 'PUT',
     body: file,
@@ -68,15 +60,9 @@ export const putFileToPresignedUrl = async (url: string, file: File, contentType
     },
   });
 
-  console.log('업로드 응답 상태:', res.status, res.statusText);
-
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    console.error('업로드 실패 응답 본문:', text);
     throw new Error(`파일 업로드 실패: ${res.statusText}`);
   }
-
-  console.log('=== 파일 업로드 성공 ===');
 };
 
 export interface UploadViaPresignedArgs {
@@ -103,8 +89,6 @@ export async function uploadViaPresigned({
   fileName,
   contentType,
 }: UploadViaPresignedArgs): Promise<UploadViaPresignedResult> {
-  console.log('=== uploadViaPresigned 시작 ===');
-
   const rawName =
     fileName ||
     (file instanceof File
@@ -115,14 +99,6 @@ export async function uploadViaPresigned({
   const name = rawName.split(/[/\\]/).pop() || rawName;
   const mime = contentType || getContentTypeByExt(name);
 
-  console.log('[1] Presigned URL 발급 요청 데이터:', {
-    fileName: name,
-    fileSize: file.size,
-    folderType,
-    organizationId,
-    contentType: mime,
-  });
-
   // presigned URL 발급
   const presigned = await createPresignedUrl({
     fileName: name,
@@ -132,21 +108,14 @@ export async function uploadViaPresigned({
     contentType: mime,
   });
 
-  console.log('[1-응답] Presigned URL 발급 성공:', presigned.data);
-
   const presignedPutUrl = presigned.data.result.fileUrl;
   const fileKey = presigned.data.result.fileKey;
 
-  console.log('[2] Presigned URL:', presignedPutUrl);
-
   // presigned URL로 PUT 업로드
-  console.log('[3] 파일 PUT 업로드 시작');
   await putFileToPresignedUrl(presignedPutUrl, file, mime);
 
   // Public URL 생성 (S3 버킷 URL + fileKey)
   const publicUrl = buildPublicUrlFromFileKey(fileKey);
-  console.log('[4] Public URL 생성 완료:', publicUrl);
-  console.log('=== uploadViaPresigned 완료 ===');
 
   return {
     presignedPutUrl,
@@ -177,7 +146,6 @@ export const registerFileByFolderType = (folderType: FolderType, body: RegisterF
     default:
       throw new Error(`folderType ${folderType}는 지원되지 않습니다.`);
   }
-  console.log(`[API 요청] ${folderType} 파일 등록`, body);
   return axiosInstance.post(endpoint, body);
 };
 
@@ -194,8 +162,6 @@ export async function uploadAndRegisterFile({
   fileName,
   contentType,
 }: UploadAndRegisterArgs) {
-  console.log('=== uploadAndRegisterFile 시작 ===');
-
   if (!categoryId) {
     throw new Error('categoryId가 없습니다. 업로드 전에 카테고리를 선택하세요.');
   }
@@ -220,16 +186,12 @@ export async function uploadAndRegisterFile({
     }
   })();
 
-  console.log('[추출된 파일명]', cleanFileName);
-
   // 3. DB 등록 (folderType별 API 자동 선택)
   const dbRes = await registerFileByFolderType(folderType, {
     categoryId,
     fileKey,
     fileName: cleanFileName,
   });
-
-  console.log('[3] DB 등록 완료:', dbRes.data);
 
   return {
     publicUrl,

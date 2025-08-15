@@ -72,7 +72,8 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialName, initialDescription, initialDepartments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialName, initialDescription, JSON.stringify(initialDepartments)]);
 
   const handleDepartmentChange = (newSelectedDepartments: string[]) => {
     setSelectedDepartments(newSelectedDepartments);
@@ -116,6 +117,7 @@ const BaseCategoryEditModal: React.FC<BaseCategoryEditModalProps> = ({
 
       // 성공 시에만 모달을 닫음
       onSuccess?.();
+      handleClose();
     } catch (error: unknown) {
       // CATEGORY400 에러 처리 (중복 에러)
       if (error && typeof error === 'object' && 'response' in error) {

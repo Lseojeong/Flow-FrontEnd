@@ -22,6 +22,7 @@ export const DictUploadModal: React.FC<Props> = ({
   onClose,
   categoryId,
   latestVersion,
+  onSuccess,
 }) => {
   const handlePresignedSubmit = async (data: {
     file: File;
@@ -41,8 +42,11 @@ export const DictUploadModal: React.FC<Props> = ({
         description: data.description,
         version: data.version,
       });
+
+      (window as { showToast?: (_message: string) => void }).showToast?.('파일이 등록되었습니다.');
+      onSuccess?.();
     } catch {
-      (window as { showToast?: (_message: string, _type: string) => void }).showToast?.(
+      (window as { showErrorToast?: (_message: string, _type: string) => void }).showErrorToast?.(
         '파일 업로드 또는 DB 등록 중 오류가 발생했습니다.',
         'error'
       );

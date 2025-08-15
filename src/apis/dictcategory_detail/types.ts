@@ -26,6 +26,8 @@ export interface DictCategoryFile {
   latestVersion: string;
   status: DictFileStatus;
   lastModifier?: string;
+  lastModifierId?: string;
+  lastModifierName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +38,8 @@ export interface FileItem {
   fileName: string;
   status: 'Completed' | 'Processing' | 'Fail' | string;
   manager: string;
+  lastModifierId?: string;
+  lastModifierName?: string;
   registeredAt: string;
   updatedAt: string;
   version: string;

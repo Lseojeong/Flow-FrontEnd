@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getFaqCategoryFiles, searchFaqCategoryFiles } from './api';
-import type { FaqCategoryFile } from './types';
+import type { FaqFile } from './types';
 
 const loadedFaqFileIdSetByCategory = new Map<string, Set<string>>();
 
@@ -43,7 +43,7 @@ export const fetchFaqFiles = async (categoryId: string, params?: FetchFaqFilesPa
     code: string;
     message: string;
     result: {
-      fileList: FaqCategoryFile[];
+      fileList: FaqFile[];
       pagination: { last: boolean };
       nextCursor?: string;
     };

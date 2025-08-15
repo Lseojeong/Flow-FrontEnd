@@ -17,5 +17,7 @@ export interface DictCategory {
   registeredDate?: string;
   lastModifier?: string;
   lastEditor?: string;
+  lastModifierId?: string;
+  lastModifierName?: string;
   fileStatus?: DictCategoryStatus;
 }
