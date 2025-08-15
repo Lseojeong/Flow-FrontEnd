@@ -40,8 +40,10 @@ export default function DashBoardPage() {
   });
 
   const handleDateChange = (start: string | null, end: string | null) => {
-    setStartDate(start || '');
-    setEndDate(end || '');
+    if (start && end) {
+      setStartDate(start);
+      setEndDate(end);
+    }
   };
 
   const getStatusCardData = () => {

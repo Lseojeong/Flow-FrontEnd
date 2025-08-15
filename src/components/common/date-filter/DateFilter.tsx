@@ -152,18 +152,15 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   );
   const [tempEndDate, setTempEndDate] = useState<Date | null>(endDate ? new Date(endDate) : null);
 
-  // string을 Date 객체로 변환
   const startDateObj = startDate ? new Date(startDate) : null;
   const endDateObj = endDate ? new Date(endDate) : null;
 
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
 
-    // 임시 상태 업데이트
     setTempStartDate(start);
     setTempEndDate(end);
 
-    // Date 객체를 yyyy-MM-dd 형식으로 변환하여 전달
     const formatDate = (date: Date | null) => {
       if (!date) return null;
       const year = date.getFullYear();
@@ -175,7 +172,6 @@ export const DateFilter: React.FC<DateFilterProps> = ({
     const startString = formatDate(start);
     const endString = formatDate(end);
 
-    // 두 날짜가 모두 선택된 경우에만 onDateChange 호출
     if (startString && endString) {
       onDateChange(startString, endString);
     }
