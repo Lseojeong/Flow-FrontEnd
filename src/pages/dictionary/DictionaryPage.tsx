@@ -133,29 +133,22 @@ export default function DictionaryPage() {
     reset,
     loadMore,
   } = useInfiniteScroll<DictCategory & { timestamp: string }, HTMLTableRowElement>({
-    queryKey: ['dict-categories', debouncedSearchKeyword, debouncedStartDate, debouncedEndDate],
+    queryKey: [
+      'dict-categories',
+      debouncedSearchKeyword || '',
+      debouncedStartDate || '',
+      debouncedEndDate || '',
+    ],
     fetchFn,
   });
 
   const existingCategoryNames = useMemo(() => categories.map((c) => c.name), [categories]);
 
-  const isDateInRange = useCallback(
-    (dateStr: string) => {
-      if (!startDate && !endDate) return true;
-      const date = new Date(dateStr);
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      return (!start || date >= start) && (!end || date <= end);
-    },
-    [startDate, endDate]
-  );
+  // 서버에서 이미 필터링된 데이터를 받으므로 클라이언트 필터링 제거
 
   const filteredCategories = useMemo(() => {
-    const kw = debouncedSearchKeyword.toLowerCase();
-    return categories.filter(
-      (c) => c.name.toLowerCase().includes(kw) && isDateInRange(c.lastModifiedDate)
-    );
-  }, [categories, debouncedSearchKeyword, isDateInRange]);
+    return categories;
+  }, [categories]);
 
   const selectedCount = filteredCategories.filter(
     (cat, idx) => !!checkedItems[rowKeyOf(cat, idx)]

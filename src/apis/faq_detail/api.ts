@@ -27,13 +27,13 @@ export const getFaqCategoryFiles = async (categoryId: string, cursor?: string) =
 
 export const searchFaqCategoryFiles = async (
   categoryId: string,
-  fileName: string,
-  cursor?: string
+  params: {
+    name?: string;
+    startDate?: string;
+    endDate?: string;
+    cursorDate: string;
+  }
 ) => {
-  const params = {
-    name: fileName,
-    cursorDate: cursor ?? new Date().toISOString(),
-  };
   return axiosInstance.get<ApiResponse<FaqFileListResult>>(
     `/admin/faqs/categories/${categoryId}/files/search`,
     { params }

@@ -68,7 +68,6 @@ type EditTargetFile = {
 export default function DictionaryDetailPage() {
   const params = useParams();
   const categoryId = (params.categoryId ?? params.dictionaryId ?? '') as string;
-  const { dictionaryId } = useParams<{ dictionaryId: string }>();
   const queryClient = useQueryClient();
 
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -102,7 +101,7 @@ export default function DictionaryDetailPage() {
     reset,
     loadMore,
   } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
-    queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword],
+    queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword || ''],
     fetchFn: async (cursor) => {
       const hasKeyword = !!debouncedSearchKeyword.trim();
 
@@ -181,7 +180,7 @@ export default function DictionaryDetailPage() {
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
-      await deleteDictCategoryFile(dictionaryId!, targetFileId);
+      await deleteDictCategoryFile(categoryId, targetFileId);
       (window as { showToast?: (_: string, _type?: 'success' | 'error') => void }).showToast?.(
         `${targetFileName} 파일이 삭제되었습니다.`,
         'success'
@@ -235,7 +234,6 @@ export default function DictionaryDetailPage() {
   };
 
   const handleUploadModalSuccess = () => {
-    (window as { showToast?: (_: string) => void }).showToast?.('파일이 등록되었습니다.');
     // 파일 업로드 후 파일 목록 캐시를 무효화하여 새로고침
     queryClient.invalidateQueries({
       queryKey: ['dict-category-files', categoryId],
@@ -458,7 +456,7 @@ export default function DictionaryDetailPage() {
       <DictUploadModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        categoryId={dictionaryId!}
+        categoryId={categoryId}
         onSuccess={handleUploadModalSuccess}
         latestVersion={'1.0.0'}
       />
