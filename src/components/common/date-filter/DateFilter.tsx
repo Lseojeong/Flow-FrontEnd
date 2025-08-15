@@ -147,6 +147,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState<Date | null>(
+    startDate ? new Date(startDate) : null
+  );
+  const [tempEndDate, setTempEndDate] = useState<Date | null>(endDate ? new Date(endDate) : null);
 
   // string을 Date 객체로 변환
   const startDateObj = startDate ? new Date(startDate) : null;
@@ -154,6 +158,11 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
+
+    // 임시 상태 업데이트
+    setTempStartDate(start);
+    setTempEndDate(end);
+
     // Date 객체를 yyyy-MM-dd 형식으로 변환하여 전달
     const formatDate = (date: Date | null) => {
       if (!date) return null;
@@ -165,7 +174,11 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 
     const startString = formatDate(start);
     const endString = formatDate(end);
-    onDateChange(startString, endString);
+
+    // 두 날짜가 모두 선택된 경우에만 onDateChange 호출
+    if (startString && endString) {
+      onDateChange(startString, endString);
+    }
   };
 
   const handleInputClick = () => {
@@ -197,10 +210,10 @@ export const DateFilter: React.FC<DateFilterProps> = ({
       <DatePicker
         filterDate={filterDate}
         showPopperArrow={false}
-        selected={startDateObj}
+        selected={tempStartDate}
         onChange={handleDateChange}
-        startDate={startDateObj}
-        endDate={endDateObj}
+        startDate={tempStartDate}
+        endDate={tempEndDate}
         selectsRange
         open={isOpen}
         disabled={disabled}
@@ -211,8 +224,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         dateFormat={DATE_FORMAT}
         dateFormatCalendar={DATE_FORMAT_CALENDAR}
         locale="ko"
-        selectsStart={!endDateObj}
-        selectsEnd={!!startDateObj && !endDateObj}
+        selectsStart={!tempEndDate}
+        selectsEnd={!!tempStartDate && !tempEndDate}
         customInput={
           <CustomInput disabled={disabled} error={error} focused={isFocused} hasValue={hasValue} />
         }
