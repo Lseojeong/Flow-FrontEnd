@@ -223,7 +223,15 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         selectsStart={!tempEndDate}
         selectsEnd={!!tempStartDate && !tempEndDate}
         customInput={
-          <CustomInput disabled={disabled} error={error} focused={isFocused} hasValue={hasValue} />
+          <CustomInput
+            disabled={disabled}
+            error={error}
+            focused={isFocused}
+            hasValue={hasValue}
+            onDateChange={onDateChange}
+            setTempStartDate={setTempStartDate}
+            setTempEndDate={setTempEndDate}
+          />
         }
         popperClassName="date-picker-popper"
         popperPlacement="bottom-start"
@@ -249,10 +257,27 @@ export const DateFilter: React.FC<DateFilterProps> = ({
 };
 
 const CustomInput = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ value, onClick, onChange, placeholder, disabled, error, focused, hasValue }, ref) => {
+  (
+    {
+      value,
+      onClick,
+      onChange,
+      onDateChange,
+      setTempStartDate,
+      setTempEndDate,
+      placeholder,
+      disabled,
+      error,
+      focused,
+      hasValue,
+    },
+    ref
+  ) => {
     const handleClearClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      onChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>);
+      setTempStartDate?.(null);
+      setTempEndDate?.(null);
+      onDateChange?.(null, null);
     };
 
     return (
