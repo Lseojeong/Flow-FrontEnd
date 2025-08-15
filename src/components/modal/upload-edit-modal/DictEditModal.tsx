@@ -85,7 +85,6 @@ export const DictEditModalEdit: React.FC<Props> = ({
         fileUrl: finalFileUrl,
       };
 
-      (window as { showToast?: (_: string) => void }).showToast?.('파일이 수정되었습니다.');
       onSubmit(updatedFile);
       onClose();
     } catch {
