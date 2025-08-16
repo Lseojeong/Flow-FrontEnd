@@ -12,6 +12,7 @@ export interface EmailTagData {
   id: string;
   email: string;
   departmentName: string;
+  departmentId: string;
 }
 
 export interface ValidationErrors {

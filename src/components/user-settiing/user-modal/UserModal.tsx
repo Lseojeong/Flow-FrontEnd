@@ -103,13 +103,15 @@ const UserModal: React.FC<UserModalProps> = ({
       return;
     }
 
-    const departmentName =
-      departmentOptions.find((d) => d.departmentId === selectedDepartment)?.departmentName || '';
+    const selectedDept = departmentOptions.find((d) => d.departmentId === selectedDepartment);
+    const departmentName = selectedDept?.departmentName || '';
+    const departmentId = selectedDept?.departmentId || '';
 
     const newTag: EmailTagData = {
       id: Date.now().toString(),
       email: emailInput.trim(),
       departmentName: departmentName,
+      departmentId: departmentId,
     };
 
     setEmailTags((prev) => [...prev, newTag]);
@@ -130,22 +132,9 @@ const UserModal: React.FC<UserModalProps> = ({
 
   const handleSubmit = async () => {
     try {
-      const emails = emailTags.map((tag) => tag.email);
-
-      const selectedDepartmentData = departmentOptions.find(
-        (d) => d.departmentId === selectedDepartment
-      );
-
-      if (!selectedDepartmentData || !selectedDepartmentData.departmentId) {
-        if (typeof window !== 'undefined' && window.showErrorToast) {
-          window.showErrorToast('부서 정보를 찾을 수 없습니다.');
-        }
-        return;
-      }
-
-      const inviteData = emails.map((email) => ({
-        email,
-        departmentId: selectedDepartmentData.departmentId,
+      const inviteData = emailTags.map((tag) => ({
+        email: tag.email,
+        departmentId: tag.departmentId,
       }));
 
       const response = await inviteAdminMutation.mutateAsync(inviteData);

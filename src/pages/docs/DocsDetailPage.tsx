@@ -282,7 +282,8 @@ const FileTable: React.FC<{
   onFileClick: (_file: DocsFile) => void;
   onEditFile: (_file: DocsFile) => void;
   onDeleteFile: (_file: DocsFile) => void;
-}> = ({ files, observerRef, onFileClick, onEditFile, onDeleteFile }) => (
+  isLoading?: boolean;
+}> = ({ files, observerRef, onFileClick, onEditFile, onDeleteFile, isLoading = false }) => (
   <TableWrapper>
     <TableHeaderSection>
       <TableLayout>
@@ -294,7 +295,13 @@ const FileTable: React.FC<{
     <TableScrollWrapper>
       <TableLayout>
         <tbody>
-          {files.length === 0 ? (
+          {isLoading ? (
+            <LoadingRow>
+              <LoadingCell colSpan={8}>
+                <LoadingMessage>검색 중...</LoadingMessage>
+              </LoadingCell>
+            </LoadingRow>
+          ) : files.length === 0 ? (
             <EmptyState />
           ) : (
             files.map((file, index) => {
@@ -369,7 +376,7 @@ export default function DocsDetailPage() {
     return <NoData>카테고리 ID가 없습니다.</NoData>;
   }
 
-  if (isCategoryLoading || isFilesLoading || !categoryDetail) {
+  if (isCategoryLoading || !categoryDetail) {
     return null;
   }
 
@@ -490,6 +497,7 @@ export default function DocsDetailPage() {
             onFileClick={handleFileClick}
             onEditFile={handleEditFile}
             onDeleteFile={handleDeleteFile}
+            isLoading={isFilesLoading}
           />
         </ContentWrapper>
       </Content>
@@ -720,6 +728,22 @@ const EmptyCell = styled.td<{ colSpan: number }>`
 `;
 
 const EmptyMessage = styled.div`
+  display: inline-block;
+`;
+
+const LoadingRow = styled.tr`
+  height: 200px;
+`;
+
+const LoadingCell = styled.td<{ colSpan: number }>`
+  text-align: center;
+  vertical-align: middle;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  padding: 80px 0;
+`;
+
+const LoadingMessage = styled.div`
   display: inline-block;
 `;
 
