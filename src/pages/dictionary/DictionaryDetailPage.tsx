@@ -95,10 +95,11 @@ export default function DictionaryDetailPage() {
     enabled: !!categoryId,
   });
 
-  const { data: paginatedFiles, observerRef } = useInfiniteScroll<
-    FileItem & { timestamp: string },
-    HTMLTableRowElement
-  >({
+  const {
+    data: paginatedFiles,
+    observerRef,
+    isLoading: isFilesLoading,
+  } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
     queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword || ''],
     fetchFn: async (cursor) => {
       const hasKeyword = !!debouncedSearchKeyword.trim();
@@ -427,11 +428,19 @@ export default function DictionaryDetailPage() {
             </thead>
             <TableScrollWrapper>
               <tbody>
-                {!paginatedFiles || paginatedFiles.length === 0
-                  ? renderEmptyState()
-                  : paginatedFiles.map((file, index) =>
-                      renderFileRow(file, index, index === paginatedFiles.length - 1)
-                    )}
+                {isFilesLoading ? (
+                  <LoadingRow>
+                    <LoadingCell colSpan={8}>
+                      <LoadingMessage>검색 중...</LoadingMessage>
+                    </LoadingCell>
+                  </LoadingRow>
+                ) : !paginatedFiles || paginatedFiles.length === 0 ? (
+                  renderEmptyState()
+                ) : (
+                  paginatedFiles.map((file, index) =>
+                    renderFileRow(file, index, index === paginatedFiles.length - 1)
+                  )
+                )}
               </tbody>
             </TableScrollWrapper>
           </TableLayout>
@@ -665,6 +674,22 @@ const EmptyMessage = styled.div`
   color: ${colors.BoxText};
   font-size: 14px;
   transform: translateX(500px);
+`;
+
+const LoadingRow = styled.tr`
+  height: 200px;
+`;
+
+const LoadingCell = styled.td<{ colSpan: number }>`
+  text-align: center;
+  vertical-align: middle;
+  color: ${colors.BoxText};
+  font-size: 14px;
+  padding: 80px 0;
+`;
+
+const LoadingMessage = styled.div`
+  display: inline-block;
 `;
 
 const StatusWrapper = styled.div`

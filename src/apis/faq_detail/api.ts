@@ -31,7 +31,7 @@ export const searchFaqCategoryFiles = async (
     name?: string;
     startDate?: string;
     endDate?: string;
-    cursorDate: string;
+    cursor: string;
   }
 ) => {
   return axiosInstance.get<ApiResponse<FaqFileListResult>>(
