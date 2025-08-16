@@ -18,7 +18,7 @@ import {
   useDeleteAdmin,
 } from '@/apis/user/query';
 import { Loading } from '@/components/common/loading/Loading';
-import { formatDateTime } from '@/utils/formatDateTime';
+import { formatDateTimeUTC } from '@/utils/formatDateTime';
 
 const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
@@ -298,7 +298,7 @@ export default function UserSettingPage() {
                         )}
                       </td>
                       <td style={{ width: '200px', textAlign: 'center' }}>
-                        {user.createdAt ? formatDateTime(user.createdAt) : '-'}
+                        {user.createdAt ? formatDateTimeUTC(user.createdAt) : '-'}
                       </td>
                       <td style={{ width: '100px', textAlign: 'center' }}>
                         <ActionButtons>
