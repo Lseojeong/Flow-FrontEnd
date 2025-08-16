@@ -95,12 +95,10 @@ export default function DictionaryDetailPage() {
     enabled: !!categoryId,
   });
 
-  const {
-    data: paginatedFiles,
-    observerRef,
-    reset,
-    loadMore,
-  } = useInfiniteScroll<FileItem & { timestamp: string }, HTMLTableRowElement>({
+  const { data: paginatedFiles, observerRef } = useInfiniteScroll<
+    FileItem & { timestamp: string },
+    HTMLTableRowElement
+  >({
     queryKey: ['dict-category-files', categoryId, debouncedSearchKeyword || ''],
     fetchFn: async (cursor) => {
       const hasKeyword = !!debouncedSearchKeyword.trim();
@@ -152,8 +150,6 @@ export default function DictionaryDetailPage() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
-    reset();
-    loadMore();
   };
 
   const handleFileClick = (file: FileItem) => {
