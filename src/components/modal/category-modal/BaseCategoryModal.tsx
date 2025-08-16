@@ -58,6 +58,18 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
     };
   }, [isOpen]);
 
+  // 모달이 열릴 때마다 폼 초기화
+  useEffect(() => {
+    if (isOpen) {
+      setCategoryName('');
+      setDescription('');
+      setSelectedDepartments([]);
+      setErrorType('');
+      setIsSubmitting(false);
+      setIsTouched(false);
+    }
+  }, [isOpen]);
+
   const handleNameChange = (val: string) => {
     setCategoryName(val);
     if (isTouched && val.trim() !== '') {
@@ -93,6 +105,14 @@ const BaseCategoryModal: React.FC<BaseCategoryModalProps> = ({
         description: trimmedDescription,
         departments: finalDepartments,
       });
+
+      // 성공 시 폼 초기화
+      setCategoryName('');
+      setDescription('');
+      setSelectedDepartments([]);
+      setErrorType('');
+      setIsSubmitting(false);
+      setIsTouched(false);
 
       // 성공 시에만 모달을 닫음
       onSuccess?.();
