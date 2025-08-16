@@ -35,7 +35,7 @@ export const fetchFaqFiles = async (categoryId: string, params?: FetchFaqFilesPa
         name: params?.name,
         startDate: params?.startDate,
         endDate: params?.endDate,
-        cursorDate,
+        cursor: cursorDate,
       })
     : await getFaqCategoryFiles(categoryId, cursorDate);
 
