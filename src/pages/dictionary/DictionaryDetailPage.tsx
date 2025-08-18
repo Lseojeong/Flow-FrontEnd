@@ -23,10 +23,11 @@ import { InformationIcon } from '@/assets/icons/settings';
 import { Button } from '@/components/common/button/Button';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loading } from '@/components/common/loading/Loading';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
 import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import { formatDateTime } from '@/utils/formatDateTime';
+import { formatDateTime, formatDate } from '@/utils/index';
 import {
   getDictCategoryFiles,
   deleteDictCategoryFile,
@@ -387,10 +388,7 @@ export default function DictionaryDetailPage() {
               <Label>등록일:</Label>
               <Value>
                 {categoryData.createdAt || categoryData.registeredDate
-                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
-                      0,
-                      10
-                    )
+                  ? formatDate(categoryData.createdAt ?? categoryData.registeredDate)
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -399,10 +397,7 @@ export default function DictionaryDetailPage() {
               <Label>최종 수정일:</Label>
               <Value>
                 {categoryData.createdAt || categoryData.registeredDate
-                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
-                      0,
-                      10
-                    )
+                  ? formatDate(categoryData.createdAt ?? categoryData.registeredDate)
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -429,11 +424,12 @@ export default function DictionaryDetailPage() {
             <TableScrollWrapper>
               <tbody>
                 {isFilesLoading ? (
-                  <LoadingRow>
-                    <LoadingCell colSpan={8}>
-                      <LoadingMessage>검색 중...</LoadingMessage>
-                    </LoadingCell>
-                  </LoadingRow>
+                  <LoadingWrapper>
+                    <Loading size={28} color="#555" />
+                    <span style={{ fontSize: '14px', color: '#555' }}>
+                      파일 목록을 불러오는 중...
+                    </span>
+                  </LoadingWrapper>
                 ) : !paginatedFiles || paginatedFiles.length === 0 ? (
                   renderEmptyState()
                 ) : (
@@ -676,20 +672,15 @@ const EmptyMessage = styled.div`
   transform: translateX(500px);
 `;
 
-const LoadingRow = styled.tr`
-  height: 200px;
-`;
-
-const LoadingCell = styled.td<{ colSpan: number }>`
-  text-align: center;
-  vertical-align: middle;
-  color: ${colors.BoxText};
-  font-size: 14px;
-  padding: 80px 0;
-`;
-
-const LoadingMessage = styled.div`
-  display: inline-block;
+const LoadingWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 620px);
+  gap: 8px;
+  transform: translateX(500px);
 `;
 
 const StatusWrapper = styled.div`

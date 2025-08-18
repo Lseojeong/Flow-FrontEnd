@@ -25,6 +25,7 @@ import { Button } from '@/components/common/button/Button';
 import DepartmentTagList from '@/components/common/department/DepartmentTagList';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getDocsCategoryById } from '@/apis/docs/api';
+import { Loading } from '@/components/common/loading/Loading';
 import {
   getDocsCategoryFiles,
   deleteDocsCategoryFile,
@@ -296,11 +297,10 @@ const FileTable: React.FC<{
       <TableLayout>
         <tbody>
           {isLoading ? (
-            <LoadingRow>
-              <LoadingCell colSpan={8}>
-                <LoadingMessage>검색 중...</LoadingMessage>
-              </LoadingCell>
-            </LoadingRow>
+            <LoadingWrapper>
+              <Loading size={28} color="#555" />
+              <span style={{ fontSize: '14px', color: '#555' }}>파일 목록을 불러오는 중...</span>
+            </LoadingWrapper>
           ) : files.length === 0 ? (
             <EmptyState />
           ) : (
@@ -731,20 +731,15 @@ const EmptyMessage = styled.div`
   display: inline-block;
 `;
 
-const LoadingRow = styled.tr`
-  height: 200px;
-`;
-
-const LoadingCell = styled.td<{ colSpan: number }>`
-  text-align: center;
-  vertical-align: middle;
-  color: ${colors.BoxText};
-  font-size: 14px;
-  padding: 80px 0;
-`;
-
-const LoadingMessage = styled.div`
-  display: inline-block;
+const LoadingWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 620px);
+  gap: 8px;
+  transform: translateX(50px);
 `;
 
 const StatusWrapper = styled.div`
