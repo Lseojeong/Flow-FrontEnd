@@ -34,7 +34,7 @@ const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
   { label: '카테고리', width: '554px', align: 'left' as const },
-  { label: '상태', width: '204px', align: 'left' as const },
+  { label: '파일 현황', width: '204px', align: 'left' as const },
   { label: '문서 수', width: '80px', align: 'center' as const },
   { label: '최종 수정일', width: '180px', align: 'left' as const },
   { label: '', width: '90px', align: 'center' as const },

@@ -42,8 +42,8 @@ const menuItems = [...commonMenuItems, ...settingsMenuItems];
 
 const TABLE_COLUMNS = [
   { label: '카테고리', width: '330px', align: 'left' as const, key: 'name' },
-  { label: '상태', width: '206px', align: 'left' as const, key: 'status' },
-  { label: 'FAQ 수', width: '80px', align: 'center' as const, key: 'faqCount' },
+  { label: '파일 현황', width: '206px', align: 'left' as const, key: 'status' },
+  { label: '문서 수', width: '80px', align: 'center' as const, key: 'faqCount' },
   { label: '포함 부서', width: '266px', align: 'left' as const, key: 'departments' },
   { label: '최종 수정일', width: '165px', align: 'left' as const, key: 'lastModifiedDate' },
   { label: '', width: '57px', align: 'center' as const, key: 'actions' },
