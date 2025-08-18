@@ -29,6 +29,7 @@ const StyledTableRow = styled.tr`
     border-bottom: 1px solid #f2f2f2;
     overflow: hidden;
     max-width: 0;
+    vertical-align: middle;
   }
 `;
 

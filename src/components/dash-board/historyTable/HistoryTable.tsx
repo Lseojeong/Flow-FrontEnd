@@ -210,13 +210,13 @@ export const HistoryTable: React.FC = () => {
                         <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
                           {row.lastModifierAdminId}({row.lastModifierName})
                         </td>
-                        <td style={{ width: '150px', minWidth: '150px', textAlign: 'left' }}>
+                        <td style={{ width: '160px', minWidth: '160px', textAlign: 'left' }}>
                           {formatDateTime(row.timestamp)}
                         </td>
                         <td style={{ width: '120px', minWidth: '120px', textAlign: 'center' }}>
                           <OperationBadge operation={row.work}>{row.work}</OperationBadge>
                         </td>
-                        <ScrollableCell maxWidth="458px" align="left">
+                        <ScrollableCell maxWidth="448px" align="left">
                           {row.description}
                         </ScrollableCell>
                       </TableRow>
