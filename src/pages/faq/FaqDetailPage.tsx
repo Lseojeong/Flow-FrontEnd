@@ -764,7 +764,7 @@ const StyledLink = styled.div`
 const TableScrollWrapper = styled.div`
   max-height: 400px;
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${colors.White};
 `;
 
@@ -785,7 +785,7 @@ const TableHeaderSection = styled.div`
 `;
 
 const TableWrapper = styled.div`
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   width: 100%;
 `;

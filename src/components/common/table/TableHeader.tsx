@@ -23,7 +23,7 @@ export const TableHeader: React.FC<TableHeaderProps> = ({ columns }) => {
 const StyledThead = styled.thead`
   background-color: ${colors.Normal};
   color: white;
-  border-radius: 8px 8px 0 0;
+  border-radius: 4px 4px 0 0;
   overflow: hidden;
 
   th {
