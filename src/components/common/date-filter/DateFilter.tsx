@@ -152,9 +152,6 @@ export const DateFilter: React.FC<DateFilterProps> = ({
   );
   const [tempEndDate, setTempEndDate] = useState<Date | null>(endDate ? new Date(endDate) : null);
 
-  const startDateObj = startDate ? new Date(startDate) : null;
-  const endDateObj = endDate ? new Date(endDate) : null;
-
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
 
@@ -238,8 +235,8 @@ export const DateFilter: React.FC<DateFilterProps> = ({
         renderCustomHeader={CustomHeader}
         dayClassName={(date) => {
           const isSunday = date.getDay() === 0;
-          const isRangeStart = startDateObj && isSameDay(date, startDateObj);
-          const isRangeEnd = endDateObj && isSameDay(date, endDateObj);
+          const isRangeStart = tempStartDate && isSameDay(date, tempStartDate);
+          const isRangeEnd = tempEndDate && isSameDay(date, tempEndDate);
           const isToday = isSameDay(date, new Date());
 
           let className = '';
