@@ -784,7 +784,7 @@ const TableHeaderSection = styled.div`
 `;
 
 const TableWrapper = styled.div`
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   width: 100%;
 `;
