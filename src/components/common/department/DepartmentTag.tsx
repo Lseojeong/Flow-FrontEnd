@@ -35,7 +35,7 @@ const TagContainer = styled.div<{ $clickable: boolean }>`
   font-size: 10px;
   font-weight: ${fontWeight.Medium};
   color: ${colors.Normal};
-  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
+  cursor: default;
 `;
 
 const TagText = styled.span`
