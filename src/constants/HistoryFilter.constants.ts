@@ -6,7 +6,7 @@ export const MSG = {
 } as const;
 
 // 파일 이름 길이 제한
-export const truncateFileName = (fileName: string, maxLength: number = 10) => {
+export const truncateFileName = (fileName: string, maxLength: number = 13) => {
   if (fileName.length <= maxLength) return fileName;
   return fileName.substring(0, maxLength) + '...';
 };
