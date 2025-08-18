@@ -27,7 +27,7 @@ import { Loading } from '@/components/common/loading/Loading';
 import { getDictCategoryById } from '@/apis/dictcategory/api';
 import type { DictCategoryFile, FileItem } from '@/apis/dictcategory_detail/types';
 import type { DictCategory } from '@/apis/dictcategory/types';
-import { formatDateTime } from '@/utils/formatDateTime';
+import { formatDateTime, formatDate } from '@/utils/index';
 import {
   getDictCategoryFiles,
   deleteDictCategoryFile,
@@ -388,10 +388,7 @@ export default function DictionaryDetailPage() {
               <Label>등록일:</Label>
               <Value>
                 {categoryData.createdAt || categoryData.registeredDate
-                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
-                      0,
-                      10
-                    )
+                  ? formatDate(categoryData.createdAt ?? categoryData.registeredDate)
                   : '-'}
               </Value>
             </InfoItemColumn>
@@ -400,10 +397,7 @@ export default function DictionaryDetailPage() {
               <Label>최종 수정일:</Label>
               <Value>
                 {categoryData.createdAt || categoryData.registeredDate
-                  ? formatDateTime(categoryData.createdAt ?? categoryData.registeredDate).slice(
-                      0,
-                      10
-                    )
+                  ? formatDate(categoryData.createdAt ?? categoryData.registeredDate)
                   : '-'}
               </Value>
             </InfoItemColumn>
