@@ -90,7 +90,7 @@ export const HistoryFilter: React.FC<HistoryFilterProps> = ({ onCancel, onConfir
     if (!selectedCategoryObj) return <GuideText>{MSG.selectCategory}</GuideText>;
     if (selectedCategoryObj.fileList.length === 0) return <GuideText>{MSG.noFile}</GuideText>;
     return selectedCategoryObj.fileList.map((fileName: string) => (
-      <FilterItemWrapper key={fileName}>
+      <FilterItemWrapper key={fileName} title={fileName}>
         <CheckBox
           id={`file-${fileName}`}
           label={truncateFileName(fileName)}
