@@ -515,7 +515,7 @@ const FaqRow: React.FC<FaqRowProps> = ({ category, checked, onToggle, onEdit, ob
         </StatusWrapper>
       </Cell>
       <Cell w={80} align="center">
-        {category.faqCount}
+        {category.documentCount}
       </Cell>
       <ScrollableCell width="266px" maxWidth="266px" align="left">
         <DepartmentTagList departments={deptTags} />

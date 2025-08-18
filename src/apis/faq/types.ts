@@ -16,7 +16,7 @@ export interface FaqCategory {
   name: string;
   description?: string;
   status: FaqCategoryStatus;
-  faqCount: number;
+  documentCount: number;
   departmentList?: string[];
   lastModifiedDate: string;
   createdAt?: string;
