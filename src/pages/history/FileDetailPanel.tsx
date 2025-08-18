@@ -117,8 +117,6 @@ export const FileDetailPanel: React.FC<Props> = ({ file, onClose }) => {
       return;
     }
 
-    if (!startDate && !endDate) return;
-
     reset();
 
     const t = setTimeout(() => loadMore(), 0);
