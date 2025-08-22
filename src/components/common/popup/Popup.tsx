@@ -63,9 +63,9 @@ export const Popup: React.FC<Props> = (props) => {
                   variant="primary"
                   size="medium"
                   onClick={props.onDelete}
-                  disabled={props.disabled}
+                  disabled={props.disabled || props.hasError}
                 >
-                  {props.disabled ? (
+                  {props.disabled && !props.hasError ? (
                     <Loading size={12} color="white" />
                   ) : (
                     props.confirmText || '삭제'

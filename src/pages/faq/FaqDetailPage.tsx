@@ -259,18 +259,50 @@ const FileTableRow: React.FC<{
     <td
       style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
     >
-      <DownloadIconWrapper onClick={() => downloadFile(file.fileUrl, file.fileName)}>
-        <DownloadIcon />
-      </DownloadIconWrapper>
+      {(() => {
+        const isCompleted = file.status === 'Completed';
+        const handleDownload = () => {
+          if (!isCompleted) return;
+          downloadFile(file.fileUrl, file.fileName);
+        };
+        return (
+          <DownloadIconWrapper
+            onClick={handleDownload}
+            style={{
+              opacity: isCompleted ? 1 : 0.4,
+              cursor: isCompleted ? 'pointer' : 'not-allowed',
+            }}
+            aria-disabled={!isCompleted}
+          >
+            <DownloadIcon />
+          </DownloadIconWrapper>
+        );
+      })()}
     </td>
     <td style={{ width: CELL_WIDTHS.ACTIONS, minWidth: CELL_WIDTHS.ACTIONS, textAlign: 'center' }}>
       <ActionButtons>
         <ActionButton onClick={() => onEditFile(file)}>
           <EditIcon />
         </ActionButton>
-        <ActionButton onClick={() => onDeleteFile(file)}>
-          <DeleteIcon />
-        </ActionButton>
+        {(() => {
+          const isCompleted = file.status === 'Completed';
+          const handleDelete = () => {
+            if (!isCompleted) return;
+            onDeleteFile(file);
+          };
+          return (
+            <ActionButton
+              onClick={handleDelete}
+              aria-disabled={!isCompleted}
+              style={{
+                opacity: isCompleted ? 1 : 0.4,
+                cursor: isCompleted ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <DeleteIcon />
+            </ActionButton>
+          );
+        })()}
       </ActionButtons>
     </td>
   </TableRow>
