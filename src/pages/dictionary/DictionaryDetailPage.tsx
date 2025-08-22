@@ -295,18 +295,30 @@ export default function DictionaryDetailPage() {
       <td
         style={{ width: CELL_WIDTHS.DOWNLOAD, minWidth: CELL_WIDTHS.DOWNLOAD, textAlign: 'center' }}
       >
-        <DownloadIconWrapper
-          onClick={() => {
+        {(() => {
+          const isCompleted = file.status === 'Completed';
+          const handleDownload = () => {
+            if (!isCompleted) return;
             const link = document.createElement('a');
             link.href = file.fileUrl;
             link.download = file.fileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-          }}
-        >
-          <DownloadIcon />
-        </DownloadIconWrapper>
+          };
+          return (
+            <DownloadIconWrapper
+              onClick={handleDownload}
+              style={{
+                opacity: isCompleted ? 1 : 0.4,
+                cursor: isCompleted ? 'pointer' : 'not-allowed',
+              }}
+              aria-disabled={!isCompleted}
+            >
+              <DownloadIcon />
+            </DownloadIconWrapper>
+          );
+        })()}
       </td>
 
       <td
@@ -316,9 +328,25 @@ export default function DictionaryDetailPage() {
           <ActionButton onClick={() => handleEditFile(file)}>
             <EditIcon />
           </ActionButton>
-          <ActionButton onClick={() => handleDeleteFile(file)}>
-            <DeleteIcon />
-          </ActionButton>
+          {(() => {
+            const isCompleted = file.status === 'Completed';
+            const handleDelete = () => {
+              if (!isCompleted) return;
+              handleDeleteFile(file);
+            };
+            return (
+              <ActionButton
+                onClick={handleDelete}
+                aria-disabled={!isCompleted}
+                style={{
+                  opacity: isCompleted ? 1 : 0.4,
+                  cursor: isCompleted ? 'pointer' : 'not-allowed',
+                }}
+              >
+                <DeleteIcon />
+              </ActionButton>
+            );
+          })()}
         </ActionButtons>
       </td>
     </TableRow>

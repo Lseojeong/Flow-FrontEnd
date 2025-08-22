@@ -320,7 +320,8 @@ export default function DepartmentPage() {
         onDelete={handleConfirmDelete}
         cancelText="취소"
         confirmText="삭제"
-        disabled={hasWarnings()}
+        disabled={deleteMutation.isPending || hasWarnings()}
+        hasError={hasWarnings()}
       />
     </PageWrapper>
   );

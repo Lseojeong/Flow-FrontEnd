@@ -17,6 +17,7 @@ interface ConfirmPopupProps extends BasePopupProps {
   confirmText?: string;
   onDelete: () => void;
   disabled?: boolean;
+  hasError?: boolean;
 }
 
 export type PopupProps = AlertPopupProps | ConfirmPopupProps;
